@@ -1,0 +1,27 @@
+{
+  "name": "@mattduffy/users",
+  "version": "0.0.1",
+  "description": "A module to create app user types.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mattduffy/users.git"
+  },
+  "keywords": [
+    "user-type"
+  ],
+  "author": "Matthew Duffy",
+  "license": "ISC",
+  "dependencies": {
+    "assert": "2.0.0",
+    "colors": "1.4.0",
+    "dotenv": "8.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.12.0",
+    "eslint-plugin-import": "^2.26.0"
+  }
+}
