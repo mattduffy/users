@@ -13,7 +13,7 @@
   "keywords": [
     "user-type"
   ],
-  "author": "Matthew Duffy",
+  "author": "mattduffy@gmail.com",
   "license": "ISC",
   "dependencies": {
     "assert": "2.0.0",

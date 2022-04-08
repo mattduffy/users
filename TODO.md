@@ -1,0 +1,10 @@
+- [ ] Add mongodb connection.
+- [ ] Add generic user properties to base User class definition.
+- [ ] Implement iterable interface. 
+- [ ] Implement generic user.keys(), user.values(), and user.entries() methods.
+- [ ] Integrate with the @mattduffy/mft package to add JWT functionality.
+- [ ] Add subclass defintions for different types of user accounts.
+- [ ] Create a test to identify user accounts.
+- [ ] Create a test to authenticate user accounts base on permissions.
+- [ ] Publish as npm package.
+- [ ] ...
