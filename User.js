@@ -1,6 +1,5 @@
+const debug = require('debug')('@mattduffy/users')
 const bcrypt = require('bcrypt')
-// require('dotenv').config()
-// const assert = require('assert')
 
 class User {
 	constructor( mongo, config ){
@@ -28,7 +27,8 @@ class User {
 	serialize(  ) {
 		let propertiesToSerialize = ['_type', '_first', '_last', '_name', '_email', '_hashedPassword', '_created_on', '_updated_on', '_description', '_jwts']
 		let that = this
-		console.dir(that._jwts)
+		// console.dir(that._jwts)
+		debug(that._jwts)
 		return JSON.stringify( that, propertiesToSerialize )
 	}
 
@@ -69,18 +69,30 @@ class User {
 
 	async save() {
 		// Check required properties are all non-null values.
-		// Throw an exception error back out to the method caller that 
-		// some required properties are missing and no save() was done.
+		// Throw an exception error back to the caller if not. 
 		this.checkRequired()
-		// Check that the database client connection is available.
-		// Throws and exception error back to the caller if not.
+		// Check database client connection is available.
+		// Throw an exception error back to the caller if not.
 		this.checkDB()
 		let result
 		try {
 			await this.dbClient.connect()
 			const database = this.dbClient.db(this.dbDatabase)
 			const users = database.collection(this.dbCollection)
-			const filter = { email: this._email }
+			let filter
+			/* if(this._id && this._id != null && this._id != '') {
+				filter = { _id : this._id }
+			} else {
+				filter = { _email : this._email }
+			} */
+			if(this.id) {
+				debug(`setting update filter doc with ${this._id}`)
+				filter = { _id: this._id }
+			} else {
+				debug(`setting update filter doc with ${this._email} instead`)
+				filter = { _email: this._email }
+			}
+
 			this._updated_on = Date.now()
 			// const update = `{ $set:  ${this.serialize()} }`
 			const update = {
@@ -96,31 +108,46 @@ class User {
 					description: this._description
 				}
 			}
-			console.log(update)
 			const options = { upsert: true }
+			if(options.upsert === true) {
+				// debug(`updateOne: ${JSON.stringify(filter)}, ${JSON.stringify(update)}, ${JSON.stringify(options)}`)
+				// return false
+			}
 			
 			result = await users.updateOne( filter, update, options )
+			if (result.upsertedId && result.upsertedId != '') {
+				this._id = result.upsertedId
+			}
+
 		} catch (err) {
 			if(err) {
-				console.log(err)
+				// console.log(err)
+				debug(err)
 			}
 		} finally {
 			await this.dbClient.close()
 		}
-		// assign this returned result to a variable scoped just outside
+		// Assign this returned result to a variable scoped just outside
 		// the calling async function to avoid having to deal with catching 
-		// a promise
+		// a promise:
 		// let dbresult
 		// async function run() { dbresult = await user.save() } )
+
 		if(result.upsertedCount && result.upsertedCount == 1) {
 			return result
 		}
 	}
 
+	set id( id ) {
+		this._id = id
+	}
+	get id() {
+		return this._id
+	}
 	set password( password ) {
-		(async ()=> {
-			this._hashedPassword = await bcrypt.hash(password, 10)
-		})()
+		// Have to, for now, rely on synchronous hash method
+		// because it is awkward to use async/await promise here.
+		this._hashedPassword = bcrypt.hashSync(password, 10)
 	}
 	get password() {
 		return this._hashedPassword

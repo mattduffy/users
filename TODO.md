@@ -1,5 +1,5 @@
-- [ ] Add mongodb connection.
-- [ ] Add generic user properties to base User class definition.
+- [x] Add mongodb connection.
+- [x] Add generic user properties to base User class definition.
 - [ ] Implement iterable interface. 
 - [ ] Implement generic user.keys(), user.values(), and user.entries() methods.
 - [ ] Integrate with the @mattduffy/mft package to add JWT functionality.

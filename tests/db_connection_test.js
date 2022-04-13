@@ -62,7 +62,7 @@ async function insertOne () {
 // insertOne().catch(console.dir)
 
 function gT () {
-  const secret = fs.readFileSync('/data/sites/nginx-sites/mattmadethese.com/nodejs/keys/jwt-private-rsa4096.pem')
+  const secret = fs.readFileSync('/data/sites/nginx-sites/mattmadethese.com/nodejs/keys/jwt/jwt-private-rsa4096.pem')
   const toptions = { algorithm: 'HS256', expiresIn: '30m', issuer: 'mattmadethese.com', subject: 'matt', audience: 'access', jwtid: gID() }
   const roptions = { algorithm: 'HS256', expiresIn: '5m', issuer: 'mattmadethese.com', subject: 'matt', audience: 'refresh', jwtid: gID() }
   const token = jwt.sign({ email: 'mattduffy@gmail.com' }, secret, toptions)
