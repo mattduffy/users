@@ -70,27 +70,25 @@ class User {
 	async save() {
 		// Check required properties are all non-null values.
 		// Throw an exception error back to the caller if not. 
+		debug('1: checkRequired()')
 		this.checkRequired()
 		// Check database client connection is available.
 		// Throw an exception error back to the caller if not.
 		this.checkDB()
+		debug('2: checkDB()')
 		let result
 		try {
 			await this.dbClient.connect()
+			debug('3: dbClient.connect()')
 			const database = this.dbClient.db(this.dbDatabase)
 			const users = database.collection(this.dbCollection)
 			let filter
-			/* if(this._id && this._id != null && this._id != '') {
-				filter = { _id : this._id }
-			} else {
-				filter = { _email : this._email }
-			} */
-			if(this.id) {
-				debug(`setting update filter doc with ${this._id}`)
+			if(this._id) {
+				debug(`4: setting update filter doc with ${this._id}`)
 				filter = { _id: this._id }
 			} else {
-				debug(`setting update filter doc with ${this._email} instead`)
-				filter = { _email: this._email }
+				debug(`5: setting update filter doc with ${this._email} instead`)
+				filter = { email: this._email }
 			}
 
 			this._updated_on = Date.now()
@@ -108,34 +106,32 @@ class User {
 					description: this._description
 				}
 			}
-			const options = { upsert: true }
+			const options = { upsert: true, returnDocument: 'after', projection: { _id: 1, email: 1, first: 1 } }
 			if(options.upsert === true) {
 				// debug(`updateOne: ${JSON.stringify(filter)}, ${JSON.stringify(update)}, ${JSON.stringify(options)}`)
 				// return false
 			}
-			
-			result = await users.updateOne( filter, update, options )
-			if (result.upsertedId && result.upsertedId != '') {
-				this._id = result.upsertedId
+			result = await users.findOneAndUpdate( filter, update, options )
+			debug('6: typeof result = ', typeof result)
+			if (result?.value._id && result?.value._id != '') {
+				debug('7: _id created: ', result.value._id.toString())
+				this._id = result.value._id.toString()
 			}
-
 		} catch (err) {
 			if(err) {
 				// console.log(err)
-				debug(err)
+				debug('8: catch err', err)
 			}
 		} finally {
 			await this.dbClient.close()
 		}
-		// Assign this returned result to a variable scoped just outside
-		// the calling async function to avoid having to deal with catching 
-		// a promise:
-		// let dbresult
-		// async function run() { dbresult = await user.save() } )
+		// Still not totally clear how to work with the result of async/await results
+		// without haveing to wrap the await expression inside of somethign like IIFE
+		// to get around the Promise.
+		// (async () => { dbresult = await user.save() } )();
 
-		if(result.upsertedCount && result.upsertedCount == 1) {
-			return result
-		}
+		debug('9: returning result')
+		return result
 	}
 
 	set id( id ) {
