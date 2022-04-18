@@ -3,26 +3,26 @@ const debug = require('debug')('@mattduffy/users')
 const User = require('../User.js')
 const {client, genTokens} = require('./db_connection_test.js')
 
-debug('I: setting minimum required user properties.')
+debug('****, Setting minimum required user properties.')
 let user1 = new User(client)
 user1.password = '9@zzw0rd'
-debug('II: ', user1.password)
+debug('****, ', user1.password)
 user1.firstName = 'Matthew'
 user1.lastName = 'Duffy'
 user1.email = 'matt@email.duffy';
-user1.jwts = genTokens();
+user1.jwts = genTokens()
 
-let saveResults;
+var getSaveResults = function() {
+  return user1.save()
+};
+
 (async function() {
-  if(user1.checkRequired()) {
-    debug('III: checkRequired returned true')
-    debug('IV: about to call user1.save()')
-    const result = await user1.save()
-    debug('V: ', result)
-    saveResults = result
-    debug('VI: user1._id set?: ', user1._id)
-  } 
+  const result = await getSaveResults()
+  console.log('result: ', result)
+  debug('****, ', result)
 })();
 
-debug('VII: access saveResults outside of IIFE?: ', saveResults)
-
+if(user1.checkRequired()) {
+  debug('****, checkRequired returned true')
+  debug('****, about to call user1.save()')
+}

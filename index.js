@@ -1,5 +1,5 @@
 // require('dotenv').config({ path: 'tests/.env', debug: process.env.DEBUG });
-const debug = require('debug')('@mattduffy/users')
+const debug = require('debug')('users:index')
 const User = require('./User.js')
 
 class Users {

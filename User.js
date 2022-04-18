@@ -1,27 +1,49 @@
-const debug = require('debug')('@mattduffy/users')
+const debug = require('debug')('users:User')
 const bcrypt = require('bcrypt')
+const { ObjectId } = require('mongodb')
 
 class User {
 	constructor( mongo, config ){
 		if (mongo) {
+			this.objectId = ObjectId
 			this.dbClient = mongo
 			this.dbDatabase = 'mattmadethese'
 			this.dbCollection = 'users'
 		}
 		// Required properties for existing users.
 		this._type = `User`
-		this._first = config?.first_name
-		this._last = config?.last_name
-		this._name = null
+		this._first = config?.first_name || null
+		this._last = config?.last_name || null
+		let full_name = null
+		if (this._first != null && this._last != null) {
+			full_name = `${this._first} ${this._last}`
+		}
+		this._name = full_name 
 		this._email = config?.email || ''
-		this._hashedPassword = ''
-		this._jwts = null
+		this._hashedPassword = ( config?.password ) ? bcrypt.hashSync(config.password, 10) : ''
+		this._jwts = config?.jwts || null 
 
 		// Optional properties to define for creating new users.
 		this._id = null
 		this._created_on = Date.now()
 		this._updated_on = null
 		this._description = 'This is a user.'
+	}
+
+	toString() {
+		return JSON.stringify({
+			_id: this._id,
+			type: this._type,
+			first_name: this._first,
+			last_name: this._last,
+			full_name: this._name,
+			email: this._email,
+			password: this._hashedPassword,
+			jwts: this._jwts,
+			description: this._description,
+			created_on: this._created_on,
+			updated_on: this._updated_on
+		}, null, 2 )
 	}
 
 	serialize(  ) {
@@ -67,55 +89,89 @@ class User {
 		return true
 	}
 
-	async save() {
+	async update() {
 		// Check required properties are all non-null values.
 		// Throw an exception error back to the caller if not. 
-		debug('1: checkRequired()')
+		debug('1: Calling checkRequired()')
 		this.checkRequired()
 		// Check database client connection is available.
 		// Throw an exception error back to the caller if not.
 		this.checkDB()
-		debug('2: checkDB()')
-		let result
+		debug('2: Calling checkDB()')
+		let result;
 		try {
 			await this.dbClient.connect()
-			debug('3: dbClient.connect()')
+			debug('3: Calling dbClient.connect()')
 			const database = this.dbClient.db(this.dbDatabase)
 			const users = database.collection(this.dbCollection)
-			let filter
-			if(this._id) {
-				debug(`4: setting update filter doc with ${this._id}`)
-				filter = { _id: this._id }
-			} else {
-				debug(`5: setting update filter doc with ${this._email} instead`)
-				filter = { email: this._email }
-			}
-
-			this._updated_on = Date.now()
-			// const update = `{ $set:  ${this.serialize()} }`
+			debug(`4: Setting update filter doc with ${this._id}`)
+			let filter = { _id: this.objectId(this._id) }
 			const update = {
-				$set: { 
-					type: this._type, 
-					first: this._first,
-					last: this._last,
-					email: this._email,
-					hashedPassword: this._hashedPassword,
-					jwts: this._jwts,
-					createdOn: this._created_on,
-					updatedOn: Date.now(),
-					description: this._description
-				}
+			$set: { 
+				type: this._type, 
+				first: this._first,
+				last: this._last,
+				email: this._email,
+				hashedPassword: this._hashedPassword,
+				jwts: this._jwts,
+				createdOn: this._created_on,
+				updatedOn: Date.now(),
+				description: this._description
 			}
-			const options = { upsert: true, returnDocument: 'after', projection: { _id: 1, email: 1, first: 1 } }
-			if(options.upsert === true) {
-				// debug(`updateOne: ${JSON.stringify(filter)}, ${JSON.stringify(update)}, ${JSON.stringify(options)}`)
-				// return false
 			}
+			const options = { writeConcern: { w: 'majority' }, upsert: false, returnDocument: 'after', projection: { _id: 1, email: 1, first: 1 } }
+			debug('5: Calling findOneAndUpdate.')
 			result = await users.findOneAndUpdate( filter, update, options )
-			debug('6: typeof result = ', typeof result)
-			if (result?.value._id && result?.value._id != '') {
-				debug('7: _id created: ', result.value._id.toString())
-				this._id = result.value._id.toString()
+		} catch (err) {
+			if(err) {
+				// console.log(err)
+				debug('6: catch err', err)
+			}
+		} finally {
+			await this.dbClient.close()
+		}
+		debug('7: returning result')
+		return result
+	}
+
+	// async save( insertOrUpdate = 'insert') {
+	async save() {
+		// Check required properties are all non-null values.
+		// Throw an exception error back to the caller if not. 
+		debug('1: Calling checkRequired()')
+		this.checkRequired()
+		// Check database client connection is available.
+		// Throw an exception error back to the caller if not.
+		this.checkDB()
+		debug('2: Calling checkDB()')
+		let result;
+		try {
+			await this.dbClient.connect()
+			debug('3: Calling dbClient.connect()')
+			const database = this.dbClient.db(this.dbDatabase)
+			const users = database.collection(this.dbCollection)
+			this._updated_on = Date.now()
+			// Inserting a new user.
+			debug('5: This is a new user - insertOne.')
+			const insert = {
+				type: this._type, 
+				first: this._first,
+				last: this._last,
+				email: this._email,
+				hashedPassword: this._hashedPassword,
+				jwts: this._jwts,
+				createdOn: this._created_on,
+				updatedOn: this._updated_on,
+				description: this._description
+			}
+			const options = { writeConcern: { w: 'majority' } }
+			debug('6: Calling insertOne.')
+			result = await users.insertOne( insert, options )
+			debug('7: typeof result = ', typeof result)
+			if(result?.insertedId != null) {
+			// Get the newly creted ObjectId and assign it to this._id.
+			debug('ObjectId: ', result.insertedId.toString())
+			this._id = result.insertedId.toString()
 			}
 		} catch (err) {
 			if(err) {
@@ -125,13 +181,10 @@ class User {
 		} finally {
 			await this.dbClient.close()
 		}
-		// Still not totally clear how to work with the result of async/await results
-		// without haveing to wrap the await expression inside of somethign like IIFE
-		// to get around the Promise.
-		// (async () => { dbresult = await user.save() } )();
 
 		debug('9: returning result')
-		return result
+		// return result
+		return this 
 	}
 
 	set id( id ) {
