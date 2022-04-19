@@ -1,33 +1,102 @@
 const debug = require('debug')('users:User')
 const bcrypt = require('bcrypt')
-const { ObjectId } = require('mongodb')
+const { client, ObjectId } = require('./mongoclient.js')
+const Database = 'mattmadethese'
+const Collection = 'users'
 
 class User {
-	constructor( mongo, config ){
-		if (mongo) {
-			this.objectId = ObjectId
-			this.dbClient = mongo
-			this.dbDatabase = 'mattmadethese'
-			this.dbCollection = 'users'
-		}
-		// Required properties for existing users.
-		this._type = `User`
+	constructor( config ){
+		this.objectId = ObjectId
+		this.dbClient = client 
+		this.dbDatabase = 'mattmadethese'
+		this.dbCollection = 'users'
+		this._id = config?.id || null
+		this._type = config?.type || `User`
 		this._first = config?.first_name || null
 		this._last = config?.last_name || null
-		let full_name = null
-		if (this._first != null && this._last != null) {
+		let full_name;
+		if(config.name != null && config.name != '') {
+			full_name = config.name
+		} else if(this._first != null && this._last != null) {
 			full_name = `${this._first} ${this._last}`
 		}
-		this._name = full_name 
+		this._name = full_name || null
 		this._email = config?.email || ''
-		this._hashedPassword = ( config?.password ) ? bcrypt.hashSync(config.password, 10) : ''
+		let hashOrPassword
+		if(config.hashedPassword != null && config.hashedPassword.match(/^\$2b\$10/)['input'] == config.hashedPassword) {
+			hashOrPassword = config.hashedPassword	
+		} else if(config.password != null && config.password != '') {
+			hashOrPassword = bcrypt.hashSync(config.password, 10)
+		}
+		this._hashedPassword = hashOrPassword || null
 		this._jwts = config?.jwts || null 
+		this._created_on = config?.created_on || Date.now()
+		this._updated_on = config?.updated_on || null
+		this._description = config?.description || 'This is a user.'
+	}
 
-		// Optional properties to define for creating new users.
-		this._id = null
-		this._created_on = Date.now()
-		this._updated_on = null
-		this._description = 'This is a user.'
+		static async findByEmail( email ) {
+		let foundUserByEmail
+		try {
+			await client.connect()
+			const db = client.db(Database)
+			const users = db.collection(Collection)
+			foundUserByEmail = await users.findOne( {email: email })
+		} catch (err) {
+			debug('Exception during findByEmail')
+			throw new Error(err.message)
+		} finally {
+			await client.close()
+		}
+		// If no user found by email, returned result is NULL.
+		if(foundUserByEmail != null) {
+			return new User( {
+				id: foundUserByEmail._id,
+				type: foundUserByEmail.type,
+				first_name: foundUserByEmail.first,
+				last_name: foundUserByEmail.last,
+				name: foundUserByEmail.name,
+				email: foundUserByEmail.email,
+				hashedPassword: foundUserByEmail.hashedPassword,
+				jwts: foundUserByEmail.jwts,
+				created_on: foundUserByEmail.created_on,
+				updated_on: foundUserByEmail.updated_on,
+				description: foundUserByEmail.description
+			})
+		}
+		return foundUserByEmail
+	}
+
+	static async findById( id ) {
+		let foundUserById
+		try {
+			await client.connect()
+			const db = client.db(Database)
+			const users = db.collection(Collection)
+			foundUserById = await users.findOne( {_id: ObjectId(id) })
+		} catch (err) {
+			debug('Exception during findById')
+			throw new Error(err.message)
+		} finally {
+			await client.close()
+		}
+		// If no user found by ObjectId(_id), returned result is NULL.
+		if(foundUserById != null) {
+			return new User( {
+				id: foundUserById._id,
+				type: foundUserById.type,
+				first_name: foundUserById.first,
+				last_name: foundUserById.last,
+				name: foundUserById.name,
+				email: foundUserById.email,
+				hashedPassword: foundUserById.hashedPassword,
+				jwts: foundUserById.jwts,
+				created_on: foundUserById.created_on,
+				updated_on: foundUserById.updated_on,
+				description: foundUserById.description
+			})
+		}
+		return foundUserById
 	}
 
 	toString() {
