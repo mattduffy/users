@@ -10,7 +10,7 @@ function createNewBasicUser( properties = {} ) {
 	// if (!mongo) {
 	// 	throw new Error('DB connection object required.')
 	// }
-	if (!properties.hasOwnProperty('first_name') || !properties.hasOwnProperty('last_name') || !properties.hasOwnProperty('email') || !properties.hasOwnProperty('password') ) {
+	if(!properties.hasOwnProperty('first_name') || !properties.hasOwnProperty('last_name') || !properties.hasOwnProperty('email') || !properties.hasOwnProperty('password') ) {
 		let msg = `The following fields are required to create a new user:\n`
 		msg += `    - first_name: new user's first name.\n`
 		msg += `    - last_name: new user's last name.\n`
@@ -23,20 +23,29 @@ function createNewBasicUser( properties = {} ) {
 }
 
 async function getUserByEmailAddress( email = null ) {
-	if (!email) {
+	if(!email) {
 		throw new Error('Email Address is required.')
 	}
 	return await User.findByEmail(email)
 }
 
 async function getUserById( id = null ) {
-	if (!id) {
+	if(!id) {
 		throw new Error('User ID is required.')
 	}
 	return await User.findById(id)
 }
+
+async function comparePasswords( email = null, password = null ) {
+	if(!email || !password) {
+		throw new Error('Email and password are required.')
+	}
+	return await User.cmpPassword( email, password )
+}
+
 module.exports = {
 	newUser: createNewBasicUser,
 	findByEmail: getUserByEmailAddress,
-	findById: getUserById
+	findById: getUserById,
+	cmpPassword: comparePasswords
 }

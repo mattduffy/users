@@ -35,13 +35,38 @@ class User {
 		this._description = config?.description || 'This is a user.'
 	}
 
-		static async findByEmail( email ) {
-		let foundUserByEmail
+	static async cmpPassword( email, password ) {
+		let userToComparePassword
+		let filter = { email: email }
+		let options = { projection: { hashedPassword: 1 }  }
+		let result
 		try {
 			await client.connect()
 			const db = client.db(Database)
 			const users = db.collection(Collection)
-			foundUserByEmail = await users.findOne( {email: email })
+			userToComparePassword = await users.findOne( filter, options )	
+			if(userToComparePassword != null) {
+				// Boolean value returned from bcrypt.compare function.
+				result = await bcrypt.compare( password, userToComparePassword.hashedPassword )
+			}
+		} catch (err) {
+			debug('Exception during cmpPasssword')
+			throw new Error(err.message)
+		} finally {
+			await client.close()
+		}
+		// True if password == hashedPassword. False if !=.
+		return result
+	}
+
+	static async findByEmail( email ) {
+		let foundUserByEmail
+		let filter = { email: email }
+		try {
+			await client.connect()
+			const db = client.db(Database)
+			const users = db.collection(Collection)
+			foundUserByEmail = await users.findOne( filter )
 		} catch (err) {
 			debug('Exception during findByEmail')
 			throw new Error(err.message)
@@ -59,8 +84,8 @@ class User {
 				email: foundUserByEmail.email,
 				hashedPassword: foundUserByEmail.hashedPassword,
 				jwts: foundUserByEmail.jwts,
-				created_on: foundUserByEmail.created_on,
-				updated_on: foundUserByEmail.updated_on,
+				created_on: foundUserByEmail.createdOn,
+				updated_on: foundUserByEmail.updatedOn,
 				description: foundUserByEmail.description
 			})
 		}
@@ -91,15 +116,15 @@ class User {
 				email: foundUserById.email,
 				hashedPassword: foundUserById.hashedPassword,
 				jwts: foundUserById.jwts,
-				created_on: foundUserById.created_on,
-				updated_on: foundUserById.updated_on,
+				created_on: foundUserById.createdOn,
+				updated_on: foundUserById.updatedOn,
 				description: foundUserById.description
 			})
 		}
 		return foundUserById
 	}
 
-	toString() {
+		toString() {
 		return JSON.stringify({
 			_id: this._id,
 			type: this._type,

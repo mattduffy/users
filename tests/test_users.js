@@ -54,6 +54,21 @@ debug('calling save() method on the new user.');
     debug(e)
   }
   debug('Found user: %O', userById.toString())
+
+  debug('***********************************************' )
+  debug('***********************************************' )
+  debug('Can we compare password with hashedPassword?')
+  let passwordsTheSame
+  debug('About to cmp properties.password: \'%s\' and userById.password: \'%s\'', properties.password, userById.password)
+  passwordsTheSame = await Users.cmpPassword( userById.email, properties.last_name)
+  if(passwordsTheSame) {
+    debug('Samesies')
+  } else {
+    debug('different')
+  }
+
+
+
 })();
 
 
