@@ -67,8 +67,6 @@ debug('calling save() method on the new user.');
     debug('different')
   }
 
-
-
 })();
 
 

@@ -5,7 +5,7 @@ const Database = 'mattmadethese'
 const Collection = 'users'
 
 class User {
-	constructor( config ){
+	constructor( config ) {
 		this.objectId = ObjectId
 		this.dbClient = client 
 		this.dbDatabase = 'mattmadethese'
@@ -55,7 +55,7 @@ class User {
 		} finally {
 			await client.close()
 		}
-		// True if password == hashedPassword. False if !=.
+		// True if password == hashedPassword, and False if !=.
 		return result
 	}
 
@@ -124,7 +124,7 @@ class User {
 		return foundUserById
 	}
 
-		toString() {
+	toString() {
 		return JSON.stringify({
 			_id: this._id,
 			type: this._type,
@@ -140,10 +140,9 @@ class User {
 		}, null, 2 )
 	}
 
-	serialize(  ) {
+	serialize() {
 		let propertiesToSerialize = ['_type', '_first', '_last', '_name', '_email', '_hashedPassword', '_created_on', '_updated_on', '_description', '_jwts']
 		let that = this
-		// console.dir(that._jwts)
 		debug(that._jwts)
 		return JSON.stringify( that, propertiesToSerialize )
 	}

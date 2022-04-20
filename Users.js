@@ -1,4 +1,6 @@
-// require('dotenv').config( { path: './tests/.env' } )
+if(!module.parent) {
+	require('dotenv').config( { path: './tests/.env' } )
+}
 // const {client, genTokens} = require('./db_connection_test.js')
 // const { client, ObjectId } = require('./mongoclient.js')
 const debug = require('debug')('users:Users')
