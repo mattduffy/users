@@ -6,6 +6,7 @@ if(!module.parent) {
 }
 const debug = require('debug')('users:Users')
 const User = require('./User.js')
+const AdminUser = require('./AdminUser.js')
 
 /**
  * Create a new instance of the User class with the default type = User.  This
@@ -27,6 +28,27 @@ function createNewBasicUser( properties = {} ) {
 		throw new Error(msg)
 	}
 	return new User(properties)
+}
+
+/**
+ * Create a new instance of the AdminUser class.  The properties param
+ * is checked for the minimum required User properties before being passed to
+ * the AdminUser constructor.
+ * @param {Object} properties - An object literal containing properties to be
+ * assigned to the new user instance.
+ * @return {AdminUser} - A new (unsaved) instance of AdminUser.
+ */
+function createNewAdmincUser( adminProperties = {} ) {
+	debug('Creating a new admin user')
+	if(!adminProperties.hasOwnProperty('first_name') || !adminProperties.hasOwnProperty('last_name') || !adminProperties.hasOwnProperty('email') || !adminProperties.hasOwnProperty('password') ) {
+		let msg = `The following fields are required to create a new user:\n`
+		msg += `    - first_name: new user's first name.\n`
+		msg += `    - last_name: new user's last name.\n`
+		msg += `    - email: new user's valid email address.\n`
+		msg += `    - password: new user's password to be hashed.`
+		throw new Error(msg)
+	}
+	return new AdminUser( adminProperties )
 }
 
 /**
@@ -73,6 +95,7 @@ async function comparePasswords( email = null, password = null ) {
 
 module.exports = {
 	newUser: createNewBasicUser,
+	newAdminUser: createNewAdmincUser,
 	findByEmail: getUserByEmailAddress,
 	findById: getUserById,
 	cmpPassword: comparePasswords

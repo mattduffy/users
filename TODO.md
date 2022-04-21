@@ -2,7 +2,7 @@
 - [x] Add generic user properties to base User class definition.
 - [x] Create a test to identify user accounts.
 - [x] Add documentation to package files.
-- [ ] Add subclass defintions for different types of user accounts.
+- [x] Add subclass defintions for different types of user accounts.
 - [ ] Integrate with the @mattduffy/mft package to add JWT functionality.
 - [ ] Create a test to authenticate user accounts base on permissions.
 - [ ] Publish as npm package.

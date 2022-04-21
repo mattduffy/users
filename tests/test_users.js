@@ -3,38 +3,38 @@ const debug = require('debug')('users:test_users')
 const Users = require('../Users.js')
 const {client, genTokens} = require('./db_connection_test.js')
 
-debug('&, starting tests.')
-let properties = {
-  first_name: '1234567890',
-  last_name: 'slkjdlafjd',
-  email: 'matt@mattmail.email',
-  password: '9@zzw0rd',
-  jwts: genTokens()
-}
-debug('created properties object')
-debug('calling Users.newUser static method with mongodb client obj and user properties obj.')
-// let basicUser = Users.newUser(client, properties)
-let basicUser = Users.newUser(properties)
-debug('basicUser.toString: ', basicUser.toString())
-debug('calling save() method on the new user.');
+;(async () => {
+  debug('Starting basic user account tests...');
+  let properties = {
+    first_name: '1234567890',
+    last_name: 'slkjdlafjd',
+    email: 'matt@mattmail.email',
+    password: '9@zzw0rd',
+    jwts: genTokens()
+  };
+  debug('BasicUser created properties object')
+  debug('BasicUser calling Users.newUser static method with mongodb client obj and user properties obj.')
+  // let basicUser = Users.newUser(client, properties)
+  let basicUser = Users.newUser(properties)
+  debug('BasicUser basicUser.toString: ', basicUser.toString())
+  debug('BasicUser calling save() method on the new user.');
 
-(async () => {
   // let result = await basicUser.save( )
   basicUser = await basicUser.save( )
-  debug('result of save() call.' )
-  debug('result: ', basicUser.toString() )
-  debug('result.insertedId.toString: ', basicUser.id )
+  debug('BasicUser result of save() call.' )
+  debug('BasicUser result: ', basicUser.toString() )
+  debug('BasicUser result.insertedId.toString: ', basicUser.id )
   
   debug('***********************************************' )
   debug('***********************************************' )
-  debug('Can we update this newly created basic user now?' )
+  debug('BasicUser Can we update this newly created basic user now?' )
   basicUser.email = 'mail@electronic-mail.commercial'
   basicUser = await basicUser.update( )
-  debug('updated basic user: ', basicUser.toString() )
+  debug('BasicUser updated basic user: ', basicUser.toString() )
 
   debug('***********************************************' )
   debug('***********************************************' )
-  debug('Can we find a user by email address?')
+  debug('UserByEmail Can we find a user by email address?')
   let userByEmail;
   try {
     userByEmail = await Users.findByEmail( 'mail@electronic-mail.commercial' )
@@ -47,26 +47,50 @@ debug('calling save() method on the new user.');
   debug('***********************************************' )
   let id = userByEmail.id
   let userById
-  debug('Can we find a user by id %s ?', id)
+  debug('UserByEmail Can we find a user by id %s ?', id)
   try {
     userById = await Users.findById( id )
   } catch (e) {
     debug(e)
   }
-  debug('Found user: %O', userById.toString())
+  debug('UserById Found user: %O', userById.toString())
 
   debug('***********************************************' )
   debug('***********************************************' )
-  debug('Can we compare password with hashedPassword?')
+  debug('UserById Can we compare password with hashedPassword?')
   let passwordsTheSame
-  debug('About to cmp properties.password: \'%s\' and userById.password: \'%s\'', properties.password, userById.password)
+  debug('COMPARE About to cmp properties.password: \'%s\' and userById.password: \'%s\'', properties.password, userById.password)
   passwordsTheSame = await Users.cmpPassword( userById.email, properties.last_name)
   if(passwordsTheSame) {
-    debug('Samesies')
+    debug('COMPARE Samesies')
   } else {
-    debug('different')
+    debug('COMPARE different')
   }
 
-})();
+  debug('Starting Admin User account tests...');
+  debug('***********************************************' )
+  debug('***********************************************' )
+  debug('Can we create an Admin User?')
+  let adminProperties = {
+    first_name: 'Adam',
+    last_name: 'TheAdmin',
+    email: 'adam@theadmin.email',
+    password: '9@zzw0rd',
+    jwts: genTokens()
+  }
+  debug('AdminUser created properties object')
+  debug('AdminUser calling Users.newAdminUser static method with mongodb client obj and user properties obj.')
+  // let basicUser = Users.newUser(client, properties)
+  let adminUser = await Users.newAdminUser( adminProperties )
+  debug('AdminUser AdminUser.toString: ', adminUser.toString())
+  debug('AdminUser calling the save() method on the new user.');
 
+  adminUser = await adminUser.save( )
+  debug('AdminUser result of save() call.' )
+  debug('AdminUser result: ', adminUser.toString() )
+  debug('AdminUser result.insertedId.toString: ', adminUser.id )
+
+
+
+ })();
 

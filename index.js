@@ -10,7 +10,7 @@ if(!module.parent) {
 	require('dotenv').config({ path: 'tests/.env', debug: process.env.DEBUG });
 }
 const debug = require('debug')('users:index')
-const BasicUser = require('./User.js')
+const User = require('./User.js')
 const AdminUser = require('./AdminUser.js')
 
 /**
@@ -29,7 +29,7 @@ class Users {
 		if(type === 'admin') {
 			return new AdminUser( this._db )
 		} else {
-		return new BasicUser( this._db )
+		return new User( this._db )
 		}
 	}
 
@@ -42,7 +42,7 @@ class Users {
 			debug('Static method User.getById() called without the id value.')
 			throw new Error('Missing user id value.')
 		}
-		return new BasicUser.byId( id, this._db )	
+		return new User.byId( id, this._db )	
 	}
 
 	getByEmail( email = null ) {
@@ -54,7 +54,7 @@ class Users {
 			debug('Static method User.getByEmail() called without the email value.')
 			throw new Error('Missing email value.')
 		}
-		return new BasicUser.byEmail( email, this._db )
+		return new User.byEmail( email, this._db )
 	}
 
 	getBySessionId( sessionId = null ){
@@ -66,7 +66,7 @@ class Users {
 			debug('Static method User.getBySessionId() called without the session id value.')
 			throw new Error('Missing session id value')
 		}
-		return new BasicUser.bySession( sessionId, this._db )
+		return new User.bySession( sessionId, this._db )
 	}
 }
 
