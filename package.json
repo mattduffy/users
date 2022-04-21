@@ -2,9 +2,9 @@
   "name": "@mattduffy/users",
   "version": "0.0.1",
   "description": "A module to create app user types.",
-  "main": "index.js",
+  "main": "Users.js",
   "scripts": {
-    "test": "test/index.js"
+    "test": "DEBUG=users:* node tests/test_users.js"
   },
   "repository": {
     "type": "git",

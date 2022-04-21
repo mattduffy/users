@@ -42,8 +42,8 @@ async function insertOne () {
   const doc = {
     uid: gID(),
     name: 'Matt',
-    email: 'mattduffy@gmail.com',
-    password: await bcrypt.hash('monk3ysh', 10),
+    email: 'matt@mattmail.email',
+    password: await bcrypt.hash('9@zzw0rd', 10),
     jwt: gT()
   }
   console.log(doc)
@@ -62,11 +62,11 @@ async function insertOne () {
 // insertOne().catch(console.dir)
 
 function gT () {
-  const secret = fs.readFileSync('/data/sites/nginx-sites/mattmadethese.com/nodejs/keys/jwt/jwt-private-rsa4096.pem')
+  const secret = fs.readFileSync(process.env.JWT_PRIKEY)
   const toptions = { algorithm: 'HS256', expiresIn: '30m', issuer: 'mattmadethese.com', subject: 'matt', audience: 'access', jwtid: gID() }
   const roptions = { algorithm: 'HS256', expiresIn: '5m', issuer: 'mattmadethese.com', subject: 'matt', audience: 'refresh', jwtid: gID() }
-  const token = jwt.sign({ email: 'mattduffy@gmail.com' }, secret, toptions)
-  const refresh = jwt.sign({ email: 'mattduffy@gmail.com' }, secret, roptions)
+  const token = jwt.sign({ email: 'matt@mattmail.email' }, secret, toptions)
+  const refresh = jwt.sign({ email: 'matt@mattmail.email' }, secret, roptions)
   return { token, refresh }
 }
 

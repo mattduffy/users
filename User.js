@@ -1,10 +1,26 @@
+/**
+ * @module @mattduffy/users
+ */
 const debug = require('debug')('users:User')
 const bcrypt = require('bcrypt')
 const { client, ObjectId } = require('./mongoclient.js')
 const Database = 'mattmadethese'
 const Collection = 'users'
 
+/**
+ * A class representing the basic user model.  This class contains the generic
+ * properties and methods necessary to create a simple application user.  
+ * Methods include saveing/updating properties, comparing password for 
+ * authentication and handler for verifying JWTs.
+ * @summary A class defining a basic user model.
+ * @author Matthew Duffy <mattduffy@gmail.com>
+ * @module @mattduffy/users
+ */
 class User {
+	/**
+	 * Create a user model and populate the properties.
+	 * @param {Object} config - An object literal with properties to initialize new user.
+	 */
 	constructor( config ) {
 		this.objectId = ObjectId
 		this.dbClient = client 
@@ -35,6 +51,16 @@ class User {
 		this._description = config?.description || 'This is a user.'
 	}
 
+	/**
+	 * Static class method to compare a given password with a user's stored password.
+	 * Passwords are Bcrypt hashed and salted before they are saved in the database.
+	 * Bcrypt compare is used to compare.
+	 * @static 
+	 * @async
+	 * @param {string} email - Email address used to find existing user in the database.
+	 * @param {string} password - Cleartext password provided for comparison with hash.
+	 * @return {(boolean|Error}} - True/False result of comparison or throws Error.
+	 */
 	static async cmpPassword( email, password ) {
 		let userToComparePassword
 		let filter = { email: email }
@@ -59,6 +85,13 @@ class User {
 		return result
 	}
 
+	/**
+	 * Static class method to find user in the database, searching by email address.
+	 * @static
+	 * @async
+	 * @param {string} email - Email address to search by in the database.
+	 * @return {Promise(<User>|null)} - Instance of User with properties populated.
+	 */
 	static async findByEmail( email ) {
 		let foundUserByEmail
 		let filter = { email: email }
@@ -92,6 +125,13 @@ class User {
 		return foundUserByEmail
 	}
 
+	/**
+	 * Static class method to find user in the database, searching by ObjectId value.
+	 * @static
+	 * @async
+	 * @param {string} id - ObjectId value to search by in the database.
+	 * @return {Promise(<User>|null)} - Instance of User with properties populated.
+	 */
 	static async findById( id ) {
 		let foundUserById
 		try {
@@ -124,6 +164,10 @@ class User {
 		return foundUserById
 	}
 
+	/**
+	 * Stringifies the instance properties of the user, excluding and DB stuff.
+	 * @return {string} - A stringified version of a JSON literal of user properties.
+	 */
 	toString() {
 		return JSON.stringify({
 			_id: this._id,
@@ -140,6 +184,10 @@ class User {
 		}, null, 2 )
 	}
 
+	/**
+	 * Stringifies the instance properties of the user, excluding and DB stuff.
+	 * @return {string} - A stringified version of a JSON literal of user properties.
+	 */
 	serialize() {
 		let propertiesToSerialize = ['_type', '_first', '_last', '_name', '_email', '_hashedPassword', '_created_on', '_updated_on', '_description', '_jwts']
 		let that = this
@@ -147,10 +195,17 @@ class User {
 		return JSON.stringify( that, propertiesToSerialize )
 	}
 
+	/**
+	 * Returns an array of the minimum required properties to instantiate a new user.
+	 */
 	requiredProperties() {
 		return ['_first', '_last', '_email', '_hashedPassword', '_jwts', '_type']
 	}
 
+	/**
+	 * Sanity check to ensure all required properties have a value before saving the user.
+	 * @return {(boolean|Error)} - True or throws Error if missing any required properties.
+	 */
 	checkRequired() {
 		let missing = []
 		for(let key of this.requiredProperties()) {
@@ -164,6 +219,12 @@ class User {
 		}
 		return true
 	}
+
+	/**
+	 * Sanity check to ensure a valid database client connection object is present before
+	 * issuing any database queries.
+	 * @return {(boolean|Error)} - True or throws Error is client connection is not working.
+	 */
 	checkDB() {
 		let missing = []
 		if (!this.dbClient || this.dbClient === null || this.dbClient === 'undefined') {
@@ -182,6 +243,13 @@ class User {
 		return true
 	}
 
+	/**
+	 * Performs an update on an existing user.  All user instance properties are sent
+	 * back to the database during the update.  Update query requires the user to have
+	 * a valid ObjectId value.
+	 * @async
+	 * @return {Promise(<UpdateResult>|Error)} - MongoDB UpdateResult object or throws an Error.
+	 */
 	async update() {
 		// Check required properties are all non-null values.
 		// Throw an exception error back to the caller if not. 
@@ -227,7 +295,13 @@ class User {
 		return result
 	}
 
-	// async save( insertOrUpdate = 'insert') {
+	/**
+	 * Performs an insert of a new user.  All user instance properties are sent
+	 * to the database during the insert.  Insert query requires the user to have
+	 * a unique email address.
+	 * @async
+	 * @return {Promise(<User>|Error)} - A populated user instance or throws an Error.
+	 */
 	async save() {
 		// Check required properties are all non-null values.
 		// Throw an exception error back to the caller if not. 
@@ -280,21 +354,41 @@ class User {
 		return this 
 	}
 
+	/**
+	 * Id property setter.
+	 * @param {string} id - A value to be used as a valid ObjectId.
+	 */
 	set id( id ) {
 		this._id = id
 	}
+	/**
+	 * Id proptery getter.
+	 * @return {string} - Current value to be used as a valid ObjectId.
+	 */
 	get id() {
 		return this._id
 	}
+	/**
+	 * Password proptery setter.
+	 * @param {string} password - Value to be Bcyrpt hashed and salted.
+	 */
 	set password( password ) {
 		// Have to, for now, rely on synchronous hash method
 		// because it is awkward to use async/await promise here.
 		this._hashedPassword = bcrypt.hashSync(password, 10)
 	}
+	/**
+	 * Password property getter.
+	 * @return {string} - Bcrypt hashed and salted password value.
+	 */
 	get password() {
 		return this._hashedPassword
 	}
-	set firstName(first) {
+	/**
+	 * First name propety setter.
+	 * @param {string} first - User first name value.
+	 */
+	set firstName( first ) {
 		this._first = first
 		if (!this._name || this._name === null || this._name === 'undefined') {
 			if (this._last != null && this._last != 'undefined') {
@@ -302,9 +396,17 @@ class User {
 			}
 		}
 	}
+	/**
+	 * First name property getter.
+	 * @return {string} - User first name value.
+	 */
 	get firstName() {
 		return this._first
 	}
+	/**
+	 * Last name propety setter.
+	 * @param {string} last - User last name value.
+	 */
 	set lastName(last) {
 		this._last = last
 		if (!this._name || this._name === null || this._name === 'undefined') {
@@ -313,24 +415,52 @@ class User {
 			}
 		}
 	}
+	/**
+	 * Last name property getter.
+	 * @return {string} - User last name value.
+	 */
 	get lastName() {
 		return this._last
 	}
+	/**
+	 * Email address property setter.
+	 * @param {string} - User email address value.
+	 */
 	set email(email) {
 		this._email = email
 	}
+	/**
+	 * Email address property getter.
+	 * @return {string} - User email address value.
+	 */
 	get email() {
 		return this._email
 	}
+	/**
+	 * JWT object property setter.
+	 * @param {object} tokens - Object literal containing JW Tokens.
+	 */
 	set jwts(tokens) {
 		this._jwts = tokens
 	}
+	/**
+	 * JTW object property getter.
+	 * @return {Object} - User JWT object literal.
+	 */
 	get jwts() {
 		return this._jwts
 	}
+	/**
+	 * Full name property setter.
+	 * @param {string} newName - User full name property value.
+	 */
 	set name(newName) {
 		this._name = newName
 	}
+	/**
+	 * Full name property getter.
+	 * @return {string} - User full name value.
+	 */
 	get name() {
 		if (!this._name || this._name === '' || this._name === 'undefined') {
 			return `${this._first} ${this._last}`
@@ -338,9 +468,24 @@ class User {
 			return this._name
 		}
 	}
+	/**
+	 * Description property setter.
+	 * @param {string} description - User desciption value.
+	 */
+	set description( description ) {
+		this._description = description
+	}
+	/**
+	 * Description property getter.
+	 * @return {string} - User description property value.
+	 */
 	get description() {
 		return this._description
 	}
+	/**
+	 * User type property setter.
+	 * @param {string} userType - User type property value.
+	 */
 	set type(userType = 'User') {
 		if(userType.toLowerCase() === 'admin') {
 			this._type = 'Admin'
@@ -348,12 +493,24 @@ class User {
 			this._type = 'User'
 		}
 	}
+	/**
+	 * User type property getter.
+	 * @return {string} - User type property value.
+	 */
 	get type() {
 		return this._type
 	}
-	set db(db) {
+	/**
+	 * Database client property setter.
+	 * @param {MongoClient} db -  User db connection property value.
+	 */
+	set db( db ) {
 		this.dbClient = db
 	}
+	/**
+	 * Database client property getter.
+	 * @return {MongoClient} - User db connection proertery value.
+	 */
 	get db() {
 		return this.dbClient
 	}
