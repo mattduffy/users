@@ -52,6 +52,22 @@ class User {
 	}
 
 	/**
+	 * Static property used to compare with instanceof expressions.
+	 * @static
+	 * @type {string}
+	 */
+	static type = 'User'
+	/**
+	 * A static class method to check if a given user object is a User. 
+	 * @static
+	 * @param {object} obj - Object to check instanceof against.
+	 * @return {boolean} - True if object checked is instance of User class.
+	 */
+	static [Symbol.hasInstance]( obj ) {
+		if(obj.type === this.type) return true
+	}
+
+	/**
 	 * Static class method to compare a given password with a user's stored password.
 	 * Passwords are Bcrypt hashed and salted before they are saved in the database.
 	 * Bcrypt compare is used to compare.

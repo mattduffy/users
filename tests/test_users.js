@@ -80,7 +80,6 @@ const {client, genTokens} = require('./db_connection_test.js')
   }
   debug('AdminUser created properties object')
   debug('AdminUser calling Users.newAdminUser static method with mongodb client obj and user properties obj.')
-  // let basicUser = Users.newUser(client, properties)
   let adminUser = await Users.newAdminUser( adminProperties )
   debug('AdminUser AdminUser.toString: ', adminUser.toString())
   debug('AdminUser calling the save() method on the new user.');

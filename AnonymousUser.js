@@ -1,17 +1,17 @@
 /**
  * @module @mattduffy/users
  */
-const debug = require('debug')('users:AdminUser')
+const debug = require('debug')('users:AnonUser')
 const User = require('./User.js')
 
 /**
- * A class representing the Admin user model.  This class extends the basic User
+ * A class representing the Anonymous user model.  This class extends basic User
  * model.  Admin specific methods and properties are provided here.
- * @summary A class defining the admin user model.
+ * @summary A class defining the anonymous user model.
  * @author Matthew Duffy <mattduffy@gmail.com>
  * @module @mattduffy/users
  */
-class AdminUser extends User {
+class AnonUser extends User {
 	/**
 	 * Create an admin user model and populate the properties.
 	 * @param {Object} config - An object literal with properties to pass new user
@@ -19,8 +19,8 @@ class AdminUser extends User {
 	 */
 	constructor( config ) {
 		super( config )
-		this._type = 'Admin'
-		this._description = 'This ia an Admin level user.'
+		this._type = 'Anonymous'
+		this._description = 'This is an Anonymous user.'
 		debug(this._description)
 	}
 
@@ -29,22 +29,18 @@ class AdminUser extends User {
 	 * @static
 	 * @type {string}
 	 */
-	static type = 'Admin'
+	static type = 'Anonymous'
 	/**
-	 * A static class method to check if a given user object is an Admin User. 
+	 * A static class method to check if a given user object is a Anonymous User. 
 	 * @static
 	 * @param {object} obj - Object to check instanceof against.
-	 * @return {boolean} - True if object checked is instance of AdminUser class.
+	 * @return {boolean} - True if object checked is instance of AnonymousUser class.
 	 */
 	static [Symbol.hasInstance]( obj ) {
 		if(obj.type === this.type) return true
 	}
 
-	// toString() {
-	// 	// debug(super.email)
-	// 	return super.toString()
-	// }
 }
 
-module.exports = AdminUser
+module.exports = AnonUser
 
