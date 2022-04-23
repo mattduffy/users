@@ -23,27 +23,39 @@ function r(n) {return crypto.randomBytes(n).toString('hex')}
   debug('AdminUser adminUser.toString: ', adminUser.toString())
   debug('AdminUser calling save() method on the new user.');
   debug('AdmimUser: is instance of? ', adminUser instanceof AdminUser)
-  adminUser = await adminUser.save()
+  let saveResult = await adminUser.save()
 
   debug('AdminUser result of save() call.' )
-  debug('AdminUser result: %O', adminUser.toString() )
-  debug('AdminUser result.insertedId.toString: ', adminUser.id )
-  
+  debug('AdminUser result: %O', saveResult )
+  // debug('AdminUser result.insertedId.toString: ', adminUser.id )
+  debug('') 
   debug('***********************************************' )
   debug('***********************************************' )
   debug('AdminUser Can we update this newly created admin user now?' )
 
-  adminUser.toString()
-
+  let aString = adminUser.toString()
+  debug(aString)
   debug('AdminUser.email: ', adminUser.email)
   let email = adminUser.email
   email = email.slice(0, email.length - 4)
   email = email + r(2)
   adminUser.email = email
   debug('AdminUser.email new: ', email)
-  adminUser = await adminUser.update( )
-  debug('AdminUser updated admin user: ', adminUser.toString() )
-
+  let updateResult = await adminUser.update( )
+  debug('AdminUser result of update() call ')
+  debug('AdminUser result %O', updateResult?.value )
+  debug('') 
+  debug('***********************************************' )
+  debug('***********************************************' )
+  debug('AdminUser Can we list all existing user accounts?' )
+  debug('AdminUser is this still an admin user?', adminUser instanceof AdminUser)
+  debug('') 
+  try {
+    let userArray = await adminUser.listUsers()
+    debug('returned array of users: %O', userArray)
+  } catch (err) {
+    debug(err)
+  }
 
 
 })();

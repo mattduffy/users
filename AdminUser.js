@@ -5,6 +5,16 @@ const debug = require('debug')('users:AdminUser')
 const User = require('./User.js')
 
 /**
+ * @todo [ ] Create a test to authenticate user accounts base on permissions.
+ * @todo [ ] Create an Admin class.
+ * @todo [ ] Add admin method - listUsers
+ * @todo [ ] Add admin method - deleteUser
+ * @todo [ ] Add admin method - getUserType
+ * @todo [ ] Add admin methods - updgradUser / downgradeUser
+ * @todo [ ] Add admin methods - suspendUser / reinstateUser
+ */
+
+/**
  * A class representing the Admin user model.  This class extends the basic User
  * model.  Admin specific methods and properties are provided here.
  * @summary A class defining the admin user model.
@@ -25,6 +35,18 @@ class AdminUser extends User {
 	}
 
 	/**
+	 * Query the database for all existing user accounts.
+	 * @async
+	 * @return {(Promis<array>|Error)} - An array of users.
+	 */
+	async listUsers() {
+		debug('AdminUser.listUsers method.')
+		debug('this.dbDatabase: %s', this.dbDatabase)
+		debug('this.dbCollection: %s', this.dbCollection)
+		return new Array()
+	}
+
+	/**
 	 * Static property used to compare with instanceof expressions.
 	 * @static
 	 * @type {string}
@@ -40,10 +62,7 @@ class AdminUser extends User {
 		if(obj.type === this.type) return true
 	}
 
-	// toString() {
-	// 	// debug(super.email)
-	// 	return super.toString()
-	// }
+
 }
 
 module.exports = AdminUser

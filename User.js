@@ -8,6 +8,12 @@ const Database = 'mattmadethese'
 const Collection = 'users'
 
 /**
+ * @todo [ ] Create a test to authenticate user accounts base on permissions.
+ * @todo [ ] Integrate with the @mattduffy/mft package to add JWT functionality.
+ * @todo [ ] Add method - list albums
+ */
+
+/**
  * A class representing the basic user model.  This class contains the generic
  * properties and methods necessary to create a simple application user.  
  * Methods include saveing/updating properties, comparing password for 
@@ -364,10 +370,10 @@ class User {
 		} finally {
 			await this.dbClient.close()
 		}
-
-		debug('9: returning result')
-		// return result
-		return this 
+		debug('9: returning the newly created ObjectId value')
+		// return this._id
+		return result
+		// return this 
 	}
 
 	/**
