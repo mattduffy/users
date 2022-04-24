@@ -5,7 +5,8 @@ const AdminUser = require('../AdminUser.js')
 const {client, genTokens} = require('./db_connection_test.js')
 const crypto = require('crypto')
 
-function r(n) {return crypto.randomBytes(n).toString('hex')}
+function r(n) { return crypto.randomBytes(n).toString('hex') }
+function h() { if(Math.floor((Math.random()*10)) % 2 === 1) { return 'inactive' } else { return 'active' } }
 
 (async () => {
     
@@ -15,7 +16,8 @@ function r(n) {return crypto.randomBytes(n).toString('hex')}
     last_name: 'Admonsterator',
     email: 'arnold@admin.'+r(2),
     password: process.env.TEST_PASSWORD,
-    jwts: genTokens()
+    jwts: genTokens(),
+    status: h()
   };
   let adminUser = Users.newAdminUser(AdminProperties)
   debug('AdminUser created properties object')
@@ -50,12 +52,16 @@ function r(n) {return crypto.randomBytes(n).toString('hex')}
   debug('AdminUser Can we list all existing user accounts?' )
   debug('AdminUser is this still an admin user?', adminUser instanceof AdminUser)
   debug('') 
-  try {
-    let userArray = await adminUser.listUsers()
-    debug('returned array of users: %O', userArray)
-  } catch (err) {
-    debug(err)
+  let userArray = await adminUser.listUsers()
+  debug('Is result an array?', userArray instanceof Array)
+  let numUsers = userArray.length
+  debug('Length of result array: ', numUsers)
+  if (numUsers <= 1) {
+    debug('userArray (length 1 - no users returned)', userArray)
+  } else {
+    debug(userArray[0]?._id, userArray[0]?.users[0].email)
+    debug(userArray[1]?._id, userArray[1]?.users[0].email)
   }
 
-
+  
 })();

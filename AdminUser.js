@@ -35,18 +35,6 @@ class AdminUser extends User {
 	}
 
 	/**
-	 * Query the database for all existing user accounts.
-	 * @async
-	 * @return {(Promis<array>|Error)} - An array of users.
-	 */
-	async listUsers() {
-		debug('AdminUser.listUsers method.')
-		debug('this.dbDatabase: %s', this.dbDatabase)
-		debug('this.dbCollection: %s', this.dbCollection)
-		return new Array()
-	}
-
-	/**
 	 * Static property used to compare with instanceof expressions.
 	 * @static
 	 * @type {string}
@@ -60,6 +48,36 @@ class AdminUser extends User {
 	 */
 	static [Symbol.hasInstance]( obj ) {
 		if(obj.type === this.type) return true
+	}
+
+	/**
+	 * Query the database for all existing user accounts.
+	 * @async
+	 * @return {(Promis<array>|Error)} - An array of users.
+	 */
+	async listUsers() {
+		this.checkDB()
+		let userList;
+		try {
+			await this.dbClient.connect()
+			debug('1: Calling dbClient.connect()')
+			const database = this.dbClient.db(this.dbDatabase)
+			const users = database.collection(this.dbCollection)
+			const pipeline = [{
+				'$group': {
+					'_id': '$userStatus', 
+					'count': { '$sum': 1 },
+					'users': { '$push': { 'status': '$userStatus', 'id': '$_id', 'email': '$email', 'name': '$name' } }
+				} }]
+			userList = await users.aggregate(pipeline).toArray()
+		} catch (error) {
+			debug(error)
+		} finally {
+			await this.dbClient.close()
+		}
+
+		// userList = userList.toArray()
+		return userList
 	}
 
 

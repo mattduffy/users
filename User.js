@@ -55,6 +55,7 @@ class User {
 		this._created_on = config?.created_on || Date.now()
 		this._updated_on = config?.updated_on || null
 		this._description = config?.description || 'This is a user.'
+		this._userStatus = config?.status || 'inactive'
 	}
 
 	/**
@@ -221,7 +222,7 @@ class User {
 	 * Returns an array of the minimum required properties to instantiate a new user.
 	 */
 	requiredProperties() {
-		return ['_first', '_last', '_email', '_hashedPassword', '_jwts', '_type']
+		return ['_first', '_last', '_email', '_hashedPassword', '_jwts', '_type', '_userStatus']
 	}
 
 	/**
@@ -290,17 +291,18 @@ class User {
 			debug(`4: Setting update filter doc with ${this._id}`)
 			let filter = { _id: this.objectId(this._id) }
 			const update = {
-			$set: { 
-				type: this._type, 
-				first: this._first,
-				last: this._last,
-				email: this._email,
-				hashedPassword: this._hashedPassword,
-				jwts: this._jwts,
-				createdOn: this._created_on,
-				updatedOn: Date.now(),
-				description: this._description
-			}
+				$set: { 
+					type: this._type, 
+					first: this._first,
+					last: this._last,
+					email: this._email,
+					hashedPassword: this._hashedPassword,
+					jwts: this._jwts,
+					createdOn: this._created_on,
+					updatedOn: Date.now(),
+					description: this._description,
+					userStatus: this._userStatus
+				}
 			}
 			const options = { writeConcern: { w: 'majority' }, upsert: false, returnDocument: 'after', projection: { _id: 1, email: 1, first: 1 } }
 			debug('5: Calling findOneAndUpdate.')
@@ -351,7 +353,8 @@ class User {
 				jwts: this._jwts,
 				createdOn: this._created_on,
 				updatedOn: this._updated_on,
-				description: this._description
+				description: this._description,
+				userStatus: this._userStatus
 			}
 			const options = { writeConcern: { w: 'majority' } }
 			debug('6: Calling insertOne.')
@@ -359,7 +362,7 @@ class User {
 			debug('7: typeof result = ', typeof result)
 			if(result?.insertedId != null) {
 			// Get the newly creted ObjectId and assign it to this._id.
-			debug('ObjectId: ', result.insertedId.toString())
+			// debug('ObjectId: ', result.insertedId.toString())
 			this._id = result.insertedId.toString()
 			}
 		} catch (err) {
@@ -521,6 +524,20 @@ class User {
 	 */
 	get type() {
 		return this._type
+	}
+	/**
+	 * User status property setter.
+	 * @param {string} status - A value of either 'active' or 'inactive'.
+	 */
+	set status( status ) {
+		this._userStatus = status
+	}
+	/**
+	 * User status property getter.
+	 * @return {string} - Current status of user.
+	 */
+	get status() {
+		return this._userStatus
 	}
 	/**
 	 * Database client property setter.
