@@ -4,7 +4,9 @@
 - [x] Add documentation to package files.
 - [x] Add subclass defintions for different types of user accounts.
 - [ ] Integrate with the @mattduffy/mft package to add JWT functionality.
-- [ ] Create a test to authenticate user accounts base on permissions.
+- [ ] Integrate with the @mattduffy/albums package to add album functionality.
+- [ ] Create an AnonymousUser class.
+- [ ] Create an AdminUser class.
+- [ ] Create an CreatorUser class.
 - [ ] Publish as npm package.
-- [ ] ~~Implement generic user.keys(), user.values(), and user.entries() methods.~~
 - [ ] ...

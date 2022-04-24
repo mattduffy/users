@@ -5,6 +5,11 @@ const debug = require('debug')('users:AnonUser')
 const User = require('./User.js')
 
 /**
+ * @todo [ ] Create a test to authenticate user accounts base on permissions.
+ * @todo [ ] 
+ */
+
+/**
  * A class representing the Anonymous user model.  This class extends basic User
  * model.  Admin specific methods and properties are provided here.
  * @summary A class defining the anonymous user model.

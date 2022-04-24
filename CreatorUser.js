@@ -5,6 +5,17 @@ const debug = require('debug')('users:CreatorUser')
 const AnonymousUser = require('./AnonymousUser.js')
 
 /**
+ * @todo [ ] Create a test to authenticate user accounts base on permissions.
+ * @todo [ ] Create creator method - creeatAlbum.
+ * @todo [ ] Create creator method - deleteAlbum.
+ * @todo [ ] Create creator method - updateAlbum.
+ * @todo [ ] Create creator methods - hideAlbum / showAlbum.
+ * @todo [ ] Create creator methods - makeAlbumPrivate / makeAlbumPublic.
+ * @todo [ ] Create creator methods - makeAlbumShareLink / deleteAlbumShareLink.
+ * @todo [ ] 
+ */
+
+/**
  * A class representing the Creator user model.  This class extends Anonymous 
  * Use rmodel.  Creator specific methods and properties are provided here.
  * @summary A class defining the creator user model.
