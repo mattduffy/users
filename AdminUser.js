@@ -5,9 +5,9 @@ const debug = require('debug')('users:AdminUser')
 const User = require('./User.js')
 
 /**
+ * @todo [x] Create an Admin class.
+ * @todo [x] Add admin method - listUsers
  * @todo [ ] Create a test to authenticate user accounts base on permissions.
- * @todo [ ] Create an Admin class.
- * @todo [ ] Add admin method - listUsers
  * @todo [ ] Add admin method - deleteUser
  * @todo [ ] Add admin method - getUserType
  * @todo [ ] Add admin methods - updgradUser / downgradeUser
@@ -80,6 +80,40 @@ class AdminUser extends User {
 		return userList
 	}
 
+	/**
+	 * Delete a user from the database, identified by either id or email address.
+	 * @async
+	 * @param {string} id - String value of an ObjectId
+	 * @param {string} email = String value of an email address.
+	 * @return {Promis<boolean>} - True if delete is successful, false if not.
+	 */
+	async deleteUser( id = null, email = null ) {
+		if(id === null && email === null) {
+			throw new Error('Either an id or email address are required.')
+		}
+		this.checkDB()
+		let deleteSuccessful
+		let deleteFilter
+		try {
+			debug('1: Calling dbClient.connect()')
+			await this.dbClient.connect()
+			const database = this.dbClient.db(this.dbDatabase)
+			const users = database.collection(this.dbCollection)
+			if(id != null && id != '') {
+				deleteFilter = { _id: this.objectId(id) }
+			} 
+			if(email != null && email != '') {
+				deleteFilter = { email: email }
+			} 
+			deleteSuccessful = await users.deleteOne( deleteFilter )
+		} catch (error) {
+			debug(error)
+		} finally {
+			await this.dbClient.close()
+		}
+		// If no delete occurred: deleteSuccessful.deletedCount: 0 
+		return deleteSuccessful
+	}
 
 }
 

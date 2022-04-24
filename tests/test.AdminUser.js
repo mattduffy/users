@@ -62,6 +62,15 @@ function h() { if(Math.floor((Math.random()*10)) % 2 === 1) { return 'inactive' 
     debug(userArray[0]?._id, userArray[0]?.users[0].email)
     debug(userArray[1]?._id, userArray[1]?.users[0].email)
   }
+  debug('') 
+  debug('***********************************************' )
+  debug('***********************************************' )
+  debug('AdminUser Can we delete an existing user account?')
+  let userIdToDelete = userArray[0].users[0].id
+  let userEmailToDelete = userArray[0].users[0].email
+  debug('Attempting to delete %s (%s)', userIdToDelete, userEmailToDelete)
+  let deletedUser = await adminUser.deleteUser(userIdToDelete)
+  debug(deletedUser)
 
   
 })();
