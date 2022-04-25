@@ -72,5 +72,20 @@ function h() { if(Math.floor((Math.random()*10)) % 2 === 1) { return 'inactive' 
   let deletedUser = await adminUser.deleteUser(userIdToDelete)
   debug(deletedUser)
 
+   debug('') 
+  debug('***********************************************' )
+  debug('***********************************************' )
+  debug('AdminUser Can we list user accounts by type?')
+  let userListArray = await adminUser.getUsersByType('admin')
+  debug('Is result an array?', userListArray instanceof Array)
+  debug('Length of result array: ', userListArray.length)
+  // console.dir(userListArray)
+  userListArray.forEach(type => {
+    debug(`type: ${type._id}, count: ${type.count}`) 
+  })
+
+
+
+
   
 })();

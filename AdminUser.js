@@ -7,9 +7,9 @@ const User = require('./User.js')
 /**
  * @todo [x] Create an Admin class.
  * @todo [x] Add admin method - listUsers
+ * @todo [x] Add admin method - deleteUser
+ * @todo [x] Add admin method - getUsersByType
  * @todo [ ] Create a test to authenticate user accounts base on permissions.
- * @todo [ ] Add admin method - deleteUser
- * @todo [ ] Add admin method - getUserType
  * @todo [ ] Add admin methods - updgradUser / downgradeUser
  * @todo [ ] Add admin methods - suspendUser / reinstateUser
  */
@@ -30,7 +30,7 @@ class AdminUser extends User {
 	constructor( config ) {
 		super( config )
 		this._type = 'Admin'
-		this._description = 'This ia an Admin level user.'
+		this._description = 'This is an Admin level user.'
 		debug(this._description)
 	}
 
@@ -63,20 +63,70 @@ class AdminUser extends User {
 			debug('1: Calling dbClient.connect()')
 			const database = this.dbClient.db(this.dbDatabase)
 			const users = database.collection(this.dbCollection)
-			const pipeline = [{
+			const pipeline = []
+			const group = {
 				'$group': {
 					'_id': '$userStatus', 
 					'count': { '$sum': 1 },
-					'users': { '$push': { 'status': '$userStatus', 'id': '$_id', 'email': '$email', 'name': '$name' } }
-				} }]
+					'users': { '$push': { 'id': '$_id', 'email': '$email', 'name': '$first' } }
+				} } 
+			pipeline.push(group)
 			userList = await users.aggregate(pipeline).toArray()
 		} catch (error) {
 			debug(error)
 		} finally {
 			await this.dbClient.close()
 		}
-
 		// userList = userList.toArray()
+		return userList
+	}
+
+	/**
+	 * Query the database for all users by type.
+	 * @async
+	 * @param {string} type - User type to query by.
+	 * @return {(Promis<array>|Error)} - An array of users.
+	 */
+	async getUsersByType( type = 'all' ) {
+		debug(`What is going on with the <type> param? ${type}`)
+		if(type === null || type === '' || type === 'undefined') {
+			throw new Error('A valid user type was not supplied.')
+		}
+		this.checkDB()
+		let userList
+		let match
+		try {
+			await this.dbClient.connect()
+			const database = this.dbClient.db(this.dbDatabase)
+			const users = database.collection(this.dbCollection)
+			const pipeline = []
+			if(/all/i.test(type)) {
+				// match = { '$match': { 'type': { '$exists': true } } }
+				match = { '$match': { type: { '$exists': true } } }
+			} else {
+				let userType = type[0].toUpperCase()+type.slice(1)
+				match = { '$match': { type: userType } }
+			}
+			// debug('match: %O', match)
+			pipeline.push(match)
+			let group = {
+					'$group': {
+						_id: '$type',
+						count: { '$sum': 1 },
+						users: { '$push': { id: '$_id', email: '$email', name: '$first', status: '$userStatus' } }
+					}
+				}
+			// debug('group: %O', group)
+			pipeline.push(group)
+			// debug('pipeline: %O', pipeline, { depth: null })
+			// console.dir(pipeline,  { depth: null })
+			userList = await users.aggregate(pipeline).toArray()
+			console.dir(userList)
+		} catch (error) {
+			debug(error)
+		} finally {
+			await this.dbClient.close()
+		}
 		return userList
 	}
 
