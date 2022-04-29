@@ -1,4 +1,5 @@
 # x.509 keys for testing
+keys/*
 *.pem
 *.crt
 *.cert

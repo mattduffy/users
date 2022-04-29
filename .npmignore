@@ -5,6 +5,11 @@
 .npmrc
 .lock-wscript
 *.env
+keys/*
+*.pem
+*.crt
+*.cert
+*.csr
 npm-debug.log
 node_modules
 package-lock.json
