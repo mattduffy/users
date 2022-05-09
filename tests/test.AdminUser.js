@@ -1,3 +1,6 @@
+/**
+ *
+ */
 require('dotenv').config({ path: './.env' })
 const debug = require('debug')('users:test.AdminUser')
 const Users = require('../Users.js')

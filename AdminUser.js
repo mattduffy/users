@@ -60,7 +60,7 @@ class AdminUser extends User {
 		let userList;
 		try {
 			await this.dbClient.connect()
-			debug('1: Calling dbClient.connect()')
+			debug('1: Calling dbClient.connect method ')
 			const database = this.dbClient.db(this.dbDatabase)
 			const users = database.collection(this.dbCollection)
 			const pipeline = []
@@ -100,7 +100,7 @@ class AdminUser extends User {
 			const database = this.dbClient.db(this.dbDatabase)
 			const users = database.collection(this.dbCollection)
 			const pipeline = []
-			if(/all/i.test(type)) {
+			if(/all/i.test(type) ) {
 				// match = { '$match': { 'type': { '$exists': true } } }
 				match = { '$match': { type: { '$exists': true } } }
 			} else {
