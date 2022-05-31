@@ -9,9 +9,9 @@ const User = require('./User.js')
  * @todo [x] Add admin method - listUsers
  * @todo [x] Add admin method - deleteUser
  * @todo [x] Add admin method - getUsersByType
- * @todo [ ] Create a test to authenticate user accounts base on permissions.
- * @todo [ ] Add admin methods - updgradUser / downgradeUser
+ * @todo [ ] Add admin methods - upgradUser / downgradeUser
  * @todo [ ] Add admin methods - suspendUser / reinstateUser
+ * @todo [ ] Create a test to authenticate user accounts base on permissions.
  */
 
 /**
@@ -32,6 +32,12 @@ class AdminUser extends User {
 		this._type = 'Admin'
 		this._description = 'This is an Admin level user.'
 		debug(this._description)
+		this._userTypes = [
+			{ type: 'User', description: 'This is a User level user.' },
+			{ type: 'Anonymous', description: 'This is an Anonymous level user.' },
+			{ type: 'Creator', description: 'This is an Creator level user.' },
+			{ type: 'Admin', description: 'This is an Admin level user.' }
+		]
 	}
 
 	/**
@@ -48,6 +54,36 @@ class AdminUser extends User {
 	 */
 	static [Symbol.hasInstance]( obj ) {
 		if(obj.type === this.type) return true
+	}
+
+	/**
+	 * Upgrade a user account to the next higher privilege level.
+	 * @static
+	 * @param {string} id - String value of ObjectId of the user to upgrade.
+	 * @return {boolean} - True if successful, false otherwise.
+	 */
+	static async upgradeUser( id = null ) {
+		let wasSuccessful = false
+		if ( id === null ) {
+			throw new Error('A valid user id in the form of an ObjectId must be provided.')
+		}
+		this.checkDB()
+		try {
+			await this.dbClient.connect()
+			debug('1: Calling dbClient.connect method')
+			const database = this.dbClient.db(this.dbDatabase)
+			const users = database.collection(this.dbCollection)
+		  const filter = { _id: this.objectId( id ) }
+			const options = {}
+			const userToUpgrade = users.findOne( ... )
+
+
+		} catch (error) {
+			debug(error)
+		} finally {
+			await this.dbClient.close()
+		}
+		return wasSuccessful
 	}
 
 	/**

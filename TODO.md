@@ -9,4 +9,5 @@
 - [ ] Create an AdminUser class.
 - [ ] Create an CreatorUser class.
 - [ ] Publish as npm package.
+- [ ] Convert package files from CommonJS sytax to ES Modules.
 - [ ] ...
