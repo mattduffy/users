@@ -4,7 +4,7 @@
 import Debug from 'debug'
 const debug = Debug('users:AdminUser')
 //const User = require('./User.js')
-import User from './User.js'
+import { User } from './User.js'
 
 /**
  * @todo [x] Create an Admin class.
@@ -77,7 +77,7 @@ class AdminUser extends User {
 			const users = database.collection(this.dbCollection)
 		  const filter = { _id: this.objectId( id ) }
 			const options = {}
-			const userToUpgrade = users.findOne( ... )
+			const userToUpgrade = users.findOne({_id: ObjectId(id)})
 
 
 		} catch (error) {
@@ -206,5 +206,3 @@ class AdminUser extends User {
 }
 
 export { AdminUser }
-//module.exports = AdminUser
-

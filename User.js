@@ -1,11 +1,12 @@
 /**
  * @module @mattduffy/users
  */
-import Debug  from 'debug'
-const debug = Debug('users:User')
-const bcrypt = require('bcrypt')
-//const { client, ObjectId } = require('./mongoclient.js')
+import bcrypt from 'bcrypt'
 import { client, ObjectId } from './mongoclient.js'
+import Debug from 'debug'
+const debug = Debug('users:User')
+// const bcrypt = require('bcrypt')
+// const { client, ObjectId } = require('./mongoclient.js')
 const Database = 'mattmadethese'
 const Collection = 'users'
 
@@ -558,4 +559,6 @@ class User {
 }
 
 //module.exports = User
-export User
+export {
+	User
+}

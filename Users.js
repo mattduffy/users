@@ -6,8 +6,8 @@
 
 import { fileURLToPath } from 'node:url'
 import Debug from 'debug'
-import User from './User.js'
-import AdminUser from './AdminUser.js'
+import { User } from './User.js'
+import { AdminUser } from './AdminUser.js'
 
 const debug = Debug('users:Users')
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

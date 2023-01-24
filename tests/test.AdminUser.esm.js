@@ -5,8 +5,8 @@
 import crypto from 'node:crypto'
 import * as Dotenv from 'dotenv'
 import Debug from 'debug'
-import Users from '../Users.js'
-import AdminUser from '../AdminUser.js'
+import * as Users from '../Users.js'
+import { AdminUser } from '../AdminUser.js'
 import { client, genTokens } from './db_connection_test.js'
 
 Dotenv.config({ path: './.env' })

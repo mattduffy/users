@@ -1,16 +1,17 @@
-//require('dotenv').config({ path: './tests/.env' })
-import dotenv from 'dotenv'
-dotenv.config( { path: './tests/.env' } )
+// require('dotenv').config({ path: './tests/.env' })
+// const fs = require('fs')
+// const jwt = require('jsonwebtoken')
+// const crypto = require('crypto')
+// const bcrypt = require('bcrypt')
+// const { MongoClient } = require('mongodb')
+import * as Dotenv from 'dotenv'
 import { MongoClient } from 'mongodb'
-//const { MongoClient } = require('mongodb')
 import bcrypt from 'bcrypt'
-//const bcrypt = require('bcrypt')
 import crypto from 'node:crypto'
-//const crypto = require('crypto')
 import jwt from 'jsonwebtoken'
-//const jwt = require('jsonwebtoken')
 import fs from 'node:fs'
-//const fs = require('fs')
+
+Dotenv.config({ path: './tests/.env' })
 
 const clientDn = process.env.MONGODB_CLIENT_DN
 const dbHost = process.env.MONGODB_HOST
@@ -27,7 +28,28 @@ const uri = `mongodb://${clientDn}@${dbHost}:${dbPort1},${dbHost}:${dbPort2},${d
 
 const client = new MongoClient(uri)
 
-async function run () {
+function gID() {
+  const arr = []
+  for (let i = 0; i <= 6; i += 1) {
+    arr.push(crypto.randomBytes(2).toString('hex'))
+  }
+  return arr.join('-')
+}
+
+function gT() {
+  const secret = fs.readFileSync(process.env.JWT_PRIKEY)
+  const toptions = {
+    algorithm: 'HS256', expiresIn: '30m', issuer: 'mattmadethese.com', subject: 'matt', audience: 'access', jwtid: gID(),
+  }
+  const roptions = {
+    algorithm: 'HS256', expiresIn: '5m', issuer: 'mattmadethese.com', subject: 'matt', audience: 'refresh', jwtid: gID(),
+  }
+  const token = jwt.sign({ email: 'matt@mattmail.email' }, secret, toptions)
+  const refresh = jwt.sign({ email: 'matt@mattmail.email' }, secret, roptions)
+  return { token, refresh }
+}
+
+async function run() {
   try {
     await client.connect()
     const database = client.db('mattmadethese')
@@ -47,13 +69,13 @@ async function run () {
 
 // run().catch(console.dir)
 
-async function insertOne () {
+async function insertOne() {
   const doc = {
     uid: gID(),
     name: 'Matt',
     email: 'matt@mattmail.email',
     password: await bcrypt.hash('9@zzw0rd', 10),
-    jwt: gT()
+    jwt: gT(),
   }
   console.log(doc)
   try {
@@ -68,35 +90,11 @@ async function insertOne () {
     await client.close()
   }
 }
-// insertOne().catch(console.dir)
-
-function gT () {
-  const secret = fs.readFileSync(process.env.JWT_PRIKEY)
-  const toptions = { algorithm: 'HS256', expiresIn: '30m', issuer: 'mattmadethese.com', subject: 'matt', audience: 'access', jwtid: gID() }
-  const roptions = { algorithm: 'HS256', expiresIn: '5m', issuer: 'mattmadethese.com', subject: 'matt', audience: 'refresh', jwtid: gID() }
-  const token = jwt.sign({ email: 'matt@mattmail.email' }, secret, toptions)
-  const refresh = jwt.sign({ email: 'matt@mattmail.email' }, secret, roptions)
-  return { token, refresh }
-}
-
-function gID () {
-  const arr = []
-  for (let i = 0; i <= 6; i++) {
-    arr.push(crypto.randomBytes(2).toString('hex'))
-  }
-  return arr.join('-')
-}
 
 export {
   client,
   run,
   insertOne,
-  gT as genTokens
+  gID,
+  gT as genTokens,
 }
-//module.exports = {
-//  client,
-//  run,
-//  insertOne,
-//  genTokens: gT
-//}
-

@@ -1,5 +1,7 @@
-require('dotenv').config({ path: './tests/.env' })
-const { MongoClient, ObjectId } = require('mongodb')
+import * as Dotenv from 'dotenv'
+import { MongoClient, ObjectId } from 'mongodb'
+
+Dotenv.config({ path: './tests/.env' })
 
 const clientDn = process.env.MONGODB_CLIENT_DN
 const dbHost = process.env.MONGODB_HOST
@@ -14,7 +16,7 @@ const uri = `mongodb://${clientDn}@${dbHost}:${dbPort1},${dbHost}:${dbPort2},${d
 
 const client = new MongoClient(uri)
 
-module.exports = {
+export {
   client,
   ObjectId,
 }
