@@ -6,12 +6,23 @@
  * @exports @mattduffy/users
  * @author Matthew Duffy <mattduffy@gmail.com>
  */
-if(!module.parent) {
-	require('dotenv').config({ path: 'tests/.env', debug: process.env.DEBUG });
+// This is not compatible with ESM-style imports.  Need to use esm dynamic import()
+// because module.parent is only populated by require().
+//if(!module.parent) {
+//	require('dotenv').config({ path: 'tests/.env', debug: process.env.DEBUG });
+//}
+if (process.argv[1] === readFile(fileURLToPath(import.meta.url))) {
+	/* eslint-disable-next-line  */
+	const dotenv = await import('dotenv')
+	dotenv.config({ path: 'tests/.env', debug: process.env.DEBUG })
 }
-const debug = require('debug')('users:index')
-const User = require('./User.js')
-const AdminUser = require('./AdminUser.js')
+//const debug = require('debug')('users:index')
+import Debug from 'debug'
+const debug = Debug('users:index')
+//const User = require('./User.js')
+import User from './User.js'
+//const AdminUser = require('./AdminUser.js')
+import AdminUser from './AdminUser.js'
 
 /**
  * 
@@ -70,5 +81,6 @@ class Users {
 	}
 }
 
-module.exports = ( mongodb  ) => { return new Users( mongodb ) }
+//module.exports = ( mongodb  ) => { return new Users( mongodb ) }
+export default ( mongodb ) => { return new Users( mongodb ) }
 

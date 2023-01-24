@@ -15,6 +15,6 @@ const uri = `mongodb://${clientDn}@${dbHost}:${dbPort1},${dbHost}:${dbPort2},${d
 const client = new MongoClient(uri)
 
 module.exports = {
-	client,
-	ObjectId
+  client,
+  ObjectId,
 }

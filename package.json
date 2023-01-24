@@ -2,7 +2,19 @@
   "name": "@mattduffy/users",
   "version": "0.0.1",
   "description": "A module to create app user types.",
-  "main": "Users.js",
+  "main": "Users.cjs",
+  "type": "module",
+  "exports": {
+    ".": {
+      "require": "Users.cjs",
+      "import": "CreatorUser.js"
+    },
+    "package.json": "./package.json",
+    "./tests": "./tests/*.js"
+  },
+  "engines": {
+    "node": ">=14.16"
+  },
   "scripts": {
     "test": "DEBUG=users:* node tests/test_users.js"
   },
@@ -16,15 +28,16 @@
   "author": "mattduffy@gmail.com",
   "license": "ISC",
   "dependencies": {
-    "assert": "2.0.0"
+    "assert": "2.0.0",
+    "bcrypt": "^5.0.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongodb": "^4.5.0",
+    "dotenv": "^16.0.0",
+    "debug": "^4.3.4"
   },
   "devDependencies": {
-    "bcrypt": "^5.0.1",
-    "debug": "^4.3.4",
-    "dotenv": "^16.0.0",
-    "eslint": "^8.12.0",
-    "eslint-plugin-import": "^2.26.0",
-    "jsonwebtoken": "^8.5.1",
-    "mongodb": "^4.5.0"
+    "eslint": "8.29.0",
+    "eslint-config-airbnb-base": "15.0.0",
+    "eslint-plugin-import": "2.26.0"
   }
 }

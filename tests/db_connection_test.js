@@ -1,9 +1,16 @@
-require('dotenv').config({ path: './tests/.env' })
-const { MongoClient } = require('mongodb')
-const bcrypt = require('bcrypt')
-const crypto = require('crypto')
-const jwt = require('jsonwebtoken')
-const fs = require('fs')
+//require('dotenv').config({ path: './tests/.env' })
+import dotenv from 'dotenv'
+dotenv.config( { path: './tests/.env' } )
+import { MongoClient } from 'mongodb'
+//const { MongoClient } = require('mongodb')
+import bcrypt from 'bcrypt'
+//const bcrypt = require('bcrypt')
+import crypto from 'node:crypto'
+//const crypto = require('crypto')
+import jwt from 'jsonwebtoken'
+//const jwt = require('jsonwebtoken')
+import fs from 'node:fs'
+//const fs = require('fs')
 
 const clientDn = process.env.MONGODB_CLIENT_DN
 const dbHost = process.env.MONGODB_HOST
@@ -80,9 +87,16 @@ function gID () {
   return arr.join('-')
 }
 
-module.exports = {
+export {
   client,
   run,
   insertOne,
-  genTokens: gT
+  gT as genTokens
 }
+//module.exports = {
+//  client,
+//  run,
+//  insertOne,
+//  genTokens: gT
+//}
+

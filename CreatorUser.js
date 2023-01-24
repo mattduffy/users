@@ -1,8 +1,10 @@
 /**
  * @module @mattduffy/users
  */
-const debug = require('debug')('users:CreatorUser')
-const AnonymousUser = require('./AnonymousUser.js')
+import Debug from 'debug'
+const debug = Debug('users:CreatorUser')
+//const AnonymousUser = require('./AnonymousUser.js')
+import AnonymouseUser from './AnonymousUser.js'
 
 /**
  * @todo [ ] Create a test to authenticate user accounts base on permissions.
@@ -53,5 +55,6 @@ class CreatorUser extends AnonymousUser {
 
 }
 
-module.exports = CreatorUser
+export { CreatorUser }
+//module.exports = CreatorUser
 

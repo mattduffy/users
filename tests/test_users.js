@@ -1,7 +1,13 @@
-require('dotenv').config()
-const debug = require('debug')('users:test_users')
-const Users = require('../Users.js')
-const {client, genTokens} = require('./db_connection_test.js')
+//require('dotenv').config()
+import dotenv from 'dotenv'
+dotenv.config()
+//const debug = require('debug')('users:test_users')
+import Debug from 'debug'
+const debug = Debug('users:test_users')
+//const Users = require('../Users.js')
+import Users from '../Users.js'
+//const {client, genTokens} = require('./db_connection_test.js')
+import { client, getTokens } from './db_connection_test.js'
 
 ;(async () => {
   debug('Starting basic user account tests...');

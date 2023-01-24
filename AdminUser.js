@@ -1,8 +1,10 @@
 /**
  * @module @mattduffy/users
  */
-const debug = require('debug')('users:AdminUser')
-const User = require('./User.js')
+import Debug from 'debug'
+const debug = Debug('users:AdminUser')
+//const User = require('./User.js')
+import User from './User.js'
 
 /**
  * @todo [x] Create an Admin class.
@@ -89,7 +91,7 @@ class AdminUser extends User {
 	/**
 	 * Query the database for all existing user accounts.
 	 * @async
-	 * @return {(Promis<array>|Error)} - An array of users.
+	 * @return {(Promise<array>|Error)} - An array of users.
 	 */
 	async listUsers() {
 		this.checkDB()
@@ -121,7 +123,7 @@ class AdminUser extends User {
 	 * Query the database for all users by type.
 	 * @async
 	 * @param {string} type - User type to query by.
-	 * @return {(Promis<array>|Error)} - An array of users.
+	 * @return {(Promise<array>|Error)} - An array of users.
 	 */
 	async getUsersByType( type = 'all' ) {
 		debug(`What is going on with the <type> param? ${type}`)
@@ -171,7 +173,7 @@ class AdminUser extends User {
 	 * @async
 	 * @param {string} id - String value of an ObjectId
 	 * @param {string} email = String value of an email address.
-	 * @return {Promis<boolean>} - True if delete is successful, false if not.
+	 * @return {Promise<boolean>} - True if delete is successful, false if not.
 	 */
 	async deleteUser( id = null, email = null ) {
 		if(id === null && email === null) {
@@ -203,5 +205,6 @@ class AdminUser extends User {
 
 }
 
-module.exports = AdminUser
+export { AdminUser }
+//module.exports = AdminUser
 
