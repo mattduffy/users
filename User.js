@@ -207,7 +207,7 @@ class User {
 			description: this._description,
 			created_on: this._created_on,
 			updated_on: this._updated_on
-		}, null, 2 )
+		}, null, 2)
 	}
 
 	/**
@@ -319,7 +319,8 @@ class User {
 			await this.dbClient.close()
 		}
 		debug('7: returning result')
-		return result
+		// return result
+		return this
 	}
 
 	/**
@@ -378,8 +379,8 @@ class User {
 		}
 		debug('9: returning the newly created ObjectId value')
 		// return this._id
-		return result
-		// return this 
+		// return result
+		return this 
 	}
 
 	/**
