@@ -1,7 +1,7 @@
-import * as Dotenv from 'dotenv'
 import { MongoClient, ObjectId } from 'mongodb'
+import * as Dotenv from 'dotenv'
 
-Dotenv.config({ path: './tests/.env' })
+Dotenv.config({ path: './config/mongodb.env', debug: true })
 
 const clientDn = process.env.MONGODB_CLIENT_DN
 const dbHost = process.env.MONGODB_HOST

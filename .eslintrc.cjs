@@ -7,16 +7,18 @@ module.exports = {
     'airbnb-base',
   ],
   parserOptions: {
-    ecmaVersion: 12,
+    ecmaVersion: 'latest',
     sourceType: 'module',
   },
   rules: {
     semi: ['error', 'never'],
-    'no-return-await': 'off',
     'no-console': 'off',
     'no-underscore-dangle': 'off',
+    'import/extensions': 'off',
     'import/prefer-default-export': 'off',
     'max-len': 'off',
-    'import/extensions': 'off',
+    'new-cap': 'off',
+    'no-return-await': 'off',
+    'object-curly-newline': 'off',
   },
 }

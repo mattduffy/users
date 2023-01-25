@@ -2,31 +2,34 @@
   "name": "@mattduffy/users",
   "version": "0.0.1",
   "description": "A module to create app user types.",
+  "author": "mattduffy@gmail.com",
+  "license": "ISC",
   "main": "Users.cjs",
   "type": "module",
-  "exports": {
-    ".": {
-      "require": "Users.cjs",
-      "import": "CreatorUser.js"
-    },
-    "package.json": "./package.json",
-    "./tests": "./tests/*.js"
-  },
-  "engines": {
-    "node": ">=14.16"
-  },
-  "scripts": {
-    "test": "DEBUG=users:* node tests/test_users.js"
-  },
+  "homepage": "https://github.com/mattduffy/users#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mattduffy/users.git"
   },
-  "keywords": [
-    "user-type"
-  ],
-  "author": "mattduffy@gmail.com",
-  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mattduffy/users/issues"
+  },
+  "exports": {
+    "import": "./src/index.js",
+    "package.json": "./package.json",
+    "./tests": "./tests/test.*.js"
+  },
+  "scripts": {
+    "test": "DEBUG=users:* node tests/test_users.js"
+  },
+  "engines": {
+    "node": ">=14.16"
+  },
+ "devDependencies": {
+    "eslint": "8.29.0",
+    "eslint-config-airbnb-base": "15.0.0",
+    "eslint-plugin-import": "2.26.0"
+  },
   "dependencies": {
     "assert": "2.0.0",
     "bcrypt": "^5.0.1",
@@ -35,9 +38,8 @@
     "dotenv": "^16.0.0",
     "debug": "^4.3.4"
   },
-  "devDependencies": {
-    "eslint": "8.29.0",
-    "eslint-config-airbnb-base": "15.0.0",
-    "eslint-plugin-import": "2.26.0"
-  }
+  "keywords": [
+    "user-type",
+    "user models"
+  ]
 }

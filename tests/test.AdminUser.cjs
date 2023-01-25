@@ -1,22 +1,12 @@
 /**
  *
  */
-
-import crypto from 'node:crypto'
-import * as Dotenv from 'dotenv'
-import Debug from 'debug'
-import * as Users from '../Users.js'
-import { AdminUser } from '../AdminUser.js'
-import { client, genTokens } from './db_connection_test.js'
-
-Dotenv.config({ path: './.env' })
-const debug = Debug('users:test.AdminUser')
-// require('dotenv').config({ path: './.env' })
-// const crypto = require('crypto')
-// const debug = require('debug')('users:test.AdminUser')
-// const Users = require('../Users.js')
-// const AdminUser = require('../AdminUser.js')
-// const {client, genTokens} = require('./db_connection_test.js')
+require('dotenv').config({ path: 'config/.env' })
+const debug = require('debug')('users:test.AdminUser')
+const Users = require('../src/Users.js')
+const AdminUser = require('../src/AdminUser.js')
+const { client, genTokens } = require('./db_connection_test.js')
+const crypto = require('crypto')
 
 function r(n) { return crypto.randomBytes(n).toString('hex') }
 function h() { if (Math.floor((Math.random() * 10)) % 2 === 1) { return 'inactive' } return 'active' }
@@ -52,7 +42,7 @@ function h() { if (Math.floor((Math.random() * 10)) % 2 === 1) { return 'inactiv
   debug('AdminUser.email: ', adminUser.email)
   let { email } = adminUser
   email = email.slice(0, email.length - 4)
-  email += r(2)
+  email = `${email}${r(2)}`
   adminUser.email = email
   debug('AdminUser.email new: ', email)
   const updateResult = await adminUser.update()

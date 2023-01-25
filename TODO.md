@@ -3,11 +3,11 @@
 - [x] Create a test to identify user accounts.
 - [x] Add documentation to package files.
 - [x] Add subclass defintions for different types of user accounts.
+- [x] Convert package files from CommonJS sytax to ES Modules.
+- [ ] Create an AnonymousUser class.
+- [x] Create an AdminUser class.
+- [x] Create an CreatorUser class.
 - [ ] Integrate with the @mattduffy/mft package to add JWT functionality.
 - [ ] Integrate with the @mattduffy/albums package to add album functionality.
-- [ ] Create an AnonymousUser class.
-- [ ] Create an AdminUser class.
-- [ ] Create an CreatorUser class.
 - [ ] Publish as npm package.
-- [ ] Convert package files from CommonJS sytax to ES Modules.
 - [ ] ...

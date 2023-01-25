@@ -1,17 +1,14 @@
-// require('dotenv').config({ path: './tests/.env' })
-// const fs = require('fs')
-// const jwt = require('jsonwebtoken')
-// const crypto = require('crypto')
-// const bcrypt = require('bcrypt')
-// const { MongoClient } = require('mongodb')
 import * as Dotenv from 'dotenv'
 import { MongoClient } from 'mongodb'
 import bcrypt from 'bcrypt'
 import crypto from 'node:crypto'
 import jwt from 'jsonwebtoken'
 import fs from 'node:fs'
+import Debug from 'debug'
 
-Dotenv.config({ path: './tests/.env' })
+const debug = Debug('users:db_conn_test')
+
+Dotenv.config({ path: './config/.env' })
 
 const clientDn = process.env.MONGODB_CLIENT_DN
 const dbHost = process.env.MONGODB_HOST
@@ -24,7 +21,7 @@ const clientPEMFile = encodeURIComponent(process.env.MONGODB_CLIENT_KEY)
 const dbCAKeyFile = encodeURIComponent(process.env.MONGODB_CAKEYFILE)
 const uri = `mongodb://${clientDn}@${dbHost}:${dbPort1},${dbHost}:${dbPort2},${dbHost}:${dbPort3}/mattmadethese?replicaSet=myReplicaSet&authMechanism=${authMechanism}&tls=true&tlsCertificateKeyFile=${clientPEMFile}&tlsCAFile=${dbCAKeyFile}&authSource=${authSource}`
 
-// console.log(uri)
+// debug(uri)
 
 const client = new MongoClient(uri)
 
@@ -56,9 +53,9 @@ async function run() {
     const collection = database.collection('test')
 
     const cursor = await collection.find()
-    // console.log(cursor)
+    // debug(cursor)
     if (collection.estimatedDocumentCount === 0) {
-      console.log('no documents found')
+      debug('no documents found')
     }
     // await cursor.forEach(console.dir)
     return await cursor
@@ -77,13 +74,13 @@ async function insertOne() {
     password: await bcrypt.hash('9@zzw0rd', 10),
     jwt: gT(),
   }
-  console.log(doc)
+  debug(doc)
   try {
     await client.connect()
     const database = client.db('mattmadethese')
     const collection = database.collection('test')
     const result = await collection.insertOne(doc)
-    console.log(`document inserted into test collection with _id: ${result.insertedId}`)
+    debug(`document inserted into test collection with _id: ${result.insertedId}`)
   } catch (e) {
     console.error(e)
   } finally {

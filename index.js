@@ -8,18 +8,15 @@
  */
 // This is not compatible with ESM-style imports.  Need to use esm dynamic import()
 // because module.parent is only populated by require().
-//if(!module.parent) {
-//	require('dotenv').config({ path: 'tests/.env', debug: process.env.DEBUG });
-//}
 if (process.argv[1] === readFile(fileURLToPath(import.meta.url))) {
 	/* eslint-disable-next-line  */
 	const dotenv = await import('dotenv')
-	dotenv.config({ path: 'tests/.env', debug: process.env.DEBUG })
+	dotenv.config({ path: 'config/.env', debug: process.env.DEBUG })
 }
+import { User } from '../src/User.js'
+import { AdminUser } from '../src/AdminUser.js'
 import Debug from 'debug'
 const debug = Debug('users:index')
-import { User } from './User.js'
-import { AdminUser } from './AdminUser.js'
 
 /**
  * 

@@ -1,11 +1,8 @@
 import crypto from 'node:crypto'
 import Debug from 'debug'
-import * as Users from '../Users.js'
-// import { client, genTokens } from './db_connection_test.js'
-import { genTokens } from './db_connection_test.js'
+import * as Users from '../src/Users.js'
+import { client, genTokens } from './db_connection_test.js'
 
-// import * as Dotenv from 'dotenv'
-// Dotenv.config({ path: 'tests/.env', debug: false })
 const debug = Debug('users:test_users');
 
 (async () => {

@@ -5,6 +5,8 @@
 .npmrc
 .lock-wscript
 *.env
+tmp/*
+config/*
 keys/*
 *.pem
 *.crt
