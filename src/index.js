@@ -7,11 +7,20 @@
  * @author Matthew Duffy <mattduffy@gmail.com>
  * @file tests/index.js
  */
+/**
+ * Usage:
+ * import Users from '@mattduffy/index.js'
+ * const users = Users(<mongoclient>)
+ * let matt = users.getByEmail('matt@mattmail.email.602b')
+ * matt.sessionId = '1401b6e7-307e-4864-bfe9-2e2b99a9d61d'
+ * matt = await matt.update()
+ */
+
 import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
 import Debug from 'debug'
-import { User } from './src/User.js'
-import { AdminUser } from './src/AdminUser.js'
+import { User } from './User.js'
+import { AdminUser } from './AdminUser.js'
 
 const debug = Debug('users:index')
 

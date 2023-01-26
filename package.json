@@ -15,8 +15,9 @@
     "url": "https://github.com/mattduffy/users/issues"
   },
   "exports": {
-    "import": "./src/index.js",
-    "package.json": "./package.json",
+    ".": "./src/index.js",
+    "./mongoclient": "./src/mongoclient.js",
+    "./package.json": "./package.json",
     "./tests": "./tests/test.*.js"
   },
   "scripts": {
