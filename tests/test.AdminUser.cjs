@@ -1,12 +1,13 @@
 /**
- *
+ * @file ./tests/test.AdminUser.cjs
  */
+
 require('dotenv').config({ path: 'config/.env' })
 const debug = require('debug')('users:test.AdminUser')
+const crypto = require('crypto')
 const Users = require('../src/Users.js')
 const AdminUser = require('../src/AdminUser.js')
 const { client, genTokens } = require('./db_connection_test.js')
-const crypto = require('crypto')
 
 function r(n) { return crypto.randomBytes(n).toString('hex') }
 function h() { if (Math.floor((Math.random() * 10)) % 2 === 1) { return 'inactive' } return 'active' }

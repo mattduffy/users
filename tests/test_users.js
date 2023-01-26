@@ -1,3 +1,7 @@
+/**
+ * @file ./tests/test_users.js
+ */
+
 import crypto from 'node:crypto'
 import Debug from 'debug'
 import * as Users from '../src/Users.js'

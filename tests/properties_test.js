@@ -1,3 +1,7 @@
+/**
+ * @file ./tests/properties_test.js
+ */
+
 const obj = {}
 
 obj.dbClient = { a: 'MongoDB client connection object' }

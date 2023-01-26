@@ -1,3 +1,7 @@
+/**
+ * @file ./tests/db_connection_test.js
+ */
+
 import * as Dotenv from 'dotenv'
 import { MongoClient } from 'mongodb'
 import bcrypt from 'bcrypt'

@@ -1,6 +1,10 @@
+/**
+ * @file ./tests/index.js
+ */
+
 require('dotenv').config()
 const debug = require('debug')('@mattduffy/users')
-const User = require('../User.js')
+const User = require('../src/User.js')
 const { client, genTokens } = require('./db_connection_test.js')
 
 debug('****, Setting minimum required user properties.')
