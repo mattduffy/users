@@ -1,3 +1,8 @@
+/**
+ * @module @mattduffy/users
+ * @file /src/mongoclient.js
+ */
+
 import { MongoClient, ObjectId } from 'mongodb'
 import * as Dotenv from 'dotenv'
 

@@ -1,11 +1,13 @@
 /**
  * @module @mattduffy/users
+ * @file /src/User.js
  */
 import bcrypt from 'bcrypt'
 import Debug from 'debug'
 import { client, ObjectId } from './mongoclient.js'
 
-const debug = Debug('users:User')
+const log = Debug('users:User')
+const error = Debug('users:User_error')
 const Database = 'mattmadethese'
 const Collection = 'users'
 
@@ -58,6 +60,7 @@ class User {
     this._updated_on = config?.updated_on || null
     this._description = config?.description || 'This is a user.'
     this._userStatus = config?.status || 'inactive'
+    this._sessionId = config?.sessionId || null
   }
 
   /**
@@ -102,7 +105,7 @@ class User {
         result = await bcrypt.compare(password, userToComparePassword.hashedPassword)
       }
     } catch (err) {
-      debug('Exception during cmpPasssword')
+      error('Exception during cmpPasssword')
       throw new Error(err.message)
     } finally {
       await client.close()
@@ -127,7 +130,7 @@ class User {
       const users = db.collection(Collection)
       foundUserByEmail = await users.findOne(filter)
     } catch (err) {
-      debug('Exception during findByEmail')
+      error('Exception during findByEmail')
       throw new Error(err.message)
     } finally {
       await client.close()
@@ -166,7 +169,7 @@ class User {
       const users = db.collection(Collection)
       foundUserById = await users.findOne({ _id: ObjectId(id) })
     } catch (err) {
-      debug('Exception during findById')
+      error('Exception during findById')
       throw new Error(err.message)
     } finally {
       await client.close()
@@ -185,9 +188,49 @@ class User {
         created_on: foundUserById.createdOn,
         updated_on: foundUserById.updatedOn,
         description: foundUserById.description,
+        sessionId: foundUserById.sessionId,
       })
     }
     return foundUserById
+  }
+
+  /**
+   * Static class method to find user in the database, searching by sessionId value.
+   * @static
+   * @async
+   * @param {string} sessionId - Current session ID of user as stored by redis.
+   * @return {Promise(<User>|null} - Instance of a User with properties populated.
+   */
+  static async findBySessionId(sessionId) {
+    let foundUserBySessionId
+    try {
+      await client.connect()
+      const db = client.db(Database)
+      const users = db.collection(Collection)
+      foundUserBySessionId = await users.find({ sessionId: sessionId })
+    } catch (err) {
+      error('Exception during findBySessionId')
+      throw new Error(err.message)
+    } finally {
+      await client.close()
+    }
+    if (foundUserBySessionId != null) {
+      return new User({
+        id: foundUserBySessionId._id,
+        type: foundUserBySessionId.type,
+        first_name: foundUserBySessionId.first,
+        last_name: foundUserBySessionId.last,
+        name: foundUserBySessionId.name,
+        email: foundUserBySessionId.email,
+        hashedPassword: foundUserBySessionId.hashedPassword,
+        jwts: foundUserBySessionId.jwts,
+        created_on: foundUserBySessionId.createdOn,
+        updated_on: foundUserBySessionId.updatedOn,
+        description: foundUserBySessionId.description,
+        sessionId: foundUserBySessionId,
+      })
+    }
+    return foundUserBySessionId
   }
 
   /**
@@ -217,7 +260,7 @@ class User {
   serialize() {
     const propertiesToSerialize = ['_type', '_first', '_last', '_name', '_email', '_hashedPassword', '_created_on', '_updated_on', '_description', '_jwts']
     const that = this
-    debug(that._jwts)
+    log(that._jwts)
     return JSON.stringify(that, propertiesToSerialize)
   }
 
@@ -279,19 +322,19 @@ class User {
   async update() {
     // Check required properties are all non-null values.
     // Throw an exception error back to the caller if not.
-    debug('1: Calling checkRequired()')
+    log('1: Calling checkRequired()')
     this.checkRequired()
     // Check database client connection is available.
     // Throw an exception error back to the caller if not.
     this.checkDB()
-    debug('2: Calling checkDB()')
+    log('2: Calling checkDB()')
     let result
     try {
       await this.dbClient.connect()
-      debug('3: Calling dbClient.connect()')
+      log('3: Calling dbClient.connect()')
       const database = this.dbClient.db(this.dbDatabase)
       const users = database.collection(this.dbCollection)
-      debug(`4: Setting update filter doc with ${this._id}`)
+      log(`4: Setting update filter doc with ${this._id}`)
       const filter = { _id: this.objectId(this._id) }
       const update = {
         $set: {
@@ -304,21 +347,21 @@ class User {
           createdOn: this._created_on,
           updatedOn: Date.now(),
           description: this._description,
-          userStatus: this._userStatus
+          userStatus: this._userStatus,
+          sessionId: this._sessionId
         }
       }
       const options = { writeConcern: { w: 'majority' }, upsert: false, returnDocument: 'after', projection: { _id: 1, email: 1, first: 1 } }
-      debug('5: Calling findOneAndUpdate.')
+      log('5: Calling findOneAndUpdate.')
       result = await users.findOneAndUpdate(filter, update, options)
     } catch (err) {
       if (err) {
-        // console.log(err)
-        debug('6: catch err', err)
+        error('6: catch err', err)
       }
     } finally {
       await this.dbClient.close()
     }
-    debug('7: returning result')
+    log('7: returning result')
     // return result
     return this
   }
@@ -333,21 +376,21 @@ class User {
   async save() {
     // Check required properties are all non-null values.
     // Throw an exception error back to the caller if not.
-    debug('1: Calling checkRequired()')
+    log('1: Calling checkRequired()')
     this.checkRequired()
     // Check database client connection is available.
     // Throw an exception error back to the caller if not.
     this.checkDB()
-    debug('2: Calling checkDB()')
+    log('2: Calling checkDB()')
     let result
     try {
       await this.dbClient.connect()
-      debug('3: Calling dbClient.connect()')
+      log('3: Calling dbClient.connect()')
       const database = this.dbClient.db(this.dbDatabase)
       const users = database.collection(this.dbCollection)
       this._updated_on = Date.now()
       // Inserting a new user.
-      debug('5: This is a new user - insertOne.')
+      log('5: This is a new user - insertOne.')
       const insert = {
         type: this._type,
         first: this._first,
@@ -358,26 +401,26 @@ class User {
         createdOn: this._created_on,
         updatedOn: this._updated_on,
         description: this._description,
-        userStatus: this._userStatus
+        userStatus: this._userStatus,
+        sessionId: this._sessionId
       }
       const options = { writeConcern: { w: 'majority' } }
-      debug('6: Calling insertOne.')
+      log('6: Calling insertOne.')
       result = await users.insertOne(insert, options)
-      debug('7: typeof result = ', typeof result)
+      log('7: typeof result = ', typeof result)
       if (result?.insertedId != null) {
         // Get the newly creted ObjectId and assign it to this._id.
-        // debug('ObjectId: ', result.insertedId.toString())
+        // log('ObjectId: ', result.insertedId.toString())
         this._id = result.insertedId.toString()
       }
     } catch (err) {
       if (err) {
-        // console.log(err)
-        debug('8: catch err', err)
+        error('8: catch err', err)
       }
     } finally {
       await this.dbClient.close()
     }
-    debug('9: returning the newly created ObjectId value')
+    log('9: returning the newly created ObjectId value')
     // return this._id
     // return result
     return this
@@ -560,6 +603,22 @@ class User {
    */
   get status() {
     return this._userStatus
+  }
+
+  /**
+   * User session ID property getter.
+   * @return {string} - Current session ID of user.
+   */
+  get sessionId() {
+    return this._sessionId
+  }
+
+  /**
+   * User session ID property setter.
+   * @param {string} sessionId - The current session ID stored in redis.
+   */
+  set sessionId(sessionId) {
+    this._sessionId = sessionId
   }
 
   /**
