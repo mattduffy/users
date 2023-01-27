@@ -2,7 +2,7 @@
  * @module @mattduffy/users
  */
 import Debug from 'debug'
-import { AnonUser as AnonymousUser } from './AnonymousUser.js'
+import { AnonymousUser } from './AnonymousUser.js'
 
 const debug = Debug('users:CreatorUser')
 

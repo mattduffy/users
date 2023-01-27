@@ -49,7 +49,7 @@ class User {
     this._name = fullName || null
     this._email = config?.email || ''
     let hashOrPassword
-    if (config.hashedPassword != null && config.hashedPassword.match(/^\$2b\$10/)['input'] === config.hashedPassword) {
+    if (config.hashedPassword != null && config.hashedPassword.match(/^\$2b\$10/)?.input === config.hashedPassword) {
       hashOrPassword = config.hashedPassword
     } else if (config.password != null && config.password !== '') {
       hashOrPassword = bcrypt.hashSync(config.password, 10)
@@ -78,6 +78,7 @@ class User {
    */
   static [Symbol.hasInstance](obj) {
     if (obj.type === this.type) return true
+    return false
   }
 
   /**
@@ -198,16 +199,16 @@ class User {
    * Static class method to find user in the database, searching by sessionId value.
    * @static
    * @async
-   * @param {string} sessionId - Current session ID of user as stored by redis.
+   * @param {string} sessId - Current session ID of user as stored by redis.
    * @return {Promise(<User>|null} - Instance of a User with properties populated.
    */
-  static async findBySessionId(sessionId) {
+  static async findBySessionId(sessId) {
     let foundUserBySessionId
     try {
       await client.connect()
       const db = client.db(Database)
       const users = db.collection(Collection)
-      foundUserBySessionId = await users.find({ sessionId: sessionId })
+      foundUserBySessionId = await users.findOne({ sessionId: sessId })
     } catch (err) {
       error('Exception during findBySessionId')
       throw new Error(err.message)
@@ -268,7 +269,8 @@ class User {
    * Returns an array of the minimum required properties to instantiate a new user.
    */
   requiredProperties() {
-    return ['_first', '_last', '_email', '_hashedPassword', '_jwts', '_type', '_userStatus']
+    this._requiredProperties = ['_first', '_last', '_email', '_hashedPassword', '_jwts', '_type', '_userStatus']
+    return this._requiredProperties
   }
 
   /**
@@ -354,6 +356,7 @@ class User {
       const options = { writeConcern: { w: 'majority' }, upsert: false, returnDocument: 'after', projection: { _id: 1, email: 1, first: 1 } }
       log('5: Calling findOneAndUpdate.')
       result = await users.findOneAndUpdate(filter, update, options)
+      log(result)
     } catch (err) {
       if (err) {
         error('6: catch err', err)

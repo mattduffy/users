@@ -2,9 +2,9 @@
  * @module @mattduffy/users
  */
 import Debug from 'debug'
-import User from './User.js'
+import { User } from './User.js'
 
-const debug = Debug('users:AnonUser')
+const debug = Debug('users:AnonymousUser')
 
 /**
  * @todo [ ] - Create a test to authenticate user accounts base on permissions.
@@ -18,7 +18,7 @@ const debug = Debug('users:AnonUser')
  * @author Matthew Duffy <mattduffy@gmail.com>
  * @module @mattduffy/users
  */
-class AnonUser extends User {
+class AnonymousUser extends User {
   /**
    * Create an admin user model and populate the properties.
    * @param {Object} config - An object literal with properties to pass new user
@@ -51,5 +51,5 @@ class AnonUser extends User {
 }
 
 export {
-  AnonUser,
+  AnonymousUser,
 }
