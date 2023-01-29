@@ -95,7 +95,7 @@ class Users {
     return await User.findBySessionId(sessionId, this._db)
   }
 
-  async getAllUsers() {
+  async getAllUsers(filter = {}) {
     let array = []
     if (this._db === undefined) {
       error('what happened to the mongoclient?')
@@ -103,15 +103,13 @@ class Users {
     }
     const projection = { type: 1, userStatus: 1, email: 1, first: 1, last: 1 }
     const sort = { type: 1, userStatus: 1, first: 1, last: 1 }
-    const cursor = await this._db.find().project(projection).sort(sort)
+    const cursor = await this._db.find(filter).project(projection).sort(sort)
     array = await cursor.toArray()
     await cursor.close()
     return array
   }
 }
 
-// export default (mongodb) => new Users(mongodb)
-// export default () => new Users(client)
 export {
   Users,
 }

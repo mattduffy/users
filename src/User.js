@@ -246,7 +246,7 @@ class User {
       last_name: this._last,
       full_name: this._name,
       email: this._email,
-      password: this._hashedPassword,
+      // password: this._hashedPassword,
       jwts: this._jwts,
       description: this._description,
       created_on: this._created_on,
