@@ -105,6 +105,7 @@ class Users {
     const sort = { type: 1, userStatus: 1, first: 1, last: 1 }
     const cursor = await this._db.find(filter).project(projection).sort(sort)
     array = await cursor.toArray()
+    array.unshift(array.length)
     await cursor.close()
     return array
   }
