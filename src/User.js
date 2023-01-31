@@ -73,8 +73,8 @@ class User {
   /**
    * A static class method to check if a given user object is a User.
    * @static
-   * @param {object} obj - Object to check instanceof against.
-   * @return {boolean} - True if object checked is instance of User class.
+   * @param { object } obj - Object to check instanceof against.
+   * @return { boolean } - True if object checked is instance of User class.
    */
   static [Symbol.hasInstance](obj) {
     if (obj.type === this.type) return true
@@ -87,9 +87,9 @@ class User {
    * Bcrypt compare is used to compare.
    * @static
    * @async
-   * @param {string} email - Email address used to find existing user in the database.
-   * @param {string} password - Cleartext password provided for comparison with hash.
-   * @return {(boolean|Error}} - True/False result of comparison or throws Error.
+   * @param { string } email - Email address used to find existing user in the database.
+   * @param { string } password - Cleartext password provided for comparison with hash.
+   * @return { (boolean|Error) } - True/False result of comparison or throws Error.
    */
   static async cmpPassword(email, password) {
     let userToComparePassword
@@ -119,8 +119,8 @@ class User {
    * Static class method to find user in the database, searching by email address.
    * @static
    * @async
-   * @param {string} email - Email address to search by in the database.
-   * @return {Promise(<User>|null)} - Instance of User with properties populated.
+   * @param { string } email - Email address to search by in the database.
+   * @return { Promise(<User>|null) } - Instance of User with properties populated.
    */
   static async findByEmail(email) {
     let foundUserByEmail
