@@ -36,10 +36,13 @@ class User {
     this.dbClient = client
     this.dbDatabase = 'mattmadethese'
     this.dbCollection = 'users'
-    this._id = config?.id || null
+    this._id = config?._id || null
     this._type = config?.type || 'User'
-    this._first = config?.first_name || null
-    this._last = config?.last_name || null
+    this._first = config?.first_name || config?.first || null
+    this._last = config?.last_name || config?.last || null
+    this._email = config?.email || ''
+    this._hashedPassword = null
+    this.password = config?.password || config.hashedPassword
     let fullName
     if (config.name != null && config.name !== '') {
       fullName = config.name
@@ -47,17 +50,9 @@ class User {
       fullName = `${this._first} ${this._last}`
     }
     this._name = fullName || null
-    this._email = config?.email || ''
-    let hashOrPassword
-    if (config.hashedPassword != null && config.hashedPassword.match(/^\$2b\$10/)?.input === config.hashedPassword) {
-      hashOrPassword = config.hashedPassword
-    } else if (config.password != null && config.password !== '') {
-      hashOrPassword = bcrypt.hashSync(config.password, 10)
-    }
-    this._hashedPassword = hashOrPassword || null
     this._jwts = config?.jwts || null
-    this._created_on = config?.created_on || Date.now()
-    this._updated_on = config?.updated_on || null
+    this._created_on = config?.createdOn || Date.now()
+    this._updated_on = config?.updatedOn || null
     this._description = config?.description || 'This is a user.'
     this._userStatus = config?.status || 'inactive'
     this._sessionId = config?.sessionId || null
@@ -452,7 +447,13 @@ class User {
   set password(password) {
     // Have to, for now, rely on synchronous hash method
     // because it is awkward to use async/await promise here.
-    this._hashedPassword = bcrypt.hashSync(password, 10)
+    let hashOrPassword
+    if (/^\$2b\$10/.test(password)) {
+      hashOrPassword = password
+    } else if (password != null && password !== '') {
+      hashOrPassword = bcrypt.hashSync(password, 10)
+    }
+    this._hashedPassword = hashOrPassword
   }
 
   /**

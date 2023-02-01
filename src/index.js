@@ -25,7 +25,7 @@ import { CreatorUser } from './CreatorUser.js'
 import { AnonymousUser } from './AnonymousUser.js'
 // import { client, ObjectId } from './mongoclient.js'
 
-const debug = Debug('users:index_log')
+const log = Debug('users:index_log')
 const error = Debug('users:index_error')
 
 if (process.argv[1] === await readFile(fileURLToPath(import.meta.url))) {
@@ -44,7 +44,7 @@ class Users {
 
   async newUser(type = 'basic') {
     if (this._db === null) {
-      debug('No MongoDB client connection object provided.')
+      log('No MongoDB client connection object provided.')
       throw new Error('No MongoDB client connection object provided.')
     }
     if (/admin/i.test(type)) {
@@ -99,7 +99,8 @@ class Users {
     let array = []
     if (this._db === undefined) {
       error('what happened to the mongoclient?')
-      return array
+      throw new Error('DB connection error')
+      // return array
     }
     const projection = { type: 1, userStatus: 1, email: 1, first: 1, last: 1 }
     const sort = { type: 1, userStatus: 1, first: 1, last: 1 }
@@ -108,6 +109,43 @@ class Users {
     array.unshift(array.length)
     await cursor.close()
     return array
+  }
+
+  async authenticateAndGetUser(email = null, password = null) {
+    const result = {}
+    if (email === null || password === null) {
+      throw new Error('Email and Password arguments are required.')
+    }
+    if (this._db === undefined) {
+      error('What happened to the mongoclient?')
+      throw new Error('DB connection error')
+    }
+    try {
+      result.user = await this._db.findOne({ email })
+      log('user found: %o', result.user)
+      if (result.user !== null) {
+        if (/admin/i.test(result.type)) {
+          result.user = new AdminUser(result.user)
+        } else if (/creator/i.test(result.type)) {
+          result.user = new CreatorUser(result.user)
+        } else if (/anonymous/i.test(result.type)) {
+          result.user = new AnonymousUser(result.user)
+        } else {
+          result.user = new User(result.user)
+        }
+      } else {
+        result.user = null
+        result.message = `No user found with email: ${email}`
+      }
+      //
+      // put bcrypt.compare() test here to authenticate password
+      //
+    } catch (e) {
+      result.user = false
+      result.error = e
+    }
+    // await this._db.close()
+    return result
   }
 }
 
