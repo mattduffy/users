@@ -18,6 +18,7 @@
 
 import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
+import bcrypt from 'bcrypt'
 import Debug from 'debug'
 import { User } from './User.js'
 import { AdminUser } from './AdminUser.js'
@@ -112,7 +113,11 @@ class Users {
   }
 
   async authenticateAndGetUser(email = null, password = null) {
-    const result = {}
+    const result = {
+      user: null,
+      message: null,
+      error: null,
+    }
     if (email === null || password === null) {
       throw new Error('Email and Password arguments are required.')
     }
@@ -133,18 +138,19 @@ class Users {
         } else {
           result.user = new User(result.user)
         }
+        if (!await bcrypt.compare(password, result.user.password)) {
+          result.user = false
+          result.message = 'Username and password mismatch.'
+        } else {
+          result.message = 'Username and password match.'
+        }
       } else {
-        result.user = null
         result.message = `No user found with email: ${email}`
       }
-      //
-      // put bcrypt.compare() test here to authenticate password
-      //
     } catch (e) {
       result.user = false
       result.error = e
     }
-    // await this._db.close()
     return result
   }
 }
