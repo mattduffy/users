@@ -69,7 +69,12 @@ class Users {
       error('Static method User.getById() called without the id value.')
       throw new Error('Missing user id value.')
     }
-    return await User.findById(id, this._db)
+    try {
+      return await User.findById(id, this._db)
+    } catch (e) {
+      log(e)
+      return false
+    }
   }
 
   async getByEmail(email = null) {
@@ -81,7 +86,12 @@ class Users {
       error('Static method User.getByEmail() called without the email value.')
       throw new Error('Missing email value.')
     }
-    return await User.findByEmail(email, this._db)
+    try {
+      return await User.findByEmail(email, this._db)
+    } catch (e) {
+      log(e)
+      return false
+    }
   }
 
   async getBySessionId(sessionId = null) {
@@ -93,7 +103,12 @@ class Users {
       error('Static method User.getBySessionId() called without the session id value.')
       throw new Error('Missing session id value')
     }
-    return await User.findBySessionId(sessionId, this._db)
+    try {
+      return await User.findBySessionId(sessionId, this._db)
+    } catch (e) {
+      log(e)
+      return false
+    }
   }
 
   async getAllUsers(filter = {}) {
@@ -103,13 +118,18 @@ class Users {
       throw new Error('DB connection error')
       // return array
     }
-    const projection = { type: 1, userStatus: 1, email: 1, first: 1, last: 1 }
-    const sort = { type: 1, userStatus: 1, first: 1, last: 1 }
-    const cursor = await this._db.find(filter).project(projection).sort(sort)
-    array = await cursor.toArray()
-    array.unshift(array.length)
-    await cursor.close()
-    return array
+    try {
+      const projection = { type: 1, userStatus: 1, email: 1, first: 1, last: 1 }
+      const sort = { type: 1, userStatus: 1, first: 1, last: 1 }
+      const cursor = await this._db.find(filter).project(projection).sort(sort)
+      array = await cursor.toArray()
+      array.unshift(array.length)
+      await cursor.close()
+      return array
+    } catch (e) {
+      log(e)
+      return false
+    }
   }
 
   async authenticateAndGetUser(email = null, password = null) {
