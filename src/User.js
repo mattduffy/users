@@ -36,7 +36,7 @@ class User {
     this.dbClient = client
     this.dbDatabase = 'mattmadethese'
     this.dbCollection = 'users'
-    this._id = config?._id || null
+    this._id = config?._id || config?.id || null
     this._type = config?.type || 'User'
     this._first = config?.first_name || config?.first || null
     this._last = config?.last_name || config?.last || null
@@ -51,8 +51,8 @@ class User {
     }
     this._name = fullName || null
     this._jwts = config?.jwts || null
-    this._created_on = config?.createdOn || Date.now()
-    this._updated_on = config?.updatedOn || null
+    this._created_on = config?.createdOn || config?.created_on || Date.now()
+    this._updated_on = config?.updatedOn || config?.updated_on || null
     this._description = config?.description || 'This is a user.'
     this._userStatus = config?.status || 'inactive'
     this._sessionId = config?.sessionId || null
@@ -173,7 +173,7 @@ class User {
     // If no user found by ObjectId(_id), returned result is NULL.
     if (foundUserById != null) {
       return new User({
-        id: foundUserById._id,
+        id: foundUserById._id.toString(),
         type: foundUserById.type,
         first_name: foundUserById.first,
         last_name: foundUserById.last,
