@@ -93,12 +93,11 @@ class Users {
       throw new Error('Missing user id value.')
     }
     try {
-      // return await User.findById(id, this._db)
       const user = await User.findById(id, this._db)
       if (!user) {
         return false
       }
-      return this.factory(user, user.type)
+      return await this.factory(user, user.type)
     } catch (e) {
       log(e)
       return false
@@ -115,12 +114,11 @@ class Users {
       throw new Error('Missing email value.')
     }
     try {
-      // return await User.findByEmail(email, this._db)
       const user = await User.findByEmail(email, this._db)
       if (!user) {
         return false
       }
-      return this.factory(user, user.type)
+      return await this.factory(user, user.type)
     } catch (e) {
       log(e)
       return false
@@ -137,12 +135,11 @@ class Users {
       throw new Error('Missing username parameter.')
     }
     try {
-      // return await User.findByUsername(username)
       const user = await User.findByUsername(username)
       if (!username) {
         return false
       }
-      return this.factory(user, user.type)
+      return await this.factory(user, user.type)
     } catch (e) {
       log(e)
       return false
@@ -159,12 +156,11 @@ class Users {
       throw new Error('Missing session id value')
     }
     try {
-      // return await User.findBySessionId(sessionId, this._db)
       const user = await User.findBySessionId(sessionId)
       if (!user) {
         return false
       }
-      return this.factory(user, user.type)
+      return await this.factory(user, user.type)
     } catch (e) {
       log(e)
       return false
@@ -176,7 +172,6 @@ class Users {
     if (this._db === undefined) {
       error('what happened to the mongoclient?')
       throw new Error('DB connection error')
-      // return array
     }
     try {
       const projection = { type: 1, userStatus: 1, email: 1, first: 1, last: 1 }
@@ -209,20 +204,12 @@ class Users {
       result.user = await this._db.findOne({ email })
       log('user found: %o', result.user)
       if (result.user !== null) {
-        if (/admin/i.test(result.type)) {
-          result.user = new AdminUser(result.user)
-        } else if (/creator/i.test(result.type)) {
-          result.user = new CreatorUser(result.user)
-        } else if (/anonymous/i.test(result.type)) {
-          result.user = new AnonymousUser(result.user)
+        if (result.user.userStatus === 'inactive') {
+          result.user = false 
+          result.message = `${email} is an inactive user account.`
         } else {
-          result.user = new User(result.user)
-        }
-        if (!await bcrypt.compare(password, result.user.password)) {
-          result.user = false
-          result.message = 'Username and password mismatch.'
-        } else {
-          result.message = 'Username and password match.'
+          const user = await this.factory(result.user, result.user.type)
+          result.user = user
         }
       } else {
         result.message = `No user found with email: ${email}`
