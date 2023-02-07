@@ -39,14 +39,16 @@ if (process.argv[1] === await readFile(fileURLToPath(import.meta.url))) {
  *
  */
 class Users {
+  NO_DB_OBJECT = 'No MongoDB client connection object provided.'
+
   constructor(mongoClient) {
     this._db = mongoClient
   }
 
   async newUser(type = 'basic') {
     if (this._db === null) {
-      log('No MongoDB client connection object provided.')
-      throw new Error('No MongoDB client connection object provided.')
+      log(this.NO_DB_OBJECT)
+      throw new Error(this.NO_DB_OBJECT)
     }
     if (/admin/i.test(type)) {
       return new AdminUser(this._db)
@@ -60,17 +62,43 @@ class Users {
     return await new User(this._db)
   }
 
+  async factory(config, type = 'null') {
+    if (this._db === null) {
+      log(this.NO_DB_OBJECT)
+      throw new Error(this.NO_DB_OBJECT)
+    }
+    if (/admin/i.test(type)) {
+      log('making a new admin user')
+      return new AdminUser(config, this._db)
+    }
+    if (/creator/i.test(type)) {
+      log('making a new creator user')
+      return new CreatorUser(config, this._db)
+    }
+    if (/anonymous/i.test(type)) {
+      log('making a new anonymous user')
+      return new AnonymousUser(config, this._db)
+    }
+    log('making a new basic user')
+    return await new User(config, this._db)
+  }
+
   async getById(id = null) {
     if (this._db === null) {
-      error('No MongoDB client connection object provided.')
-      throw new Error('No MongoDB client connection object provided.')
+      error(this.NO_DB_OBJECT)
+      throw new Error(this.NO_DB_OBJECT)
     }
     if (id === null) {
       error('Static method User.getById() called without the id value.')
       throw new Error('Missing user id value.')
     }
     try {
-      return await User.findById(id, this._db)
+      // return await User.findById(id, this._db)
+      const user = await User.findById(id, this._db)
+      if (!user) {
+        return false
+      }
+      return this.factory(user, user.type)
     } catch (e) {
       log(e)
       return false
@@ -79,15 +107,42 @@ class Users {
 
   async getByEmail(email = null) {
     if (this._db === null) {
-      error('No MongoDB client connection object provided.')
-      throw new Error('No MongoDB client connection object provided.')
+      error(this.NO_DB_OBJECT)
+      throw new Error(this.NO_DB_OBJECT)
     }
     if (email === null) {
       error('Static method User.getByEmail() called without the email value.')
       throw new Error('Missing email value.')
     }
     try {
-      return await User.findByEmail(email, this._db)
+      // return await User.findByEmail(email, this._db)
+      const user = await User.findByEmail(email, this._db)
+      if (!user) {
+        return false
+      }
+      return this.factory(user, user.type)
+    } catch (e) {
+      log(e)
+      return false
+    }
+  }
+
+  async getByUsername(username = null) {
+    if (this._db === null) {
+      error(this.NO_DB_OBJECT)
+      throw new Error(this.NO_DB_OBJECT)
+    }
+    if (username === null) {
+      error('Static method User.getByUsername() called without the username parameter.')
+      throw new Error('Missing username parameter.')
+    }
+    try {
+      // return await User.findByUsername(username)
+      const user = await User.findByUsername(username)
+      if (!username) {
+        return false
+      }
+      return this.factory(user, user.type)
     } catch (e) {
       log(e)
       return false
@@ -96,15 +151,20 @@ class Users {
 
   async getBySessionId(sessionId = null) {
     if (this._db === null) {
-      error('No MongoDB client connection object provided.')
-      throw new Error('No MongoDB client connection object provided.')
+      error(this.NO_DB_OBJECT)
+      throw new Error(this.NO_DB_OBJECT)
     }
     if (sessionId === null) {
       error('Static method User.getBySessionId() called without the session id value.')
       throw new Error('Missing session id value')
     }
     try {
-      return await User.findBySessionId(sessionId, this._db)
+      // return await User.findBySessionId(sessionId, this._db)
+      const user = await User.findBySessionId(sessionId)
+      if (!user) {
+        return false
+      }
+      return this.factory(user, user.type)
     } catch (e) {
       log(e)
       return false

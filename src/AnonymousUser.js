@@ -34,9 +34,9 @@ class AnonymousUser extends User {
   /**
    * Static property used to compare with instanceof expressions.
    * @static
-   * @type {string}
+   * @typeOfUser {string}
    */
-  static type = 'Anonymous'
+  static typeOfUser = 'Anonymous'
 
   /**
    * A static class method to check if a given user object is a Anonymous User.
@@ -45,7 +45,7 @@ class AnonymousUser extends User {
    * @return {boolean} - True if object checked is instance of AnonymousUser class.
    */
   static [Symbol.hasInstance](obj) {
-    if (obj.type === this.type) return true
+    if (obj.typeOfUser === this.typeOfUser) return true
     return false
   }
 }

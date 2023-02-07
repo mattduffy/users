@@ -50,6 +50,7 @@ class User {
       fullName = `${this._first} ${this._last}`
     }
     this._name = fullName || null
+    this._username = config?.username || this._name.toLowerCase().replace(' ', '')
     this._jwts = config?.jwts || null
     this._created_on = config?.createdOn || config?.created_on || Date.now()
     this._updated_on = config?.updatedOn || config?.updated_on || null
@@ -61,9 +62,9 @@ class User {
   /**
    * Static property used to compare with instanceof expressions.
    * @static
-   * @type {string}
+   * @typeOfUser {string}
    */
-  static type = 'User'
+  static typeOfUser = 'User'
 
   /**
    * A static class method to check if a given user object is a User.
@@ -72,7 +73,7 @@ class User {
    * @return { boolean } - True if object checked is instance of User class.
    */
   static [Symbol.hasInstance](obj) {
-    if (obj.type === this.type) return true
+    if (obj.typeOfUser === this.typeOfUser) return true
     return false
   }
 
@@ -133,19 +134,20 @@ class User {
     }
     // If no user found by email, returned result is NULL.
     if (foundUserByEmail != null) {
-      return new User({
-        id: foundUserByEmail._id,
-        type: foundUserByEmail.type,
-        first_name: foundUserByEmail.first,
-        last_name: foundUserByEmail.last,
-        name: foundUserByEmail.name,
-        email: foundUserByEmail.email,
-        hashedPassword: foundUserByEmail.hashedPassword,
-        jwts: foundUserByEmail.jwts,
-        created_on: foundUserByEmail.createdOn,
-        updated_on: foundUserByEmail.updatedOn,
-        description: foundUserByEmail.description,
-      })
+      return foundUserByEmail
+      // return new User({
+      //   id: foundUserByEmail._id,
+      //   type: foundUserByEmail.type,
+      //   first_name: foundUserByEmail.first,
+      //   last_name: foundUserByEmail.last,
+      //   name: foundUserByEmail.name,
+      //   email: foundUserByEmail.email,
+      //   hashedPassword: foundUserByEmail.hashedPassword,
+      //   jwts: foundUserByEmail.jwts,
+      //   created_on: foundUserByEmail.createdOn,
+      //   updated_on: foundUserByEmail.updatedOn,
+      //   description: foundUserByEmail.description,
+      // })
     }
     return foundUserByEmail
   }
@@ -172,22 +174,63 @@ class User {
     }
     // If no user found by ObjectId(_id), returned result is NULL.
     if (foundUserById != null) {
-      return new User({
-        id: foundUserById._id.toString(),
-        type: foundUserById.type,
-        first_name: foundUserById.first,
-        last_name: foundUserById.last,
-        name: foundUserById.name,
-        email: foundUserById.email,
-        hashedPassword: foundUserById.hashedPassword,
-        jwts: foundUserById.jwts,
-        created_on: foundUserById.createdOn,
-        updated_on: foundUserById.updatedOn,
-        description: foundUserById.description,
-        sessionId: foundUserById.sessionId,
-      })
+      return foundUserById
+      // return new User({
+      //   id: foundUserById._id.toString(),
+      //   type: foundUserById.type,
+      //   first_name: foundUserById.first,
+      //   last_name: foundUserById.last,
+      //   name: foundUserById.name,
+      //   email: foundUserById.email,
+      //   hashedPassword: foundUserById.hashedPassword,
+      //   jwts: foundUserById.jwts,
+      //   created_on: foundUserById.createdOn,
+      //   updated_on: foundUserById.updatedOn,
+      //   description: foundUserById.description,
+      //   sessionId: foundUserById.sessionId,
+      // })
     }
     return foundUserById
+  }
+
+  /**
+   * @static
+   * @async
+   * @param {string} username - Find the single user with the username parameter.
+   * @return {Promise(<User>|null} - Instance of a User with the properties populated.
+   */
+  static async findByUsername(username) {
+    let foundUserByUsername
+    try {
+      await client.connect()
+      const db = client.db(Database)
+      const users = db.collection(Collection)
+      foundUserByUsername = await users.findOne({ username })
+    } catch (err) {
+      error('Exception during findByUsername')
+      throw new Error(err.message)
+    } finally {
+      await client.close()
+    }
+    if (foundUserByUsername !== null) {
+      return foundUserByUsername
+      // return new User({
+      //   id: foundUserByUsername._id,
+      //   type: foundUserByUsername.type,
+      //   first_name: foundUserByUsername.first,
+      //   last_name: foundUserByUsername.last,
+      //   name: foundUserByUsername.name,
+      //   email: foundUserByUsername.email,
+      //   username: foundUserByUsername.username,
+      //   hashedPassword: foundUserByUsername.hashedPassword,
+      //   jwts: foundUserByUsername.jwts,
+      //   created_on: foundUserByUsername.createdOn,
+      //   updated_on: foundUserByUsername.updatedOn,
+      //   desciption: foundUserByUsername.description,
+      //   sessionId: foundUserByUsername?.sessionId,
+      // })
+    }
+    return foundUserByUsername
   }
 
   /**
@@ -211,20 +254,22 @@ class User {
       await client.close()
     }
     if (foundUserBySessionId != null) {
-      return new User({
-        id: foundUserBySessionId._id,
-        type: foundUserBySessionId.type,
-        first_name: foundUserBySessionId.first,
-        last_name: foundUserBySessionId.last,
-        name: foundUserBySessionId.name,
-        email: foundUserBySessionId.email,
-        hashedPassword: foundUserBySessionId.hashedPassword,
-        jwts: foundUserBySessionId.jwts,
-        created_on: foundUserBySessionId.createdOn,
-        updated_on: foundUserBySessionId.updatedOn,
-        description: foundUserBySessionId.description,
-        sessionId: foundUserBySessionId,
-      })
+      return foundUserBySessionId
+      // return new User({
+      //   id: foundUserBySessionId._id,
+      //   type: foundUserBySessionId.type,
+      //   first_name: foundUserBySessionId.first,
+      //   last_name: foundUserBySessionId.last,
+      //   name: foundUserBySessionId.name,
+      //   email: foundUserBySessionId.email,
+      //   username: foundUserBySessionId?.username,
+      //   hashedPassword: foundUserBySessionId.hashedPassword,
+      //   jwts: foundUserBySessionId.jwts,
+      //   created_on: foundUserBySessionId.createdOn,
+      //   updated_on: foundUserBySessionId.updatedOn,
+      //   description: foundUserBySessionId.description,
+      //   sessionId: foundUserBySessionId?.sessionId,
+      // })
     }
     return foundUserBySessionId
   }
@@ -241,6 +286,7 @@ class User {
       last_name: this._last,
       full_name: this._name,
       email: this._email,
+      username: this._username,
       // password: this._hashedPassword,
       jwts: this._jwts,
       description: this._description,
@@ -254,7 +300,7 @@ class User {
    * @return {string} - A stringified version of a JSON literal of user properties.
    */
   serialize() {
-    const propertiesToSerialize = ['_type', '_first', '_last', '_name', '_email', '_hashedPassword', '_created_on', '_updated_on', '_description', '_jwts']
+    const propertiesToSerialize = ['_type', '_first', '_last', '_name', '_email', '_username', '_hashedPassword', '_created_on', '_updated_on', '_description', '_jwts']
     const that = this
     log(that._jwts)
     return JSON.stringify(that, propertiesToSerialize)
@@ -339,14 +385,15 @@ class User {
           first: this._first,
           last: this._last,
           email: this._email,
+          username: this._username,
           hashedPassword: this._hashedPassword,
           jwts: this._jwts,
           createdOn: this._created_on,
           updatedOn: Date.now(),
           description: this._description,
           userStatus: this._userStatus,
-          sessionId: this._sessionId
-        }
+          sessionId: this._sessionId,
+        },
       }
       const options = { writeConcern: { w: 'majority' }, upsert: false, returnDocument: 'after', projection: { _id: 1, email: 1, first: 1 } }
       log('5: Calling findOneAndUpdate.')
@@ -394,13 +441,14 @@ class User {
         first: this._first,
         last: this._last,
         email: this._email,
+        username: this._username,
         hashedPassword: this._hashedPassword,
         jwts: this._jwts,
         createdOn: this._created_on,
         updatedOn: this._updated_on,
         description: this._description,
         userStatus: this._userStatus,
-        sessionId: this._sessionId
+        sessionId: this._sessionId,
       }
       const options = { writeConcern: { w: 'majority' } }
       log('6: Calling insertOne.')
@@ -520,6 +568,22 @@ class User {
    */
   get email() {
     return this._email
+  }
+
+  /**
+   * Username property setter.
+   * @param {string} - New username value.
+   */
+  set username(username) {
+    this._username = username
+  }
+
+  /**
+   * Username property getter.
+   * @return {string} - Username value.
+   */
+  get username() {
+    return this._username
   }
 
   /**

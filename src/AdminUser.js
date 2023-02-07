@@ -46,9 +46,9 @@ class AdminUser extends User {
   /**
    * Static property used to compare with instanceof expressions.
    * @static
-   * @type {string}
+   * @typeOfUser {string}
    */
-  static type = 'Admin'
+  static typeOfUser = 'Admin'
 
   /**
    * A static class method to check if a given user object is an Admin User.
@@ -57,7 +57,7 @@ class AdminUser extends User {
    * @return {boolean} - True if object checked is instance of AdminUser class.
    */
   static [Symbol.hasInstance](obj) {
-    if (obj.type === this.type) return true
+    if (obj.typeOfUser === this.typeOfUser) return true
     return false
   }
 
