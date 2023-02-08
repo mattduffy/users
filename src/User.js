@@ -55,7 +55,7 @@ class User {
     this._created_on = config?.createdOn || config?.created_on || Date.now()
     this._updated_on = config?.updatedOn || config?.updated_on || null
     this._description = config?.description || 'This is a user.'
-    this._userStatus = config?.status || 'inactive'
+    this._userStatus = config?.status || config?.userStatus || 'inactive'
     this._sessionId = config?.sessionId || null
   }
 

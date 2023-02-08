@@ -36,8 +36,8 @@ class AdminUser extends User {
     this._description = 'This is an Admin level user.'
     debug(this._description)
     this._userTypes = [
-      { type: 'User', description: 'This is a User level user.' },
       { type: 'Anonymous', description: 'This is an Anonymous level user.' },
+      { type: 'User', description: 'This is a User level user.' },
       { type: 'Creator', description: 'This is an Creator level user.' },
       { type: 'Admin', description: 'This is an Admin level user.' },
     ]
