@@ -51,6 +51,10 @@ class User {
     }
     this._name = fullName || null
     this._username = config?.username || this._name.toLowerCase().replace(' ', '')
+    this._displayName = config?.displayname || config?.displayName || config.display_name || this._name
+    this._url = config?.url || null
+    this._avatar = config?.avatar || config?._avatar || null
+    this._header = config?.header || config?._header || null
     this._jwts = config?.jwts || null
     this._created_on = config?.createdOn || config?.created_on || Date.now()
     this._updated_on = config?.updatedOn || config?.updated_on || null
@@ -141,6 +145,11 @@ class User {
       //   first_name: foundUserByEmail.first,
       //   last_name: foundUserByEmail.last,
       //   name: foundUserByEmail.name,
+      //   username: foundUserByEmail.username,
+      //   displayName: foundUserByEmail?.displayName,
+      //   url: foundUserByEmail?.url,
+      //   avatar: foundUserByEmail?.avatar,
+      //   header: foundUserByEmail?.header,
       //   email: foundUserByEmail.email,
       //   hashedPassword: foundUserByEmail.hashedPassword,
       //   jwts: foundUserByEmail.jwts,
@@ -181,6 +190,11 @@ class User {
       //   first_name: foundUserById.first,
       //   last_name: foundUserById.last,
       //   name: foundUserById.name,
+      //   username: foundUserById.username,
+      //   displayName: foundUserById?.displayName,
+      //   url: foundUserById?.url,
+      //   avatar: foundUserById?.avatar,
+      //   header: foundUserById?.header,
       //   email: foundUserById.email,
       //   hashedPassword: foundUserById.hashedPassword,
       //   jwts: foundUserById.jwts,
@@ -221,7 +235,11 @@ class User {
       //   last_name: foundUserByUsername.last,
       //   name: foundUserByUsername.name,
       //   email: foundUserByUsername.email,
-      //   username: foundUserByUsername.username,
+      //   username: foundUserByUsername?.username,
+      //   displayName: foundUserByUsername?.displayName,
+      //   url: foundUserByUsername?.url,
+      //   avatar: foundUserByUsername?.avatar,
+      //   header: foundUserByUsername?.header,
       //   hashedPassword: foundUserByUsername.hashedPassword,
       //   jwts: foundUserByUsername.jwts,
       //   created_on: foundUserByUsername.createdOn,
@@ -263,6 +281,10 @@ class User {
       //   name: foundUserBySessionId.name,
       //   email: foundUserBySessionId.email,
       //   username: foundUserBySessionId?.username,
+      //   displayName: foundUserBySessionId?.displayName,
+      //   url: foundUserBySessionId?.url,
+      //   avatar: foundUserBySessionId?.avatar,
+      //   header: foundUserBySessionId?.header,
       //   hashedPassword: foundUserBySessionId.hashedPassword,
       //   jwts: foundUserBySessionId.jwts,
       //   created_on: foundUserBySessionId.createdOn,
@@ -287,6 +309,10 @@ class User {
       full_name: this._name,
       email: this._email,
       username: this._username,
+      displayName: this._displayName,
+      url: this._url,
+      avatar: this._avatar,
+      header: this._header,
       // password: this._hashedPassword,
       jwts: this._jwts,
       description: this._description,
@@ -300,7 +326,7 @@ class User {
    * @return {string} - A stringified version of a JSON literal of user properties.
    */
   serialize() {
-    const propertiesToSerialize = ['_type', '_first', '_last', '_name', '_email', '_username', '_hashedPassword', '_created_on', '_updated_on', '_description', '_jwts']
+    const propertiesToSerialize = ['_type', '_first', '_last', '_name', '_email', '_username', '_displayName', '_url', '_avatar', '_header', '_hashedPassword', '_created_on', '_updated_on', '_description', '_jwts']
     const that = this
     log(that._jwts)
     return JSON.stringify(that, propertiesToSerialize)
@@ -386,6 +412,10 @@ class User {
           last: this._last,
           email: this._email,
           username: this._username,
+          diplayName: this._displayName,
+          url: this._url,
+          avatar: this._avatar,
+          header: this._header,
           hashedPassword: this._hashedPassword,
           jwts: this._jwts,
           createdOn: this._created_on,
@@ -442,6 +472,10 @@ class User {
         last: this._last,
         email: this._email,
         username: this._username,
+        displayName: this._displayName,
+        url: this._url,
+        avatar: this._avatar,
+        header: this._header,
         hashedPassword: this._hashedPassword,
         jwts: this._jwts,
         createdOn: this._created_on,
@@ -587,19 +621,93 @@ class User {
   }
 
   /**
-   * JWT object property setter.
-   * @param {object} tokens - Object literal containing JW Tokens.
+   * Url property setter (Mastodon compatability).
+   * @param {string} - New url value.
    */
-  set jwts(tokens) {
-    this._jwts = tokens
+  set url(url) {
+    const re = new RegExp(`^https://[^\\s][A-Za-z0-9._-]*/${this._username}`)
+    if (re.test(`${url}/@${this._username}`)) {
+      this._url = `${url}/@${this._username}`
+    } else {
+      this._url = url
+    }
   }
 
   /**
-   * JTW object property getter.
-   * @return {Object} - User JWT object literal.
+   * Url property getter (Mastodon compatability).
+   * @return {string} - Url value.
    */
-  get jwts() {
-    return this._jwts
+  get url() {
+    return this._url
+  }
+
+  /**
+   * Avatar url property setter (Mastodon compatability).
+   * @param {string} url - New avatar url value.
+   */
+  set avatar(url) {
+    this._avatar = url
+  }
+
+  /**
+   * Avatar url property getter (Mastodon compatability).
+   * @return {string} - Avatar url value.
+   */
+  get avatar() {
+    return this._avatar
+  }
+
+  /**
+   * Header image url property setter (Mastodon compatability).
+   * @param {string} url - Header image url value.
+   */
+  set header(url) {
+    this._header = url
+  }
+
+  /**
+   * Header image url property getter (Mastodon compatability).
+   * @return {string} - Header image url value.
+   */
+  get header() {
+    return this._header
+  }
+
+  /**
+   * Header image url property setter (Mastodon compatability).
+   * @alias header
+   * @param {string} url - Header image url value.
+   */
+  set headerStatic(url) {
+    this._header = url
+  }
+
+  /**
+   * Header image url property getter (Mastodon compatability).
+   * @alias header
+   * @return {string} - Header image url value.
+   */
+  get headerStatic() {
+    return this._header
+  }
+
+  /**
+   * Display name property setter.
+   * @param {string} newDisplayName - User display name property value.
+   */
+  set displayName(newDisplayName) {
+    this._displayName = newDisplayName
+  }
+
+  /**
+   * Display name property getter.
+   * @return {string} - User display name value.
+   */
+  get displayName() {
+    if (!this._displayName || this._displayName === '' || this._displayName === 'undefined') {
+      return `${this._first} ${this._last}`
+    }
+    return this._displayName
   }
 
   /**
@@ -619,6 +727,38 @@ class User {
       return `${this._first} ${this._last}`
     }
     return this._name
+  }
+
+  /**
+   * JWT object property setter.
+   * @param {object} tokens - Object literal containing JW Tokens.
+   */
+  set jwts(tokens) {
+    this._jwts = tokens
+  }
+
+  /**
+   * JTW object property getter.
+   * @return {Object} - User JWT object literal.
+   */
+  get jwts() {
+    return this._jwts
+  }
+
+  /**
+   * Note property setter (alias to description - Mastodon compatability).
+   * @param {string} note - User account note value.
+   */
+  set note(note) {
+    this._description = note
+  }
+
+  /**
+   * Note property getter(alias to description - Mastodon compatability).
+   * @return {string} - User note property value.
+   */
+  get note() {
+    return this._description
   }
 
   /**
