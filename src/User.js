@@ -27,11 +27,14 @@ const Collection = 'users'
  * @module @mattduffy/users
  */
 class User {
+  SCHEMA_VERSION = 1.0
+
   /**
    * Create a user model and populate the properties.
    * @param {Object} config - An object literal with properties to initialize new user.
    */
   constructor(config) {
+    this.log = log
     this.objectId = ObjectId
     this.dbClient = client
     this.dbDatabase = 'mattmadethese'
@@ -621,12 +624,32 @@ class User {
   }
 
   /**
+   * Acct property setter (Mastodaon / Webfinger compatability).
+   * @alias username
+   * @param {string} - New acct value.
+   */
+  set acct(username) {
+    // this._username = username
+    this.log('noop - don\'t update acct / username values.')
+  }
+
+  /**
+   * Acct property getter (Mastodaon / Webfinger compatability).
+   * @alias username
+   * @return {string} - Acct value.
+   */
+  get acct() {
+    return this._username
+  }
+
+  /**
    * Url property setter (Mastodon compatability).
    * @param {string} - New url value.
    */
   set url(url) {
-    const re = new RegExp(`^https://[^\\s][A-Za-z0-9._-]*/${this._username}`)
+    const re = new RegExp(`^https://[^\\s][A-Za-z0-9._-]+/@${this._username}`)
     if (re.test(`${url}/@${this._username}`)) {
+      log(`${url}/@${this._username}`)
       this._url = `${url}/@${this._username}`
     } else {
       this._url = url

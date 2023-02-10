@@ -12,7 +12,7 @@ const debug = Debug('users:AdminUser')
  * @todo [x] Add admin method - listUsers
  * @todo [x] Add admin method - deleteUser
  * @todo [x] Add admin method - getUsersByType
- * @todo [ ] Add admin methods - upgradUser / downgradeUser
+ * @todo [ ] Add admin methods - upgradeUser / downgradeUser
  * @todo [ ] Add admin methods - suspendUser / reinstateUser
  * @todo [ ] Create a test to authenticate user accounts base on permissions.
  */
@@ -70,7 +70,7 @@ class AdminUser extends User {
   static async upgradeUser(id = null) {
     const wasSuccessful = false
     if (id === null) {
-      throw new Error('A valid user id in the form of an ObjectId must be provided.')
+      throw new Error('A valid user id must be provided.')
     }
     this.checkDB()
     try {
