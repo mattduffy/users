@@ -14,6 +14,10 @@ const debug = Debug('users:db_conn_test')
 
 Dotenv.config({ path: './config/.env' })
 
+const jwtIssuer = process.env.JWT_ISSUER
+
+const dbName = process.env.DB_NAME
+const colName = process.env.COLLECTION_NAME
 const clientDn = process.env.MONGODB_CLIENT_DN
 const dbHost = process.env.MONGODB_HOST
 const dbPort1 = process.env.MONGODB_PORT_1
@@ -23,7 +27,7 @@ const authMechanism = 'MONGODB-X509'
 const authSource = '$external'
 const clientPEMFile = encodeURIComponent(process.env.MONGODB_CLIENT_KEY)
 const dbCAKeyFile = encodeURIComponent(process.env.MONGODB_CAKEYFILE)
-const uri = `mongodb://${clientDn}@${dbHost}:${dbPort1},${dbHost}:${dbPort2},${dbHost}:${dbPort3}/mattmadethese?replicaSet=myReplicaSet&authMechanism=${authMechanism}&tls=true&tlsCertificateKeyFile=${clientPEMFile}&tlsCAFile=${dbCAKeyFile}&authSource=${authSource}`
+const uri = `mongodb://${clientDn}@${dbHost}:${dbPort1},${dbHost}:${dbPort2},${dbHost}:${dbPort3}/${dbName}?replicaSet=myReplicaSet&authMechanism=${authMechanism}&tls=true&tlsCertificateKeyFile=${clientPEMFile}&tlsCAFile=${dbCAKeyFile}&authSource=${authSource}`
 
 // debug(uri)
 
@@ -40,10 +44,10 @@ function gID() {
 function gT() {
   const secret = fs.readFileSync(process.env.JWT_PRIKEY)
   const toptions = {
-    algorithm: 'HS256', expiresIn: '30m', issuer: 'mattmadethese.com', subject: 'matt', audience: 'access', jwtid: gID(),
+    algorithm: 'HS256', expiresIn: '30m', issuer: jwtIssuer, subject: 'matt', audience: 'access', jwtid: gID(),
   }
   const roptions = {
-    algorithm: 'HS256', expiresIn: '5m', issuer: 'mattmadethese.com', subject: 'matt', audience: 'refresh', jwtid: gID(),
+    algorithm: 'HS256', expiresIn: '5m', issuer: jwtIssuer, subject: 'matt', audience: 'refresh', jwtid: gID(),
   }
   const token = jwt.sign({ email: 'matt@mattmail.email' }, secret, toptions)
   const refresh = jwt.sign({ email: 'matt@mattmail.email' }, secret, roptions)
@@ -53,7 +57,7 @@ function gT() {
 async function run() {
   try {
     await client.connect()
-    const database = client.db('mattmadethese')
+    const database = client.db(dbName)
     const collection = database.collection('test')
 
     const cursor = await collection.find()
@@ -81,7 +85,7 @@ async function insertOne() {
   debug(doc)
   try {
     await client.connect()
-    const database = client.db('mattmadethese')
+    const database = client.db(dbName)
     const collection = database.collection('test')
     const result = await collection.insertOne(doc)
     debug(`document inserted into test collection with _id: ${result.insertedId}`)
