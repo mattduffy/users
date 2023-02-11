@@ -27,7 +27,12 @@ const Collection = 'users'
  * @module @mattduffy/users
  */
 class User {
-  SCHEMA_VERSION = 1.0
+  SCHEMA_VERSION = 1.1
+
+  /**
+   * Class property set to an Array of Object literals containing email addresses.
+   */
+  _emails
 
   /**
    * Create a user model and populate the properties.
@@ -44,6 +49,7 @@ class User {
     this._first = config?.first_name || config?.first || null
     this._last = config?.last_name || config?.last || null
     this._email = config?.email || ''
+    this._emails = config?.emails || []
     this._hashedPassword = null
     this.password = config?.password || config.hashedPassword
     let fullName
@@ -64,6 +70,7 @@ class User {
     this._description = config?.description || 'This is a user.'
     this._userStatus = config?.status || config?.userStatus || 'inactive'
     this._sessionId = config?.sessionId || null
+    this._schemaVer = config?.schemaVer || this.SCHEMA_VERSION
   }
 
   /**
@@ -127,7 +134,8 @@ class User {
    */
   static async findByEmail(email) {
     let foundUserByEmail
-    const filter = { email }
+    // const filter = { email }
+    const filter = { 'emails.primary': email }
     try {
       await client.connect()
       const db = client.db(Database)
@@ -154,11 +162,14 @@ class User {
       //   avatar: foundUserByEmail?.avatar,
       //   header: foundUserByEmail?.header,
       //   email: foundUserByEmail.email,
+      //   emails: foundUserByEmail?.emails,
       //   hashedPassword: foundUserByEmail.hashedPassword,
       //   jwts: foundUserByEmail.jwts,
       //   created_on: foundUserByEmail.createdOn,
       //   updated_on: foundUserByEmail.updatedOn,
       //   description: foundUserByEmail.description,
+      //   sessionId: foundUserByEmail?.sessionId,
+      //   schemaVer: foundUserByEmail?.schemaVer,
       // })
     }
     return foundUserByEmail
@@ -199,11 +210,13 @@ class User {
       //   avatar: foundUserById?.avatar,
       //   header: foundUserById?.header,
       //   email: foundUserById.email,
+      //   emails: foundUserById?.emails,
       //   hashedPassword: foundUserById.hashedPassword,
       //   jwts: foundUserById.jwts,
       //   created_on: foundUserById.createdOn,
       //   updated_on: foundUserById.updatedOn,
       //   description: foundUserById.description,
+      //   schemaVer: foundUserById?.schemaVer,
       //   sessionId: foundUserById.sessionId,
       // })
     }
@@ -238,6 +251,7 @@ class User {
       //   last_name: foundUserByUsername.last,
       //   name: foundUserByUsername.name,
       //   email: foundUserByUsername.email,
+      //   emails: foundUserByUsername?.emails,
       //   username: foundUserByUsername?.username,
       //   displayName: foundUserByUsername?.displayName,
       //   url: foundUserByUsername?.url,
@@ -248,6 +262,7 @@ class User {
       //   created_on: foundUserByUsername.createdOn,
       //   updated_on: foundUserByUsername.updatedOn,
       //   desciption: foundUserByUsername.description,
+      //   schemaVer: foundUserByUsername?.schemaVer,
       //   sessionId: foundUserByUsername?.sessionId,
       // })
     }
@@ -283,6 +298,7 @@ class User {
       //   last_name: foundUserBySessionId.last,
       //   name: foundUserBySessionId.name,
       //   email: foundUserBySessionId.email,
+      //   emails: foundUserBySessionId?.emails,
       //   username: foundUserBySessionId?.username,
       //   displayName: foundUserBySessionId?.displayName,
       //   url: foundUserBySessionId?.url,
@@ -293,6 +309,7 @@ class User {
       //   created_on: foundUserBySessionId.createdOn,
       //   updated_on: foundUserBySessionId.updatedOn,
       //   description: foundUserBySessionId.description,
+      //   schemaVer: foundUserBySessionId?.schemaVer,
       //   sessionId: foundUserBySessionId?.sessionId,
       // })
     }
@@ -311,6 +328,7 @@ class User {
       last_name: this._last,
       full_name: this._name,
       email: this._email,
+      emails: this._emails,
       username: this._username,
       displayName: this._displayName,
       url: this._url,
@@ -321,6 +339,8 @@ class User {
       description: this._description,
       created_on: this._created_on,
       updated_on: this._updated_on,
+      sessionId: this._sessionId,
+      schemaVer: this._schemaVer,
     }, null, 2)
   }
 
@@ -329,7 +349,7 @@ class User {
    * @return {string} - A stringified version of a JSON literal of user properties.
    */
   serialize() {
-    const propertiesToSerialize = ['_type', '_first', '_last', '_name', '_email', '_username', '_displayName', '_url', '_avatar', '_header', '_hashedPassword', '_created_on', '_updated_on', '_description', '_jwts']
+    const propertiesToSerialize = ['_type', '_first', '_last', '_name', '_email', '_emails', '_username', '_displayName', '_url', '_avatar', '_header', '_hashedPassword', '_created_on', '_updated_on', '_description', '_jwts', '_sessionId', '_schemaVer']
     const that = this
     log(that._jwts)
     return JSON.stringify(that, propertiesToSerialize)
@@ -339,7 +359,7 @@ class User {
    * Returns an array of the minimum required properties to instantiate a new user.
    */
   requiredProperties() {
-    this._requiredProperties = ['_first', '_last', '_email', '_hashedPassword', '_jwts', '_type', '_userStatus']
+    this._requiredProperties = ['_first', '_last', '_email', '_emails', '_hashedPassword', '_jwts', '_type', '_userStatus']
     return this._requiredProperties
   }
 
@@ -414,6 +434,7 @@ class User {
           first: this._first,
           last: this._last,
           email: this._email,
+          emails: this._emails,
           username: this._username,
           diplayName: this._displayName,
           url: this._url,
@@ -426,6 +447,7 @@ class User {
           description: this._description,
           userStatus: this._userStatus,
           sessionId: this._sessionId,
+          schemaVer: this._schemaVer,
         },
       }
       const options = { writeConcern: { w: 'majority' }, upsert: false, returnDocument: 'after', projection: { _id: 1, email: 1, first: 1 } }
@@ -474,6 +496,7 @@ class User {
         first: this._first,
         last: this._last,
         email: this._email,
+        emails: this._emails,
         username: this._username,
         displayName: this._displayName,
         url: this._url,
@@ -486,6 +509,7 @@ class User {
         description: this._description,
         userStatus: this._userStatus,
         sessionId: this._sessionId,
+        schemaVer: this._schemaVer,
       }
       const options = { writeConcern: { w: 'majority' } }
       log('6: Calling insertOne.')
@@ -523,6 +547,14 @@ class User {
    */
   get id() {
     return this._id
+  }
+
+  /**
+   * SCHEMA_VERSION currently used to define class properties.
+   * @return {float}
+   */
+  get schemaVersion() {
+    return this._schemaVer
   }
 
   /**
@@ -592,19 +624,72 @@ class User {
   }
 
   /**
-   * Email address property setter.
+   * Alias for primary email address property setter.
+   * @alias primaryEmail
    * @param {string} - User email address value.
    */
   set email(email) {
-    this._email = email
+    this.primaryEmail = email
   }
 
   /**
-   * Email address property getter.
+   * Alias primary email address property getter.
    * @return {string} - User email address value.
    */
   get email() {
-    return this._email
+    return this._emails[0]
+  }
+
+  /**
+   * Primary email address property setter.
+   * @param {string} - User email address value.
+   */
+  set primaryEmail(email) {
+    // this._email = email
+    this._emails.push({ primary: email, verified: false })
+  }
+
+  /**
+   * Primary email address property getter.
+   * @return {string} - User email address value.
+   */
+  get primaryEmail() {
+    return this._emails[0]
+  }
+
+  /**
+   * Seconday email address property setter.
+   * @param {string} - User email address value.
+   */
+  set secondaryEmail(email) {
+    // this._email = email
+    this._emails.push({ secondary: email, verified: false })
+  }
+
+  /**
+   * Secondary email address property getter.
+   * @return {string} - User email address value.
+   */
+  get secondaryEmail() {
+    return this._emails[1]
+  }
+
+  /**
+   * Array of at most two email addresses getter.
+   * @return {Array) - List of email addresses.
+   */
+  get emails() {
+    return this._emails
+  }
+
+  /**
+   * Array of at most two email addresses setter.
+   * @param {Array) - List of email addresses.
+   */
+  set emails(emails) {
+    // this._emails = emails
+    this.primaryEmail({ primary: emails[0], verified: false })
+    this.secondaryEmail({ secondary: emails[1], verified: false })
   }
 
   /**

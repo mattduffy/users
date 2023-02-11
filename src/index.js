@@ -174,7 +174,8 @@ class Users {
       throw new Error('DB connection error')
     }
     try {
-      const projection = { type: 1, userStatus: 1, email: 1, first: 1, last: 1 }
+      // const projection = { type: 1, userStatus: 1, email: 1, first: 1, last: 1 }
+      const projection = { type: 1, userStatus: 1, 'emails.primary': 1, first: 1, last: 1 }
       const sort = { type: 1, userStatus: 1, first: 1, last: 1 }
       const cursor = await this._db.find(filter).project(projection).sort(sort)
       array = await cursor.toArray()
@@ -200,12 +201,13 @@ class Users {
       error('What happened to the mongoclient?')
       throw new Error('DB connection error')
     }
+    const filter = { 'emails.primary': email }
     try {
-      result.user = await this._db.findOne({ email })
+      result.user = await this._db.findOne(filter)
       log('user found: %o', result.user)
       if (result.user !== null) {
         if (result.user.userStatus === 'inactive') {
-          result.user = false 
+          result.user = false
           result.message = `${email} is an inactive user account.`
         } else {
           const user = await this.factory(result.user, result.user.type)
