@@ -646,7 +646,13 @@ class User {
    */
   set primaryEmail(email) {
     // this._email = email
-    this._emails.push({ primary: email, verified: false })
+    const re = new RegExp(`^${this._emails[1].secondary}$`)
+    if (this._emails.length > 1 && re.test(email)) {
+      error('Primary email must be different from the secondary email address.')
+      throw new Error('Primary email must be different from the secondary email address.')
+    } else {
+      this._emails[0] = { primary: email, verified: false }
+    }
   }
 
   /**
@@ -663,7 +669,19 @@ class User {
    */
   set secondaryEmail(email) {
     // this._email = email
-    this._emails.push({ secondary: email, verified: false })
+    const n = this._emails.length
+    const re = new RegExp(`^${this._emails[0].primary}$`)
+    if (n === 0) {
+      error('Missing required primary email address.')
+      throw new Error('Missing required primary email address.')
+    } else if (re.test(email)) {
+      error('Secondary email must be different from the primary email address.')
+      throw new Error('Secondary email must be different from the primary email address.')
+    } else if (n === 1) {
+      this._emails.push({ secondary: email, verified: false })
+    } else {
+      this._emails[1] = { secondary: email, verified: false }
+    }
   }
 
   /**
