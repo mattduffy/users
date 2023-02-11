@@ -103,12 +103,20 @@ class AdminUser extends User {
       const database = this.dbClient.db(this.dbDatabase)
       const users = database.collection(this.dbCollection)
       const pipeline = []
+      /* eslint-disable quote-props */
+      const unwind = {
+        '$unwind': {
+          'path': '$emails',
+        },
+      }
+      /* eslint-disable quote-props */
       const group = {
         '$group': {
-          '_id': '$userStatus', 
+          '_id': '$userStatus',
           'count': { '$sum': 1 },
-          'users': { '$push': { 'id': '$_id', 'email': '$email', 'name': '$first' } }
-      } }
+          'users': { '$push': { 'id': '$_id', 'primary_email': '$emails.primary', 'name': '$first' } },
+        } }
+      pipeline.push(unwind)
       pipeline.push(group)
       userList = await users.aggregate(pipeline).toArray()
     } catch (error) {
@@ -139,6 +147,12 @@ class AdminUser extends User {
       const database = this.dbClient.db(this.dbDatabase)
       const users = database.collection(this.dbCollection)
       const pipeline = []
+      const unwind = {
+        '$unwind': {
+          'path': '$emails',
+        },
+      }
+      pipeline.push(unwind)
       if (/all/i.test(type)) {
         // match = { '$match': { 'type': { '$exists': true } } }
         /* eslint-disable quote-props */
@@ -153,10 +167,10 @@ class AdminUser extends User {
       const group = {
         '$group': {
           _id: '$type',
-      		count: { '$sum': 1 },
-      		users: { '$push': { id: '$_id', email: '$email', name: '$first', status: '$userStatus' } }
-      	}
-     }
+          count: { '$sum': 1 },
+          users: { '$push': { id: '$_id', primary_email: '$emails.primary', name: '$first', status: '$userStatus' } },
+        },
+      }
       // debug('group: %O', group)
       pipeline.push(group)
       // debug('pipeline: %O', pipeline, { depth: null })
