@@ -61,9 +61,9 @@ class User {
     this._name = fullName || null
     this._username = config?.username || this._name.toLowerCase().replace(' ', '')
     this._displayName = config?.displayname || config?.displayName || config.display_name || this._name
-    this._url = config?.url || null
-    this._avatar = config?.avatar || config?._avatar || null
-    this._header = config?.header || config?._header || null
+    this._url = config?.url || `https://<example.org>/@${this._username}`
+    this._avatar = config?.avatar || config?._avatar || 'https://<example.org>/i/accounts/avatars/missing.png'
+    this._header = config?.header || config?._header || 'https://<example.org>/i/accounts/headers/generic.png'
     this._jwts = config?.jwts || null
     this._created_on = config?.createdOn || config?.created_on || Date.now()
     this._updated_on = config?.updatedOn || config?.updated_on || null
@@ -442,7 +442,7 @@ class User {
           header: this._header,
           hashedPassword: this._hashedPassword,
           jwts: this._jwts,
-          createdOn: this._created_on,
+          // createdOn: this._created_on,
           updatedOn: Date.now(),
           description: this._description,
           userStatus: this._userStatus,
