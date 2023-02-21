@@ -7,6 +7,7 @@
 - [ ] Create an AnonymousUser class.
 - [x] Create an AdminUser class.
 - [x] Create an CreatorUser class.
+- [x] Create authentication function - check email/password and return populated user if good
 - [ ] Integrate with the @mattduffy/mft package to add JWT functionality.
 - [ ] Integrate with the @mattduffy/albums package to add album functionality.
 - [ ] Publish as npm package.

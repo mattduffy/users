@@ -92,10 +92,15 @@ class AdminUser extends User {
   /**
    * Query the database for all existing user accounts.
    * @async
+   * @param {object} options - Options object to pass parameters for filtering results.
    * @return {(Promise<array>|Error)} - An array of users.
    */
-  async listUsers() {
+  async listUsers(options = {}) {
     this.checkDB()
+    let typeFilter
+    if (!options?.userTypes) {
+      typeFilter = ['Admin', 'Creator', 'User']
+    }
     let userList
     try {
       await this.dbClient.connect()
@@ -115,9 +120,17 @@ class AdminUser extends User {
           '_id': '$userStatus',
           'count': { '$sum': 1 },
           'users': { '$push': { 'id': '$_id', 'primary_email': '$emails.primary', 'name': '$first' } },
-        } }
+        },
+      }
+      // typeFilter = ['Admin', 'Creator', 'User']
+      const match = {
+        '$match': {
+          '_id.type': { '$in': typeFilter },
+        },
+      }
       pipeline.push(unwind)
       pipeline.push(group)
+      pipeline.push(match)
       userList = await users.aggregate(pipeline).toArray()
     } catch (error) {
       debug(error)

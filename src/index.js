@@ -169,23 +169,57 @@ class Users {
 
   async getAllUsers(filter = {}) {
     let array = []
+    let userList
+    let typeFilter
+    if (!filter?.userTypes) {
+      typeFilter = ['Admin', 'Creator', 'User']
+    } else {
+      typeFilter = filter.userTypes
+    }
     if (this._db === undefined) {
       error('what happened to the mongoclient?')
       throw new Error('DB connection error')
     }
     try {
+      const pipeline = []
+      /* eslint-disable quote-props */
+      const unwind = {
+        '$unwind': {
+          'path': '$emails',
+        },
+      }
+      /* eslint-disable quote-props */
+      const group = {
+        '$group': {
+          _id: '$type',
+          count: { '$sum': 1 },
+          users: { '$push': { id: '$_id', primary_email: '$emails.primary', name: '$first', status: '$userStatus' } },
+        },
+      }
+      const match = {
+        '$match': {
+          'type': { '$in': typeFilter },
+        },
+      }
+      pipeline.push(match)
+      pipeline.push(unwind)
+      pipeline.push(group)
+      // pipeline.push(match)
+      userList = await this._db.aggregate(pipeline).toArray()
+
       // const projection = { type: 1, userStatus: 1, email: 1, first: 1, last: 1 }
-      const projection = { type: 1, userStatus: 1, 'emails.primary': 1, first: 1, last: 1 }
-      const sort = { type: 1, userStatus: 1, first: 1, last: 1 }
-      const cursor = await this._db.find(filter).project(projection).sort(sort)
-      array = await cursor.toArray()
-      array.unshift(array.length)
-      await cursor.close()
-      return array
+      // const projection = { type: 1, userStatus: 1, 'emails.primary': 1, first: 1, last: 1 }
+      // const sort = { type: 1, userStatus: 1, first: 1, last: 1 }
+      // const cursor = await this._db.find(filter).project(projection).sort(sort)
+      // array = await cursor.toArray()
+      // array.unshift(array.length)
+      // await cursor.close()
     } catch (e) {
       log(e)
       return false
     }
+    // return array
+    return userList
   }
 
   async authenticateAndGetUser(email = null, password = null) {
