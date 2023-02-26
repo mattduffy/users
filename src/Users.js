@@ -27,7 +27,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
  */
 function createNewBasicUser(properties = {}) {
   debug('Creating a new basic user')
-  if (!properties.hasOwnProperty('first_name') || !properties.hasOwnProperty('last_name') || !properties.hasOwnProperty('email') || !properties.hasOwnProperty('password')) {
+  if (!Object.prototype.hasOwnProperty.call(properties, 'first_name') || !Object.prototype.hasOwnProperty.call(properties, 'last_name') || !Object.prototype.hasOwnProperty.call(properties, 'email') || !Object.prototype.hasOwnProperty.call(properties, 'password')) {
     let msg = 'The following fields are required to create a new user:\n'
     msg += '    - first_name: new user\'s first name.\n'
     msg += '    - last_name: new user\'s last name.\n'
@@ -48,7 +48,7 @@ function createNewBasicUser(properties = {}) {
  */
 function createNewAdminUser(adminProperties = {}) {
   debug('Creating a new admin user')
-  if (!adminProperties.hasOwnProperty('first_name') || !adminProperties.hasOwnProperty('last_name') || !adminProperties.hasOwnProperty('email') || !adminProperties.hasOwnProperty('password')) {
+  if (!Object.prototype.hasOwnPropertycall(adminProperties, 'first_name') || !Object.prototype.hasOwnProperty.call(adminProperties, 'last_name') || !Object.prototype.hasOwnProperty.call(adminProperties, 'email') || !Object.prototype.hasOwnPropertycall(adminProperties, 'password')) {
     let msg = 'The following fields are required to create a new user:\n'
     msg += '    - first_name: new user\'s first name.\n'
     msg += '    - last_name: new user\'s last name.\n'

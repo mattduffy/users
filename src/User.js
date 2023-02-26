@@ -44,33 +44,33 @@ class User {
     this.dbClient = client
     this.dbDatabase = 'mattmadethese'
     this.dbCollection = 'users'
-    this._id = config?._id || config?.id || null
-    this._type = config?.type || 'User'
-    this._first = config?.first_name || config?.first || null
-    this._last = config?.last_name || config?.last || null
-    this._email = config?.email || ''
-    this._emails = config?.emails || []
+    this._id = config?._id ?? config?.id ?? null
+    this._type = config?.type ?? 'User'
+    this._first = config?.first_name ?? config?.first ?? null
+    this._last = config?.last_name ?? config?.last ?? null
+    this._email = config?.email ?? ''
+    this._emails = config?.emails ?? []
     this._hashedPassword = null
-    this.password = config?.password || config.hashedPassword
+    this.password = config?.password ?? config.hashedPassword
     let fullName
     if (config.name != null && config.name !== '') {
       fullName = config.name
     } else if (this._first != null && this._last != null) {
       fullName = `${this._first} ${this._last}`
     }
-    this._name = fullName || null
-    this._username = config?.username || this._name.toLowerCase().replace(' ', '')
-    this._displayName = config?.displayname || config?.displayName || config.display_name || this._name
-    this._url = config?.url || `https://<example.org>/@${this._username}`
-    this._avatar = config?.avatar || config?._avatar || 'https://<example.org>/i/accounts/avatars/missing.png'
-    this._header = config?.header || config?._header || 'https://<example.org>/i/accounts/headers/generic.png'
-    this._jwts = config?.jwts || null
-    this._created_on = config?.createdOn || config?.created_on || Date.now()
-    this._updated_on = config?.updatedOn || config?.updated_on || null
-    this._description = config?.description || 'This is a user.'
-    this._userStatus = config?.status || config?.userStatus || 'inactive'
-    this._sessionId = config?.sessionId || null
-    this._schemaVer = config?.schemaVer || this.SCHEMA_VERSION
+    this._name = fullName ?? null
+    this._username = config?.username ?? this._name.toLowerCase().replace(' ', '')
+    this._displayName = config?.displayname ?? config?.displayName ?? config.display_name ?? this._name
+    this._url = config?.url ?? `https://<example.org>/@${this._username}`
+    this._avatar = config?.avatar ?? config?._avatar ?? 'https://<example.org>/i/accounts/avatars/missing.png'
+    this._header = config?.header ?? config?._header ?? 'https://<example.org>/i/accounts/headers/generic.png'
+    this._jwts = config?.jwts ?? null
+    this._created_on = config?.createdOn ?? config?.created_on ?? Date.now()
+    this._updated_on = config?.updatedOn ?? config?.updated_on ?? null
+    this._description = config?.description ?? 'This is a user.'
+    this._userStatus = config?.status ?? config?.userStatus ?? 'inactive'
+    this._sessionId = config?.sessionId ?? null
+    this._schemaVer = config?.schemaVer ?? this.SCHEMA_VERSION
   }
 
   /**
@@ -369,7 +369,7 @@ class User {
    */
   checkRequired() {
     const missing = []
-    for(let key of this.requiredProperties()) {
+    for(const key of this.requiredProperties()) {
       if (!this[key] || this[key] === null || this[key] === 'undefined' || this[key] === '') {
         missing.push(key)
       }
