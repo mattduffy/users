@@ -63,11 +63,11 @@ class User {
     this._username = config?.username ?? this._name.toLowerCase().replace(' ', '')
     this._displayName = config?.displayname ?? config?.displayName ?? config.display_name ?? this._name
     this._url = config?.url ?? `http://<<app.host>>/@${this._username}`
-    this._url = this.#fixUrlUsername(this._url)
+    this._url = this.#fixUsernameUrl(this._url)
     this._avatar = config?.avatar ?? config?._avatar ?? 'http://<<app.host>>/i/accounts/avatars/missing.png'
-    this._avatar = this.#fixUrlHostname(this._avatar)
+    this._avatar = this.#fixAvatarUrl(this._avatar)
     this._header = config?.header ?? config?._header ?? 'http://<<app.host>>/i/accounts/headers/generic.png'
-    this._header = this.#fixUrlHostname(this._header)
+    this._header = this.#fixHeaderUrl(this._header)
     this._jwts = config?.jwts ?? null
     this._created_on = config?.createdOn ?? config?.created_on ?? Date.now()
     this._updated_on = config?.updatedOn ?? config?.updated_on ?? null
@@ -80,17 +80,40 @@ class User {
   /**
    *
    */
-  #fixUrlHostname(url) {
-    const { protocol, hostname } = this._ctx
-    return url.replace(/^(http|https):\/\/(<<app.host>>)\/(.*)$/, (m, p, h) => `${protocol}://${hostname}${h}`)
+  #fixHeaderUrl(url) {
+    let goodUrl = url
+    const { protocol, host } = this._ctx
+    const pattern = new RegExp(`${host}/i/accounts/avatars/.*$`)
+    if (!pattern.test(url)) {
+      goodUrl = url.replace(/^(http|https):\/\/(<<app.host>>)\/(.*)$/, (m, p, h, x) => `${protocol}://${host}/${x}`)
+    }
+    return goodUrl
   }
 
   /**
    *
    */
-  #fixUrlUsername(url) {
-    const { protocol, hostname } = this._ctx
-    return url.replace(/^(http|https):\/\/(<<app.host>>)\/(.*)/, (m, p, h, u) => `${protocol}://${hostname}@${this._username}`)
+  #fixAvatarUrl(url) {
+    let goodUrl = url
+    const { protocol, host } = this._ctx
+    const pattern = new RegExp(`${host}/i/accounts/avatars/.*$`)
+    if (!pattern.test(url)) {
+      goodUrl = url.replace(/^(http|https):\/\/(<<app.host>>)\/(.*)$/, (m, p, h, x) => `${protocol}://${host}/${x}`)
+    }
+    return goodUrl
+  }
+
+  /**
+   *
+   */
+  #fixUsernameUrl(url) {
+    let goodUrl = url
+    const { protocol, host } = this._ctx
+    const pattern = new RegExp(`${host}/@(.*){2,30}$`)
+    if (!pattern.test(url)) {
+      goodUrl = url.replace(/^(http|https):\/\/(<<app.host>>)\/(.*)/, () => `${protocol}://${host}/@${this._username}`)
+    }
+    return goodUrl
   }
 
   /**
