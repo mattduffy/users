@@ -41,8 +41,9 @@ if (process.argv[1] === await readFile(fileURLToPath(import.meta.url))) {
 class Users {
   NO_DB_OBJECT = 'No MongoDB client connection object provided.'
 
-  constructor(mongoClient) {
+  constructor(mongoClient, ctx) {
     this._db = mongoClient
+    this._ctx = ctx
   }
 
   async newUser(type = 'basic') {
@@ -63,24 +64,25 @@ class Users {
   }
 
   async factory(config, type = 'null') {
+    const conf = { ctx: this._ctx, ...config }
     if (this._db === null) {
       log(this.NO_DB_OBJECT)
       throw new Error(this.NO_DB_OBJECT)
     }
     if (/admin/i.test(type)) {
       log('making a new admin user')
-      return new AdminUser(config, this._db)
+      return new AdminUser(conf, this._db)
     }
     if (/creator/i.test(type)) {
       log('making a new creator user')
-      return new CreatorUser(config, this._db)
+      return new CreatorUser(conf, this._db)
     }
     if (/anonymous/i.test(type)) {
       log('making a new anonymous user')
-      return new AnonymousUser(config, this._db)
+      return new AnonymousUser(conf, this._db)
     }
     log('making a new basic user')
-    return await new User(config, this._db)
+    return await new User(conf, this._db)
   }
 
   async getById(id = null) {

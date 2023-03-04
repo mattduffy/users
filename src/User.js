@@ -27,7 +27,7 @@ const Collection = 'users'
  * @module @mattduffy/users
  */
 class User {
-  SCHEMA_VERSION = 1.1
+  SCHEMA_VERSION = 4
 
   /**
    * Class property set to an Array of Object literals containing email addresses.
@@ -44,11 +44,12 @@ class User {
     this.dbClient = client
     this.dbDatabase = 'mattmadethese'
     this.dbCollection = 'users'
+    this._ctx = config?.ctx ?? {}
     this._id = config?._id ?? config?.id ?? null
     this._type = config?.type ?? 'User'
     this._first = config?.first_name ?? config?.first ?? null
     this._last = config?.last_name ?? config?.last ?? null
-    this._email = config?.email ?? ''
+    // this._email = config?.email ?? ''
     this._emails = config?.emails ?? []
     this._hashedPassword = null
     this.password = config?.password ?? config.hashedPassword
@@ -61,9 +62,12 @@ class User {
     this._name = fullName ?? null
     this._username = config?.username ?? this._name.toLowerCase().replace(' ', '')
     this._displayName = config?.displayname ?? config?.displayName ?? config.display_name ?? this._name
-    this._url = config?.url ?? `https://<example.org>/@${this._username}`
-    this._avatar = config?.avatar ?? config?._avatar ?? 'https://<example.org>/i/accounts/avatars/missing.png'
-    this._header = config?.header ?? config?._header ?? 'https://<example.org>/i/accounts/headers/generic.png'
+    this._url = config?.url ?? `http://<<app.host>>/@${this._username}`
+    this._url = this.#fixUrlUsername(this._url)
+    this._avatar = config?.avatar ?? config?._avatar ?? 'http://<<app.host>>/i/accounts/avatars/missing.png'
+    this._avatar = this.#fixUrlHostname(this._avatar)
+    this._header = config?.header ?? config?._header ?? 'http://<<app.host>>/i/accounts/headers/generic.png'
+    this._header = this.#fixUrlHostname(this._header)
     this._jwts = config?.jwts ?? null
     this._created_on = config?.createdOn ?? config?.created_on ?? Date.now()
     this._updated_on = config?.updatedOn ?? config?.updated_on ?? null
@@ -71,6 +75,22 @@ class User {
     this._userStatus = config?.status ?? config?.userStatus ?? 'inactive'
     this._sessionId = config?.sessionId ?? null
     this._schemaVer = config?.schemaVer ?? this.SCHEMA_VERSION
+  }
+
+  /**
+   *
+   */
+  #fixUrlHostname(url) {
+    const { protocol, hostname } = this._ctx
+    return url.replace(/^(http|https):\/\/(<<app.host>>)\/(.*)$/, (m, p, h) => `${protocol}://${hostname}${h}`)
+  }
+
+  /**
+   *
+   */
+  #fixUrlUsername(url) {
+    const { protocol, hostname } = this._ctx
+    return url.replace(/^(http|https):\/\/(<<app.host>>)\/(.*)/, (m, p, h, u) => `${protocol}://${hostname}@${this._username}`)
   }
 
   /**
@@ -327,7 +347,7 @@ class User {
       first_name: this._first,
       last_name: this._last,
       full_name: this._name,
-      email: this._email,
+      // email: this._email,
       emails: this._emails,
       username: this._username,
       displayName: this._displayName,
@@ -349,7 +369,7 @@ class User {
    * @return {string} - A stringified version of a JSON literal of user properties.
    */
   serialize() {
-    const propertiesToSerialize = ['_type', '_first', '_last', '_name', '_email', '_emails', '_username', '_displayName', '_url', '_avatar', '_header', '_hashedPassword', '_created_on', '_updated_on', '_description', '_jwts', '_sessionId', '_schemaVer']
+    const propertiesToSerialize = ['_type', '_first', '_last', '_name', '_emails', '_username', '_displayName', '_url', '_avatar', '_header', '_hashedPassword', '_created_on', '_updated_on', '_description', '_jwts', '_sessionId', '_schemaVer']
     const that = this
     log(that._jwts)
     return JSON.stringify(that, propertiesToSerialize)
@@ -359,7 +379,8 @@ class User {
    * Returns an array of the minimum required properties to instantiate a new user.
    */
   requiredProperties() {
-    this._requiredProperties = ['_first', '_last', '_email', '_emails', '_hashedPassword', '_jwts', '_type', '_userStatus']
+    // this._requiredProperties = ['_first', '_last', '_email', '_emails', '_hashedPassword', '_jwts', '_type', '_userStatus']
+    this._requiredProperties = ['_first', '_last', '_emails', '_hashedPassword', '_jwts', '_type', '_userStatus']
     return this._requiredProperties
   }
 
@@ -433,7 +454,7 @@ class User {
           type: this._type,
           first: this._first,
           last: this._last,
-          email: this._email,
+          // email: this._email,
           emails: this._emails,
           username: this._username,
           diplayName: this._displayName,
@@ -495,7 +516,7 @@ class User {
         type: this._type,
         first: this._first,
         last: this._last,
-        email: this._email,
+        // email: this._email,
         emails: this._emails,
         username: this._username,
         displayName: this._displayName,
