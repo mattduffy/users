@@ -370,7 +370,6 @@ class User {
       first_name: this._first,
       last_name: this._last,
       full_name: this._name,
-      // email: this._email,
       emails: this._emails,
       username: this._username,
       displayName: this._displayName,
@@ -378,12 +377,12 @@ class User {
       avatar: this._avatar,
       header: this._header,
       // password: this._hashedPassword,
-      jwts: this._jwts,
       description: this._description,
       created_on: this._created_on,
       updated_on: this._updated_on,
       sessionId: this._sessionId,
       schemaVer: this._schemaVer,
+      jwts: this._jwts,
     }, null, 2)
   }
 

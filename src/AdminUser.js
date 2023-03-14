@@ -33,8 +33,8 @@ class AdminUser extends User {
   constructor(config) {
     super(config)
     this._type = 'Admin'
-    this._description = 'This is an Admin level user.'
-    debug(this._description)
+    // this._description = 'This is an Admin level user.'
+    debug('This is an Admin level user.')
     this._userTypes = [
       { type: 'Anonymous', description: 'This is an Anonymous level user.' },
       { type: 'User', description: 'This is a User level user.' },

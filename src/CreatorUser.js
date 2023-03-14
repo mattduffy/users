@@ -33,8 +33,8 @@ class CreatorUser extends AnonymousUser {
   constructor(config) {
     super(config)
     this._type = 'Creator'
-    this._description = 'This is a Creator user.'
-    debug(this._description)
+    // this._description = 'This is a Creator user.'
+    debug('This is a Creator user.')
   }
 
   /**

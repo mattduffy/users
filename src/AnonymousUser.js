@@ -27,8 +27,8 @@ class AnonymousUser extends User {
   constructor(config) {
     super(config)
     this._type = 'Anonymous'
-    this._description = 'This is an Anonymous user.'
-    debug(this._description)
+    // this._description = 'This is an Anonymous user.'
+    debug('This is an Anonymous user.')
   }
 
   /**
