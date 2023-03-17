@@ -169,6 +169,48 @@ class User {
   }
 
   /**
+   * Class method to update user's password.
+   * @summary Class method to update user's password.
+   * @async
+   * @param { string } currentPassword - User's current password, to test is correct.
+   * @param { string } newPassword - New string value to be hashed and saved.
+   * @return { object } - Object literal with success message or error.
+   */
+  async updatePassword(currentPassword = null, newPassword = null) {
+    const result = {
+      message: null,
+      success: null,
+      error: [],
+      // originalHash: this.password,
+    }
+    if (!currentPassword) {
+      result.error.push('Missing required current password parameter.')
+      result.success = false
+    }
+    if (!newPassword) {
+      result.error.push('Missing required new password parameter.')
+      result.success = false
+    }
+    if (result.error.length > 0) {
+      result.error = result.error.join('\n')
+      result.success = false
+      return result
+    }
+    if (await bcrypt.compare(currentPassword, this._hashedPassword)) {
+      // currentPassword is a match, hash new password
+      this.password = newPassword
+      result.error = null
+      result.message = 'Password has been updated'
+      result.success = true
+      // result.newHash = this.password
+    } else {
+      result.error = 'Current password was not a valid match.'
+      result.success = false
+    }
+    return result
+  }
+
+  /**
    * Static class method to find user in the database, searching by email address.
    * @static
    * @async
