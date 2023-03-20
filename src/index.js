@@ -224,6 +224,45 @@ class Users {
     return userList
   }
 
+  async authenticateByAccessToken(token = null) {
+    const result = {
+      user: null,
+      message: null,
+      error: null,
+    }
+    if (token === null) {
+      throw new Error('Access token argument is required.')
+    }
+    if (this._db === undefined) {
+      error('What happened to the mongoclient?')
+      throw new Error('DB connection error.')
+    }
+    const validToken = /[^+\s]*[A-Za-z0-9._-]*/g.exec(token)
+    if (validToken && validToken[1] !== '') {
+      const filter = { 'jwts.token': token }
+      try {
+        result.user = await this._db.findOne(filter)
+        log(`Found user by token: ${result.user.username}`)
+        if (result.user !== null) {
+          if (result.user.userStatus === 'inactive') {
+            result.user = false
+            result.message = 'Access token for an inactive user account.'
+          } else {
+            const userByToken = await this.factory(result.user, result.user.type)
+            result.user = userByToken
+            result.message = 'success'
+          }
+        }
+      } catch (e) {
+        result.user = false
+        result.error = e
+      }
+    } else {
+      result.error = 'Not a valid access token'
+    }
+    return result
+  }
+
   async authenticateAndGetUser(email = null, password = null) {
     const result = {
       user: null,
