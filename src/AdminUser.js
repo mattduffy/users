@@ -114,7 +114,6 @@ class AdminUser extends User {
           'path': '$emails',
         },
       }
-      /* eslint-disable quote-props */
       const group = {
         '$group': {
           '_id': '$userStatus',
@@ -122,12 +121,12 @@ class AdminUser extends User {
           'users': { '$push': { 'id': '$_id', 'primary_email': '$emails.primary', 'name': '$first' } },
         },
       }
-      // typeFilter = ['Admin', 'Creator', 'User']
       const match = {
         '$match': {
           '_id.type': { '$in': typeFilter },
         },
       }
+      /* eslint-enable quote-props */
       pipeline.push(unwind)
       pipeline.push(group)
       pipeline.push(match)
@@ -160,6 +159,7 @@ class AdminUser extends User {
       const database = this.dbClient.db(this.dbDatabase)
       const users = database.collection(this.dbCollection)
       const pipeline = []
+      /* eslint-disable quote-props */
       const unwind = {
         '$unwind': {
           'path': '$emails',
@@ -167,12 +167,9 @@ class AdminUser extends User {
       }
       pipeline.push(unwind)
       if (/all/i.test(type)) {
-        // match = { '$match': { 'type': { '$exists': true } } }
-        /* eslint-disable quote-props */
         match = { '$match': { type: { '$exists': true } } }
       } else {
         const userType = type[0].toUpperCase() + type.slice(1)
-        /* eslint-disable quote-props */
         match = { '$match': { type: userType } }
       }
       // debug('match: %O', match)
@@ -184,6 +181,7 @@ class AdminUser extends User {
           users: { '$push': { id: '$_id', primary_email: '$emails.primary', name: '$first', status: '$userStatus' } },
         },
       }
+      /* eslint-enable-next-line quote-props */
       // debug('group: %O', group)
       pipeline.push(group)
       // debug('pipeline: %O', pipeline, { depth: null })

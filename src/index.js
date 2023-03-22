@@ -190,7 +190,6 @@ class Users {
           'path': '$emails',
         },
       }
-      /* eslint-disable quote-props */
       const group = {
         '$group': {
           _id: '$type',
@@ -203,6 +202,8 @@ class Users {
           'type': { '$in': typeFilter },
         },
       }
+      /* eslint-enable quote-props */
+
       pipeline.push(match)
       pipeline.push(unwind)
       pipeline.push(group)
