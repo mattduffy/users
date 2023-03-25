@@ -2,6 +2,9 @@
  * @module @mattduffy/users
  * @file /src/User.js
  */
+import { mkdir, stat } from 'node:fs/promises'
+import path from 'node:path'
+import { createHash } from 'node:crypto'
 import bcrypt from 'bcrypt'
 import Debug from 'debug'
 import { client, ObjectId } from './mongoclient.js'
@@ -73,8 +76,9 @@ class User {
     this._updated_on = config?.updatedOn ?? config?.updated_on ?? null
     this._description = config?.description ?? 'This is a user.'
     this._userStatus = config?.status ?? config?.userStatus ?? 'inactive'
+    this._publicDir = config?.publicDir ?? null
     this._sessionId = config?.sessionId ?? null
-    this._schemaVer = config?.schemaVer ?? this.SCHEMA_VERSION
+    this._schemaVer = config?.schemaVer
   }
 
   /**
@@ -166,6 +170,25 @@ class User {
     }
     // True if password == hashedPassword, and False if !=.
     return result
+  }
+
+  /**
+   * Simple class method wrapper around fs/promises.mkdir function.
+   * @summary Simple class method wrapper around fs/promises.mkdir function.
+   * @async
+   * @param { string } directory - Path of directory to be created.
+   * @return { undefined }
+   * @throws { Error } If directory argument is missing or already exists.
+   */
+  /* eslint-disable-next-line class-methods-use-this */
+  async makedir(directory) {
+    try {
+      await mkdir(directory, { recursive: true })
+      return true
+    } catch (e) {
+      error(`Failed to mkdir ${directory}`)
+      throw e
+    }
   }
 
   /**
@@ -1054,6 +1077,46 @@ class User {
    */
   get db() {
     return this.dbClient
+  }
+
+  /**
+   * publicDir proptery setter.
+   * @param { string } - Path to set user's publicDir location.
+   */
+  set publicDir(location) {
+    if (!location) {
+      error('Missing required location parameter.')
+      throw new Error('Missing required location parameter.')
+    }
+    let pubDirPath
+    const hashedId = createHash('md5').update(this._id.toString()).digest('hex')
+    log(`hashedId ${hashedId}`)
+    // Check to see if <location> contains the MD5 hashed user id field as part of path.
+    // If not, add it so path looks like /path/to/koa/root/public/accounts/<hashedId>/
+    const re = new RegExp(`${hashedId}`)
+    if (!re.test(location)) {
+      // pubDirPath = path.resolve(location, 'accounts', hashedId)
+      pubDirPath = `${location}/${hashedId}`
+    } else {
+      pubDirPath = location
+    }
+    try {
+      this.makedir(pubDirPath)
+    } catch (e) {
+      error('Failed setting user\'s publicDir.')
+      throw new Error('Failed setting user\'s publicDir.')
+    }
+    log(`pubDirPath ${pubDirPath}`)
+    log(`pubDirPath resolved ${path.resolve(pubDirPath)}`)
+    this._publicDir = pubDirPath
+  }
+
+  /**
+   * publicDir property getter.
+   * @return { string } - Directory location of user's publicDir.
+   */
+  get publicDir() {
+    return this._publicDir
   }
 }
 
