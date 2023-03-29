@@ -266,9 +266,11 @@ class Users {
 
   async authenticateAndGetUser(email = null, password = null) {
     const result = {
+      email,
       user: null,
-      message: null,
+      info: null,
       error: null,
+      message: null,
     }
     if (email === null || password === null) {
       throw new Error('Email and Password arguments are required.')
@@ -279,15 +281,26 @@ class Users {
     }
     const filter = { 'emails.primary': email }
     try {
+      // log(`email: ${email}`)
+      // log(`password: ${password}`)
       result.user = await this._db.findOne(filter)
-      log('user found: %o', result.user)
+      log(`User found: ${result.user.emails[0].primary}`)
       if (result.user !== null) {
         if (result.user.userStatus === 'inactive') {
           result.user = false
-          result.message = `${email} is an inactive user account.`
+          result.error = `Can't login ${email}. Inactive user account.`
         } else {
-          const user = await this.factory(result.user, result.user.type)
-          result.user = user
+          log('not inactive user... bcrypt.comapre...')
+          const match = await bcrypt.compare(password, result.user.hashedPassword)
+          log(`match is ${match}`)
+          if (match) {
+            const user = await this.factory(result.user, result.user.type)
+            result.user = user
+          } else {
+            error('bcrypt password hash compare failed')
+            result.user = false
+            result.error = 'Wrong password.'
+          }
         }
       } else {
         result.message = `No user found with email: ${email}`
@@ -296,6 +309,7 @@ class Users {
       result.user = false
       result.error = e
     }
+    log(result)
     return result
   }
 }
