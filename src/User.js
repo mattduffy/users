@@ -2,7 +2,7 @@
  * @module @mattduffy/users
  * @file /src/User.js
  */
-import { mkdir, stat } from 'node:fs/promises'
+import { mkdir, stat, rename } from 'node:fs/promises'
 import path from 'node:path'
 import { createHash } from 'node:crypto'
 import bcrypt from 'bcrypt'
@@ -187,6 +187,25 @@ class User {
       return true
     } catch (e) {
       error(`Failed to mkdir ${directory}`)
+      throw e
+    }
+  }
+
+  /**
+   * Simple class method wrapper around fs/promises.rename function.
+   * @summary Simple class method wrapper around fs/promises.rename function.
+   * @async
+   * @param { string } directory - Path of directory to be renamed.
+   * @return { undefined }
+   * @throws { Error } If directory argument is missing or doesn't already exists.
+   */
+  /* eslint-disable-next-line class-methods-use-this */
+  async renamedir(newName) {
+    try {
+      await rename(this.publicDir, newName)
+      return true
+    } catch (e) {
+      error(`Failed to rename ${this.publicDir} to ${newName}`)
       throw e
     }
   }
@@ -548,6 +567,7 @@ class User {
           url: this._url,
           avatar: this._avatar,
           header: this._header,
+          publicDir: this._publicDir,
           hashedPassword: this._hashedPassword,
           jwts: this._jwts,
           // createdOn: this._created_on,
@@ -1088,27 +1108,44 @@ class User {
       error('Missing required location parameter.')
       throw new Error('Missing required location parameter.')
     }
-    let pubDirPath
-    const hashedId = createHash('md5').update(this._id.toString()).digest('hex')
-    log(`hashedId ${hashedId}`)
-    // Check to see if <location> contains the MD5 hashed user id field as part of path.
-    // If not, add it so path looks like /path/to/koa/root/public/accounts/<hashedId>/
-    const re = new RegExp(`${hashedId}`)
-    if (!re.test(location)) {
-      // pubDirPath = path.resolve(location, 'accounts', hashedId)
-      pubDirPath = `${location}/${hashedId}`
+    if (this._publicDir === null || this._publicDir === '') {
+      // publicDir not set yet, create it now
+      log(`Creating a new publicDir for ${this.emails[0].primary} at ${location}`)
+      let pubDirPath
+      const hashedId = createHash('md5').update(this._id.toString()).digest('hex')
+      log(`hashedId ${hashedId}`)
+      // Check to see if <location> contains the MD5 hashed user id field as part of path.
+      // If not, add it so path looks like /path/to/koa-app-root/public/<location>/<hashedId>/
+      const re = new RegExp(`${hashedId}`)
+      if (!re.test(location)) {
+        // pubDirPath = path.resolve(location, 'accounts', hashedId)
+        pubDirPath = `${location}/${hashedId}`
+      } else {
+        pubDirPath = location
+      }
+      try {
+        this.makedir(pubDirPath)
+      } catch (e) {
+        error(`Failed setting ${this.email}'s publicDir.`)
+        throw new Error(`Failed setting ${this.emails[0].primary}'s publicDir.`)
+      }
+      log(`pubDirPath ${pubDirPath}`)
+      log(`pubDirPath resolved ${path.resolve(pubDirPath)}`)
+      this._publicDir = pubDirPath
     } else {
-      pubDirPath = location
+      // renaming old publicDir to new name
+      const oldPath = path.resolve(this.publicDir)
+      const newPath = path.resolve(location)
+      log(`Renaming ${this.emails[0].primary}'s publicDir from ${oldPath} to ${newPath}`)
+      // resolve the new path to the same root path...
+      try {
+        if (this.renamedir(newPath)) {
+          this.publicDir = newPath
+        }
+      } catch (e) {
+        error(`Failed to rename ${this.emails[0].primary}'s publicDir from ${oldPath} to ${newPath}`)
+      }
     }
-    try {
-      this.makedir(pubDirPath)
-    } catch (e) {
-      error('Failed setting user\'s publicDir.')
-      throw new Error('Failed setting user\'s publicDir.')
-    }
-    log(`pubDirPath ${pubDirPath}`)
-    log(`pubDirPath resolved ${path.resolve(pubDirPath)}`)
-    this._publicDir = pubDirPath
   }
 
   /**
