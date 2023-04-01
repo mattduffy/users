@@ -2,7 +2,8 @@
  * @module @mattduffy/users
  * @file /src/User.js
  */
-import { mkdir, stat, rename } from 'node:fs/promises'
+import { mkdir, stat } from 'node:fs/promises'
+import { rename } from 'node:fs'
 import path from 'node:path'
 import { createHash } from 'node:crypto'
 import bcrypt from 'bcrypt'
@@ -194,18 +195,24 @@ class User {
   /**
    * Simple class method wrapper around fs/promises.rename function.
    * @summary Simple class method wrapper around fs/promises.rename function.
-   * @async
    * @param { string } directory - Path of directory to be renamed.
    * @return { undefined }
    * @throws { Error } If directory argument is missing or doesn't already exists.
    */
   /* eslint-disable-next-line class-methods-use-this */
-  async renamedir(newName) {
+  renamedir(newName) {
+    const oldName = `${this._ctx.app.publicDir}/${this._publicDir}`
+    log(`Renaming ${oldName} to ${newName}`)
     try {
-      await rename(this.publicDir, newName)
+      rename(oldName, newName, (err) => {
+        if (err) {
+          error('fs:rename sync error: %o', err)
+          throw err
+        }
+      })
       return true
     } catch (e) {
-      error(`Failed to rename ${this.publicDir} to ${newName}`)
+      error(`Failed to rename ${oldName} to ${newName}`)
       throw e
     }
   }
@@ -1108,42 +1115,53 @@ class User {
       error('Missing required location parameter.')
       throw new Error('Missing required location parameter.')
     }
+    if (!this._ctx) {
+      error('Missing koa ctx config values.')
+      throw new Error('Missing koa ctx config values.')
+    }
+    let relPath
+    let fullPath
+    const hashedId = createHash('md5').update(this._id.toString()).digest('hex')
+    log(`hashedId ${hashedId}`)
+    // Check to see if <location> contains the MD5 hashed user id field as part of path.
+    // If not, add it so path looks like /path/to/koa-app-root/public/<location>/<hashedId>/
+    const re = new RegExp(`${hashedId}`)
+    if (!re.test(location)) {
+      relPath = `${location}/${hashedId}/`
+      fullPath = `${this._ctx.app.publicDir}/${location}/${hashedId}/`
+    } else {
+      relPath = `${location}/`
+      fullPath = `${this._ctx.app.publicDir}/${location}/`
+    }
     if (this._publicDir === null || this._publicDir === '') {
       // publicDir not set yet, create it now
       log(`Creating a new publicDir for ${this.emails[0].primary} at ${location}`)
-      let pubDirPath
-      const hashedId = createHash('md5').update(this._id.toString()).digest('hex')
-      log(`hashedId ${hashedId}`)
-      // Check to see if <location> contains the MD5 hashed user id field as part of path.
-      // If not, add it so path looks like /path/to/koa-app-root/public/<location>/<hashedId>/
-      const re = new RegExp(`${hashedId}`)
-      if (!re.test(location)) {
-        // pubDirPath = path.resolve(location, 'accounts', hashedId)
-        pubDirPath = `${location}/${hashedId}`
-      } else {
-        pubDirPath = location
-      }
+      log(`ctx.app.root: ${this._ctx.app.root}`)
       try {
-        this.makedir(pubDirPath)
+        log(`shortPath: ${relPath}`)
+        log(`fullPath: ${fullPath}`)
+        this.makedir(fullPath)
       } catch (e) {
-        error(`Failed setting ${this.email}'s publicDir.`)
-        throw new Error(`Failed setting ${this.emails[0].primary}'s publicDir.`)
+        error(`Failed setting ${this.emails[0].primary}'s publicDir.`)
+        throw new Error(`Failed setting ${this.emails[0].primary}'s publicDir ${fullPath}.`)
       }
-      log(`pubDirPath ${pubDirPath}`)
-      log(`pubDirPath resolved ${path.resolve(pubDirPath)}`)
-      this._publicDir = pubDirPath
+      this._publicDir = relPath
     } else {
       // renaming old publicDir to new name
-      const oldPath = path.resolve(this.publicDir)
-      const newPath = path.resolve(location)
-      log(`Renaming ${this.emails[0].primary}'s publicDir from ${oldPath} to ${newPath}`)
+      // const oldPath = path.resolve(this.publicDir)
+      const oldFullPath = `${this._ctx.app.publicDir}/${this.publicDir}`
+      // const newPath = path.resolve(`${location}/`)
+      const newFullPath = path.resolve(`${this._ctx.app.publicDir}`, `${location}`)
+      const newRelPath = `${location}/`
+      log(`Renaming ${this.emails[0].primary}'s publicDir from ${oldFullPath} to ${newFullPath}`)
       // resolve the new path to the same root path...
       try {
-        if (this.renamedir(newPath)) {
-          this.publicDir = newPath
+        if (this.renamedir(newFullPath)) {
+          this._publicDir = newRelPath
         }
       } catch (e) {
-        error(`Failed to rename ${this.emails[0].primary}'s publicDir from ${oldPath} to ${newPath}`)
+        error(`Failed to rename ${this.emails[0].primary}'s publicDir from ${oldFullPath} to ${newFullPath}`)
+        throw new Error(e)
       }
     }
   }

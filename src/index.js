@@ -52,15 +52,15 @@ class Users {
       throw new Error(this.NO_DB_OBJECT)
     }
     if (/admin/i.test(type)) {
-      return new AdminUser(this._db)
+      return new AdminUser(this._db, this._ctx)
     }
     if (/creator/i.test(type)) {
-      return new CreatorUser(this._db)
+      return new CreatorUser(this._db, this._ctx)
     }
     if (/anonymous/i.test(type)) {
-      return new AnonymousUser(this._db)
+      return new AnonymousUser(this._db, this._ctx)
     }
-    return await new User(this._db)
+    return await new User(this._db, this._ctx)
   }
 
   async factory(config, type = 'null') {
