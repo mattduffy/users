@@ -26,6 +26,9 @@ import { CreatorUser } from './CreatorUser.js'
 import { AnonymousUser } from './AnonymousUser.js'
 // import { client, ObjectId } from './mongoclient.js'
 
+const Database = 'mattmadethese'
+const Collection = 'users'
+
 const log = Debug('users:index_log')
 const error = Debug('users:index_error')
 
@@ -170,7 +173,15 @@ class Users {
   }
 
   async getAllUsers(filter = {}) {
-    let array = []
+    // log(`s.namespace: ${this._db.s.namespace.collection}`)
+    let users
+    if (this._db.s.namespace.collection === undefined) {
+      await this._db.connect()
+      const db = this._db.db(Database)
+      users = db.collection(Collection)
+    } else {
+      users = this._db
+    }
     let userList
     let typeFilter
     if (!filter?.userTypes) {
@@ -178,7 +189,7 @@ class Users {
     } else {
       typeFilter = filter.userTypes
     }
-    if (this._db === undefined) {
+    if (users === undefined) {
       error('what happened to the mongoclient?')
       throw new Error('DB connection error')
     }
@@ -208,15 +219,7 @@ class Users {
       pipeline.push(unwind)
       pipeline.push(group)
       // pipeline.push(match)
-      userList = await this._db.aggregate(pipeline).toArray()
-
-      // const projection = { type: 1, userStatus: 1, email: 1, first: 1, last: 1 }
-      // const projection = { type: 1, userStatus: 1, 'emails.primary': 1, first: 1, last: 1 }
-      // const sort = { type: 1, userStatus: 1, first: 1, last: 1 }
-      // const cursor = await this._db.find(filter).project(projection).sort(sort)
-      // array = await cursor.toArray()
-      // array.unshift(array.length)
-      // await cursor.close()
+      userList = await users.aggregate(pipeline).toArray()
     } catch (e) {
       log(e)
       return false

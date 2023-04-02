@@ -66,12 +66,12 @@ class User {
     this._name = fullName ?? null
     this._username = config?.username ?? this._name.toLowerCase().replace(' ', '')
     this._displayName = config?.displayname ?? config?.displayName ?? config.display_name ?? this._name
-    this._url = config?.url ?? `http://<<app.host>>/@${this._username}`
-    this._url = this.#fixUsernameUrl(this._url)
-    this._avatar = config?.avatar ?? config?._avatar ?? 'http://<<app.host>>/i/accounts/avatars/missing.png'
-    this._avatar = this.#fixAvatarUrl(this._avatar)
-    this._header = config?.header ?? config?._header ?? 'http://<<app.host>>/i/accounts/headers/generic.png'
-    this._header = this.#fixHeaderUrl(this._header)
+    this._url = config?.url ?? `/@${this._username}`
+    // this._url = this.#fixUsernameUrl(this._url)
+    this._avatar = config?.avatar ?? config?._avatar ?? '/i/accounts/avatars/missing.png'
+    // this._avatar = this.#fixAvatarUrl(this._avatar)
+    this._header = config?.header ?? config?._header ?? '/i/accounts/headers/generic.png'
+    // this._header = this.#fixHeaderUrl(this._header)
     this._jwts = config?.jwts ?? null
     this._created_on = config?.createdOn ?? config?.created_on ?? Date.now()
     this._updated_on = config?.updatedOn ?? config?.updated_on ?? null
@@ -87,10 +87,11 @@ class User {
    */
   #fixHeaderUrl(url) {
     let goodUrl = url
-    const { protocol, host } = this._ctx
-    const pattern = new RegExp(`${host}/i/accounts/avatars/.*$`)
+    // const { protocol, host } = this._ctx
+    const { origin } = this._ctx.request
+    const pattern = new RegExp(`${origin}/i/a/avatars/.*$`)
     if (!pattern.test(url)) {
-      goodUrl = url.replace(/^(http|https):\/\/(<<app.host>>)\/(.*)$/, (m, p, h, x) => `${protocol}://${host}/${x}`)
+      goodUrl = url.replace(/^(http|https):\/\/(<<app.host>>)\/(.*)$/, (m, p, h, x) => `${origin}/${x}`)
     }
     return goodUrl
   }
