@@ -325,7 +325,7 @@ class User {
       const users = db.collection(Collection)
       foundUserById = await users.findOne({ _id: ObjectId(id) })
     } catch (err) {
-      error('Exception during findById')
+      error(`Exception during findById(${id})`)
       throw new Error(err.message)
     } finally {
       await client.close()
