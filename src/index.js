@@ -205,7 +205,7 @@ class Users {
         '$group': {
           _id: '$type',
           count: { '$sum': 1 },
-          users: { '$push': { id: '$_id', primary_email: '$emails.primary', name: '$first', status: '$userStatus' } },
+          users: { '$push': { id: '$_id', primary_email: '$emails.primary', name: '$first', status: '$userStatus', username: '$username' } },
         },
       }
       const match = {
