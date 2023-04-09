@@ -293,7 +293,7 @@ class Users {
           result.user = false
           result.error = `Can't login ${email}. Inactive user account.`
         } else {
-          log('not inactive user... bcrypt.comapre...')
+          log('not inactive user... bcrypt.comapring...')
           const match = await bcrypt.compare(password, result.user.hashedPassword)
           log(`match is ${match}`)
           if (match) {

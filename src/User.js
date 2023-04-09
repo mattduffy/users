@@ -12,8 +12,8 @@ import { client, ObjectId } from './mongoclient.js'
 
 const log = Debug('users:User')
 const error = Debug('users:User_error')
-const Database = 'mattmadethese'
-const Collection = 'users'
+const DATABASE = 'mattmadethese'
+const COLLECTION = 'users'
 
 /**
  * @todo [ ] Create a test to authenticate user accounts base on permissions.
@@ -157,8 +157,8 @@ class User {
     let result
     try {
       await client.connect()
-      const db = client.db(Database)
-      const users = db.collection(Collection)
+      const db = client.db(this.dbDatabase)
+      const users = db.collection(this.dbCollection)
       userToComparePassword = await users.findOne(filter, options)
       if (userToComparePassword != null) {
         // Boolean value returned from bcrypt.compare function.
@@ -273,8 +273,8 @@ class User {
     const filter = { 'emails.primary': email }
     try {
       await client.connect()
-      const db = client.db(Database)
-      const users = db.collection(Collection)
+      const db = client.db(DATABASE)
+      const users = db.collection(COLLECTION)
       foundUserByEmail = await users.findOne(filter)
     } catch (err) {
       error('Exception during findByEmail')
@@ -321,12 +321,13 @@ class User {
     let foundUserById
     try {
       await client.connect()
-      const db = client.db(Database)
-      const users = db.collection(Collection)
+      const db = client.db(DATABASE)
+      const users = db.collection(COLLECTION)
       foundUserById = await users.findOne({ _id: ObjectId(id) })
     } catch (err) {
       error(`Exception during findById(${id})`)
-      throw new Error(err.message)
+      error(err.message)
+      throw new Error(err)
     } finally {
       await client.close()
     }
@@ -368,8 +369,8 @@ class User {
     let foundUserByUsername
     try {
       await client.connect()
-      const db = client.db(Database)
-      const users = db.collection(Collection)
+      const db = client.db(DATABASE)
+      const users = db.collection(COLLECTION)
       foundUserByUsername = await users.findOne({ username })
     } catch (err) {
       error('Exception during findByUsername')
@@ -415,8 +416,8 @@ class User {
     let foundUserBySessionId
     try {
       await client.connect()
-      const db = client.db(Database)
-      const users = db.collection(Collection)
+      const db = client.db(DATABASE)
+      const users = db.collection(COLLECTION)
       foundUserBySessionId = await users.findOne({ sessionId: sessId })
     } catch (err) {
       error('Exception during findBySessionId')
@@ -459,6 +460,7 @@ class User {
     return JSON.stringify({
       id: this._id,
       type: this._type,
+      status: this._userStatus,
       first_name: this._first,
       last_name: this._last,
       full_name: this._name,
@@ -483,7 +485,7 @@ class User {
    * @return {string} - A stringified version of a JSON literal of user properties.
    */
   serialize() {
-    const propertiesToSerialize = ['_type', '_first', '_last', '_name', '_emails', '_username', '_displayName', '_url', '_avatar', '_header', '_hashedPassword', '_created_on', '_updated_on', '_description', '_jwts', '_sessionId', '_schemaVer']
+    const propertiesToSerialize = ['_type', '_userStatus', '_first', '_last', '_name', '_emails', '_username', '_displayName', '_url', '_avatar', '_header', '_hashedPassword', '_created_on', '_updated_on', '_description', '_jwts', '_sessionId', '_schemaVer']
     const that = this
     log(that._jwts)
     return JSON.stringify(that, propertiesToSerialize)
@@ -851,7 +853,12 @@ class User {
    * @param {string} - New username value.
    */
   set username(username) {
+    this.log('This is a bad design pattern.')
+    this.log('Only set username this way if this.isUsernameAvailable() has already been called,')
+    this.log('and has returned TRUE.')
     this._username = username
+    this.log(`Side affect - update this.url to reflect new username ${username}`)
+    this._url = `@${username}`
   }
 
   /**
@@ -886,12 +893,14 @@ class User {
    * @param {string} - New url value.
    */
   set url(url) {
-    const re = new RegExp(`^https://[^\\s][A-Za-z0-9._-]+/@${this._username}`)
-    if (re.test(`${url}/@${this._username}`)) {
-      log(`${url}/@${this._username}`)
-      this._url = `${url}/@${this._username}`
+    let u = url
+    if (url[0] !== '@') {
+      u = `@${url}`
+    }
+    if (this._username === url) {
+      this.log('noop')
     } else {
-      this._url = url
+      this.log(`noop: trying to set this.url to ${u}`)
     }
   }
 
@@ -1105,6 +1114,42 @@ class User {
    */
   get db() {
     return this.dbClient
+  }
+
+  /**
+   * Check whether a username already exists in the database.
+   * @summary Check whether a username already exists in the database.
+   * @async
+   * @param { string } - username to check in the database.
+   * @throws { Error }
+   * @return { Boolean }
+   */
+  async isUsernameAvailable(check = false) {
+    if (!check) {
+      error('Missing required username parameter.')
+      throw new Error('Missing required username parameter.')
+    }
+    let isAvailable = false
+    let username = check
+    if (check[0] === '@') {
+      username = check.slice(1)
+    }
+    try {
+      await client.connect()
+      const db = client.db(this.dbDatabase)
+      const users = db.collection(this.dbCollection)
+      const match = { username }
+      const options = { projection: { _id: 1 } }
+      const found = await users.findOne(match, options)
+      log(found)
+      if (!found) {
+        isAvailable = true
+      }
+    } catch (e) {
+      error(e)
+      throw new Error(e)
+    }
+    return isAvailable
   }
 
   /**
