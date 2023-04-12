@@ -329,7 +329,7 @@ class User {
       error(err.message)
       throw new Error(err)
     } finally {
-      await client.close()
+      // await client.close()
     }
     // If no user found by ObjectId(_id), returned result is NULL.
     if (foundUserById != null) {
