@@ -78,8 +78,18 @@ class User {
     this._description = config?.description ?? 'This is a user.'
     this._userStatus = config?.status ?? config?.userStatus ?? 'inactive'
     this._publicDir = config?.publicDir ?? null
+    this._privateDir = config?.privateDir ?? null
     this._sessionId = config?.sessionId ?? null
     this._schemaVer = config?.schemaVer
+    // Mastodon specific required fields
+    this._isLocked = config?.locked ?? config?.isLocked ?? true
+    this._fields = config?.fields ?? []
+    this._isBot = config?.bot ?? false
+    this._isDiscoverable = config?.discoverable ?? true
+    this._emojis = config?.emojis ?? []
+    this._isGroup = config?.group ?? false
+    this._followers_count = config?.followers_count ?? 0
+    this._following_count = config?.following_count ?? 0
   }
 
   /**
@@ -578,6 +588,7 @@ class User {
           avatar: this._avatar,
           header: this._header,
           publicDir: this._publicDir,
+          privateDir: this._privateDir,
           hashedPassword: this._hashedPassword,
           jwts: this._jwts,
           // createdOn: this._created_on,
@@ -586,6 +597,15 @@ class User {
           userStatus: this._userStatus,
           sessionId: this._sessionId,
           schemaVer: this._schemaVer,
+          // Mastodon fields
+          locked: this._isLocked,
+          fields: this._fields,
+          bot: this._isBot,
+          discoverable: this._isDiscoverable,
+          emojis: this._emojis,
+          group: this._isGroup,
+          followers_count: this._followers_count,
+          following_count: this._following_count,
         },
       }
       const options = { writeConcern: { w: 'majority' }, upsert: false, returnDocument: 'after', projection: { _id: 1, email: 1, first: 1 } }
@@ -982,6 +1002,25 @@ class User {
   }
 
   /**
+   * Mastodon compatible display name getter.
+   * @alias displayName()
+   * @return {string} - User display name.
+   */
+  get display_name() {
+    return this.displayName()
+  }
+
+  /**
+   * Mastodon compatible display name setter.
+   * @alias displayName()
+   * @param {string} newDisplayName - User display name proptery value.
+   * @return {undefined}
+   */
+  set display_name(newDisplayName) {
+    this.displayName = newDisplayName
+  }
+
+  /**
    * Full name property setter.
    * @param {string} newName - User full name property value.
    */
@@ -1082,6 +1121,150 @@ class User {
    */
   get status() {
     return this._userStatus
+  }
+
+  /**
+   * Mastodon compatibility - whether account manually approves follow requests.
+   * @param {boolean} isLocked - User manually approves follow requests.
+   * @return {undefined}
+   */
+  set locked(isLocked) {
+    this._isLocked = isLocked
+  }
+
+  /**
+   * Mastodon compatibility - does account manually approve follow requests?
+   * @return {boolean}
+   */
+  get locked() {
+    return this._isLocked
+  }
+
+  /**
+   * Mastodon compatibility - Additional metadata attached to a profile as an array of name-value pairs.
+   * @param {Object[]} field - name/value object literal (a.k.a field) or an array of name/value fields.
+   * @return {undefined}
+   */
+  set fields(field) {
+    if (Array.isArray(field)) {
+      this._fields = field
+    } else {
+      this._fields.push(field)
+    }
+  }
+
+  /**
+   * Mastodon compatibility - Additional metadata fields attached to a profile.
+   * @return {Object[]} - name/value object literal.
+   */
+  get fields() {
+    return this._fields
+  }
+
+  /**
+   * Mastodon compatibility - whether account is a bot or not.
+   * @param {boolean} isBot - User account is a bot or not.
+   * @return {undefined}
+   */
+  set bot(isBot) {
+    this._isBot = isBot
+  }
+
+  /**
+   * Mastodon compatibility - Is account a bot or not?
+   * @return {boolean}
+   */
+  get bot() {
+    return this._isBot
+  }
+
+  /**
+   * Mastodon compatibility - whether account is a discoverable or not.
+   * @param {boolean} isDiscoverable - User account is a discoverable or not.
+   * @return {undefined}
+   */
+  set discoverable(isDiscoverable) {
+    this._isDiscoverable = isDiscoverable
+  }
+
+  /**
+   * Mastodon compatibility - Is account discoverable or not?
+   * @return {boolean}
+   */
+  get discoverable() {
+    return this._isDiscoverable
+  }
+
+  /**
+   * Mastodon compatibility - Custom emoji entities to be used when rendering the profile.
+   * @param {Array} emojis - Custom emoji entities to be used when rendering the profile.
+   * @return {undefined}
+   */
+  set emojis(emojis) {
+    if (Array.isArray(emojis)) {
+      this._emojis.concat(emojis)
+    } else {
+      this._emojis = emojis
+    }
+  }
+
+  /**
+   * Mastodon compatibility - Custom emoji entities to be used when rendering the profile.
+   * @return {Array}
+   */
+  get emojis() {
+    return this._emojis
+  }
+
+  /**
+   * Mastodon compatibility - whether account is a group actor or not.
+   * @param {boolean} isGroup - User account is a group actor or not.
+   * @return {undefined}
+   */
+  set group(isGroup) {
+    this._isGroup = isGroup
+  }
+
+  /**
+   * Mastodon compatibility - Is account is a group actor or not?
+   * @return {boolean}
+   */
+  get group() {
+    return this._isGroup
+  }
+
+  /**
+   * Mastodon compatibility - The reported followers of this profile.
+   * @param {number} followersCount - The reported followers of this profile.
+   * @return {undefined}
+   */
+  set followers_count(followersCount) {
+    this._followers_count = followersCount
+  }
+
+  /**
+   * Mastodon compatibility - The reported followers of this profile?
+   * @return {number}
+   */
+  get followers_count() {
+    return this._followers_count
+  }
+
+  /**
+   * Mastodon compatibility - The reported follows of this profile.
+   * @param {number} followingCount - The reported follows of this profile.
+   * @return {undefined}
+   */
+  set following_count(followingCount) {
+    this._following_count = followingCount
+  }
+
+  /**
+   * Mastodon compatibility - The reported followers of this profile?
+   * @return {number}
+   */
+  get following_count() {
+    return this._following_count
   }
 
   /**
