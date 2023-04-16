@@ -83,11 +83,11 @@ class User {
     this._schemaVer = config?.schemaVer
     // Mastodon specific required fields
     this._isLocked = config?.locked ?? config?.isLocked ?? true
-    this._fields = config?.fields ?? []
     this._isBot = config?.bot ?? false
     this._isDiscoverable = config?.discoverable ?? true
-    this._emojis = config?.emojis ?? []
     this._isGroup = config?.group ?? false
+    this._fields = config?.fields ?? []
+    this._emojis = config?.emojis ?? []
     this._followers_count = config?.followers_count ?? 0
     this._following_count = config?.following_count ?? 0
   }
@@ -580,7 +580,6 @@ class User {
           type: this._type,
           first: this._first,
           last: this._last,
-          // email: this._email,
           emails: this._emails,
           username: this._username,
           diplayName: this._displayName,
@@ -591,7 +590,6 @@ class User {
           privateDir: this._privateDir,
           hashedPassword: this._hashedPassword,
           jwts: this._jwts,
-          // createdOn: this._created_on,
           updatedOn: Date.now(),
           description: this._description,
           userStatus: this._userStatus,
@@ -599,11 +597,11 @@ class User {
           schemaVer: this._schemaVer,
           // Mastodon fields
           locked: this._isLocked,
-          fields: this._fields,
           bot: this._isBot,
           discoverable: this._isDiscoverable,
-          emojis: this._emojis,
           group: this._isGroup,
+          emojis: this._emojis,
+          fields: this._fields,
           followers_count: this._followers_count,
           following_count: this._following_count,
         },
