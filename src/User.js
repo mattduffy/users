@@ -1378,17 +1378,20 @@ class User {
         this.makedir(fullPublicPath)
         this._publicDir = relPublicPath
       } catch (e) {
-        error(`Failed setting ${this.emails[0].primary}'s publicDir.`)
-        throw new Error(`Failed setting ${this.emails[0].primary}'s publicDir ${fullPublicPath}.`)
+        const msg = `Failed setting ${this.emails[0].primary}'s publicDir ${fullPublicPath}.`
+        error(msg)
+        throw new Error(msg, { cause: e })
       }
       try {
         log(`private shortPath: ${relPrivatePath}`)
         log(`private fullPath: ${fullPrivatePath}`)
-        this.makedir(fullPrivatePath)
-        this._privateDir = relPrivatePath
+        this.privateDir = relPrivatePath
+        // this.makedir(fullPrivatePath)
+        // this._privateDir = relPrivatePath
       } catch (e) {
-        error(`Failed setting ${this.emails[0].primary}'s privateDir.`)
-        throw new Error(`Failed setting ${this.emails[0].primary}'s privateDir ${fullPrivatePath}.`)
+        const msg = `Failed setting ${this.emails[0].primary}'s privateDir ${fullPrivatePath}.`
+        error(msg)
+        throw new Error(msg, { cause: e })
       }
     } else {
       // renaming old publicDir to new name
@@ -1402,7 +1405,8 @@ class User {
           this._publicDir = newRelPublicPath
         }
       } catch (e) {
-        error(`Failed to rename ${this.emails[0].primary}'s publicDir from ${oldFullPublicPath} to ${newFullPublicPath}`)
+        const msg = `Failed to rename ${this.emails[0].primary}'s publicDir from ${oldFullPublicPath} to ${newFullPublicPath}`
+        error(msg, { cause: e })
         throw new Error(e)
       }
       // renaming old privateDir to new name
@@ -1415,8 +1419,9 @@ class User {
           this._privateDir = newRelPrivatePath
         }
       } catch (e) {
-        error(`Failed to rename ${this.emails[0].primary}'s privateDir from ${oldFullPrivatePath} to ${newFullPrivatePath}`)
-        throw new Error(e)
+        const msg = `Failed to rename ${this.emails[0].primary}'s privateDir from ${oldFullPrivatePath} to ${newFullPrivatePath}`
+        error(msg)
+        throw new Error(msg, { cause: e })
       }
     }
   }
@@ -1435,7 +1440,15 @@ class User {
    * @return { undefined }
    */
   set privateDir(location) {
-
+    if (location !== '') {
+      try {
+        this.makedir(`${this._ctx.app.dirs.private.dir}/${location}`)
+        this._privateDir = location
+      } catch (e) {
+        error(`Failed setting ${this.emails[0].primary}'s privateDir`)
+        throw new Error(`Failed setting ${this.emails[0].primary}'s privateDir`, { cause: e })
+      }
+    }
   }
 
   /**
