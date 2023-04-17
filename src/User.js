@@ -1335,7 +1335,8 @@ class User {
 
   /**
    * publicDir proptery setter.
-   * @param { string } - Path to set user's publicDir location.
+   * @param { string } location - Path to set user's publicDir location.
+   * @return { undefined }
    */
   set publicDir(location) {
     if (!location) {
@@ -1346,48 +1347,75 @@ class User {
       error('Missing koa ctx config values.')
       throw new Error('Missing koa ctx config values.')
     }
-    let relPath
-    let fullPath
+    let relPublicPath
+    let fullPublicPath
+    let relPrivatePath
+    let fullPrivatePath
     const hashedId = createHash('md5').update(this._id.toString()).digest('hex')
     log(`hashedId ${hashedId}`)
     // Check to see if <location> contains the MD5 hashed user id field as part of path.
     // If not, add it so path looks like /path/to/koa-app-root/public/<location>/<hashedId>/
     const re = new RegExp(`${hashedId}`)
     if (!re.test(location)) {
-      relPath = `${location}/${hashedId}/`
-      fullPath = `${this._ctx.app.publicDir}/${location}/${hashedId}/`
+      relPublicPath = `${location}/${hashedId}/`
+      fullPublicPath = `${this._ctx.app.publicDir}/${location}/${hashedId}/`
+      relPrivatePath = `${location}/${hashedId}/`
+      fullPrivatePath = `${this._ctx.app.dirs.private.dir}/${location}/${hashedId}/`
     } else {
-      relPath = `${location}/`
-      fullPath = `${this._ctx.app.publicDir}/${location}/`
+      relPublicPath = `${location}/`
+      fullPublicPath = `${this._ctx.app.publicDir}/${location}/`
+      relPrivatePath = `${location}/`
+      fullPrivatePath = `${this._ctx.app.dirs.private.dir}/${location}/`
     }
     if (this._publicDir === null || this._publicDir === '') {
       // publicDir not set yet, create it now
       log(`Creating a new publicDir for ${this.emails[0].primary} at ${location}`)
+      log(`Creating a new privateDir for ${this.emails[0].primary} at ${fullPrivatePath}`)
       log(`ctx.app.root: ${this._ctx.app.root}`)
       try {
-        log(`shortPath: ${relPath}`)
-        log(`fullPath: ${fullPath}`)
-        this.makedir(fullPath)
+        log(`public shortPath: ${relPublicPath}`)
+        log(`public fullPath: ${fullPublicPath}`)
+        this.makedir(fullPublicPath)
+        this._publicDir = relPublicPath
       } catch (e) {
         error(`Failed setting ${this.emails[0].primary}'s publicDir.`)
-        throw new Error(`Failed setting ${this.emails[0].primary}'s publicDir ${fullPath}.`)
+        throw new Error(`Failed setting ${this.emails[0].primary}'s publicDir ${fullPublicPath}.`)
       }
-      this._publicDir = relPath
+      try {
+        log(`private shortPath: ${relPrivatePath}`)
+        log(`private fullPath: ${fullPrivatePath}`)
+        this.makedir(fullPrivatePath)
+        this._privateDir = relPrivatePath
+      } catch (e) {
+        error(`Failed setting ${this.emails[0].primary}'s privateDir.`)
+        throw new Error(`Failed setting ${this.emails[0].primary}'s privateDir ${fullPrivatePath}.`)
+      }
     } else {
       // renaming old publicDir to new name
-      // const oldPath = path.resolve(this.publicDir)
-      const oldFullPath = `${this._ctx.app.publicDir}/${this.publicDir}`
-      // const newPath = path.resolve(`${location}/`)
-      const newFullPath = path.resolve(`${this._ctx.app.publicDir}`, `${location}`)
-      const newRelPath = `${location}/`
-      log(`Renaming ${this.emails[0].primary}'s publicDir from ${oldFullPath} to ${newFullPath}`)
+      const oldFullPublicPath = `${this._ctx.app.publicDir}/${this.publicDir}`
+      const newFullPublicPath = path.resolve(`${this._ctx.app.publicDir}`, `${location}`)
+      const newRelPublicPath = `${location}/`
+      log(`Renaming ${this.emails[0].primary}'s publicDir from ${oldFullPublicPath} to ${newFullPublicPath}`)
       // resolve the new path to the same root path...
       try {
-        if (this.renamedir(newFullPath)) {
-          this._publicDir = newRelPath
+        if (this.renamedir(newFullPublicPath)) {
+          this._publicDir = newRelPublicPath
         }
       } catch (e) {
-        error(`Failed to rename ${this.emails[0].primary}'s publicDir from ${oldFullPath} to ${newFullPath}`)
+        error(`Failed to rename ${this.emails[0].primary}'s publicDir from ${oldFullPublicPath} to ${newFullPublicPath}`)
+        throw new Error(e)
+      }
+      // renaming old privateDir to new name
+      const oldFullPrivatePath = `${this._ctx.app.dirs.private.accounts}/${this._privateDir}`
+      const newFullPrivatePath = path.resolve(`${this._ctx.app.dirs.private.accounts}`, `${location}`)
+      const newRelPrivatePath = `${location}`
+      log(`Renaming ${this.emails[0].primary}'s privateDir from ${oldFullPrivatePath} to ${newFullPrivatePath}`)
+      try {
+        if (this.renamedir(newFullPrivatePath)) {
+          this._privateDir = newRelPrivatePath
+        }
+      } catch (e) {
+        error(`Failed to rename ${this.emails[0].primary}'s privateDir from ${oldFullPrivatePath} to ${newFullPrivatePath}`)
         throw new Error(e)
       }
     }
@@ -1399,6 +1427,23 @@ class User {
    */
   get publicDir() {
     return this._publicDir
+  }
+
+  /**
+   * privateDir property setter.
+   * @param { string } location - Path to set user's privateDir location.
+   * @return { undefined }
+   */
+  set privateDir(location) {
+
+  }
+
+  /**
+   * privateDir property getter.
+   * @return { string } - Directory location of users's privateDir.
+   */
+  get privateDir() {
+    return this._privateDir
   }
 }
 
