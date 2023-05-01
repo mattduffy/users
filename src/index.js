@@ -1,6 +1,6 @@
 /**
  * This package is intended to encapsulate all of the data modeling for creating
- * using different types of User objects.  The data model can handel password
+ * using different types of User objects.  The data model can handle password
  * authentication, JWT verification via @mattduffy/mft package.
  * @summary A package used to create user models.
  * @exports @mattduffy/users
@@ -10,21 +10,22 @@
 /**
  * Usage:
  * import { Users } from '@mattduffy/users'
- * const users = Users(<mongoclient>)
+ * const users = Users(<mongoclient>, [<koa-ctx>])
  * let matt = users.getByEmail('matt@mattmail.email.602b')
  * matt.sessionId = '1401b6e7-307e-4864-bfe9-2e2b99a9d61d'
  * matt = await matt.update()
  */
 
+import { stat, mkdir, readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
-import { readFile } from 'node:fs/promises'
+import { rename } from 'node:fs'
+import path from 'node:path'
 import bcrypt from 'bcrypt'
 import Debug from 'debug'
 import { User } from './User.js'
 import { AdminUser } from './AdminUser.js'
 import { CreatorUser } from './CreatorUser.js'
 import { AnonymousUser } from './AnonymousUser.js'
-// import { client, ObjectId } from './mongoclient.js'
 
 const Database = 'mattmadethese'
 const Collection = 'users'
@@ -86,6 +87,57 @@ class Users {
     }
     log('making a new basic user')
     return await new User(conf, this._db)
+  }
+
+  async archiveUser(ctx, id = null) {
+    if (this._db === null) {
+      log(this.NO_DB_OBJECT)
+      throw new Error(this.NO_DB_OBJECT)
+    }
+    if (id === null || id === undefined) {
+      throw new Error('Required user id parameter is missing.')
+    }
+    const archiveDir = ctx.app.dirs.archive.archive ?? path.resolve('./archive')
+    try {
+      const user = await User.findById(id, this._db)
+      if (!user) {
+        return false
+      }
+      // do deletey stuff here
+      const fullPublicPath = path.resolve(ctx.app.dirs.public.dir, user.publicDir)
+      const fullPrivatePath = path.resolve(ctx.app.dirs.private.dir, user.privateDir)
+      log(`archiveUser archiveDir: ${archiveDir}`)
+      log(`         app.publicDir: ${ctx.app.dirs.public.dir}`)
+      log(`        user.publicDir: ${fullPublicPath}`)
+      log(`       user.privateDir: ${fullPrivatePath}`)
+      let archiveDirExists = false
+      try {
+        const stats = await stat(archiveDir)
+        if (stats.isDirectory()) {
+          log(`archive directory exists at ${archiveDir}`)
+          archiveDirExists = true
+        }
+      } catch (e) {
+        error(`Archive dir not found at ${archiveDir}`)
+        error(e)
+        const p = await mkdir(archiveDir, { recursive: true })
+        error(`Making the missing archive directory at ${p}`)
+        archiveDirExists = true
+      }
+      const fullUserArchivePath = path.resolve(`${archiveDir}/${id}`)
+      log(`fullUseArchivePath: ${fullUserArchivePath}`)
+      try {
+        const userArchive = await mkdir(fullUserArchivePath)
+      } catch (e) {
+        error(`Failed to make user archive dir: ${fullUserArchivePath}`)
+      }
+
+
+      return { username: user.username }
+    } catch (e) {
+      error(e)
+      return false
+    }
   }
 
   async getById(id = null) {
@@ -287,7 +339,8 @@ class Users {
       // log(`email: ${email}`)
       // log(`password: ${password}`)
       result.user = await this._db.findOne(filter)
-      log(`User found: ${result.user.emails[0].primary}`)
+      log(`User found: ${result.user?.emails[0].primary}`)
+      log(result.user)
       if (result.user !== null) {
         if (result.user.userStatus === 'inactive') {
           result.user = false
@@ -306,7 +359,7 @@ class Users {
           }
         }
       } else {
-        result.message = `No user found with email: ${email}`
+        result.info = `No user found with email: ${email}`
       }
     } catch (e) {
       result.user = false
