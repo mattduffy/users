@@ -98,12 +98,12 @@ class Users {
       throw new Error('Required user id parameter is missing.')
     }
     const archiveDir = ctx.app.dirs.archive.archive ?? path.resolve('./archive')
+    let user
     try {
-      const user = await User.findById(id, this._db)
+      user = await User.findById(id, this._db)
       if (!user) {
         return false
       }
-      // do deletey stuff here
       const fullPublicPath = path.resolve(ctx.app.dirs.public.dir, user.publicDir)
       const fullPrivatePath = path.resolve(ctx.app.dirs.private.dir, user.privateDir)
       log(`archiveUser archiveDir: ${archiveDir}`)
@@ -124,20 +124,67 @@ class Users {
         error(`Making the missing archive directory at ${p}`)
         archiveDirExists = true
       }
+      // compose file system path from user's MongoDB ObjectId string value.
       const fullUserArchivePath = path.resolve(`${archiveDir}/${id}`)
       log(`fullUseArchivePath: ${fullUserArchivePath}`)
       try {
-        const userArchive = await mkdir(fullUserArchivePath)
+        await mkdir(fullUserArchivePath)
       } catch (e) {
         error(`Failed to make user archive dir: ${fullUserArchivePath}`)
       }
-
-
-      return { username: user.username }
+      let pubDirExists
+      try {
+        pubDirExists = await stat(fullPublicPath)
+        pubDirExists = pubDirExists.isDirectory()
+      } catch (e) {
+        error(`User public dir is missing.  Should be ${fullPublicPath}`)
+        pubDirExists = false
+      }
+      let priDirExists
+      try {
+        priDirExists = await stat(fullPrivatePath)
+        priDirExists = priDirExists.isDirectory()
+      } catch (e) {
+        error(`User private dir is missing.  Should be ${fullPrivatePath}`)
+        priDirExists = false
+      }
+      const shortPublicArchive = `${id}/public/${user.publicDir}`
+      const shortPrivateArchive = `${id}/private/${user.privateDir}`
+      if (archiveDirExists) {
+        // App archive directory exists, safe to move user's public & private directories.
+        try {
+          if (pubDirExists) {
+            const newPath = path.resolve(archiveDir, shortPublicArchive)
+            await rename(fullPublicPath, newPath)
+            user.publicDir = shortPublicArchive
+          }
+        } catch (e) {
+          error(`Moving @${user.username}'s public folder to archive failed.`)
+          error(e)
+        }
+        try {
+          if (priDirExists) {
+            const newPath = path.resolve(archiveDir, shortPrivateArchive)
+            await rename(fullPrivatePath, newPath)
+            user.privateDir = shortPrivateArchive
+          }
+        } catch (e) {
+          error(`Moving @${user.username}'s private folder to archive failed.`)
+          error(e)
+        }
+        return {
+          username: user.username,
+          newDirs: {
+            public: shortPublicArchive,
+            private: shortPrivateArchive,
+          },
+        }
+      }
     } catch (e) {
       error(e)
       return false
     }
+    return false
   }
 
   async getById(id = null) {
@@ -224,6 +271,62 @@ class Users {
     }
   }
 
+  async getAllArchivedUsers(filter = { archived: true }) {
+    let users
+    if (this._db.s.namespace.collection === undefined) {
+      await this._db.connect()
+      const db = this._db.db(Database)
+      users = db.collection(Collection)
+    } else {
+      users = this._db
+    }
+    let archivedUserList
+    let archiveFilter
+    let typeFilter
+    if (!filter?.userTypes) {
+      typeFilter = ['Admin', 'Creator', 'User']
+    } else {
+      typeFilter = filter.userTypes
+    }
+    if (!filter?.archived) {
+      archiveFilter = { archived: true }
+    } else {
+      archiveFilter = filter
+    }
+    if (users === undefined) {
+      error('what happened to the mongo-client?')
+      throw new Error('DB connection error')
+    }
+    try {
+      /* eslint-disable quote-props */
+      const pipeline = []
+      const matchArchive = {
+        '$match': archiveFilter,
+      }
+      const matchUserType = {
+        '$match': {
+          'type': { '$in': typeFilter },
+        },
+      }
+      const group = {
+        '$group': {
+          _id: '$type',
+          count: { '$sum': 1 },
+          users: { '$push': { id: '$_id', primary_email: '$emails.primary', username: { '$concat': ['@', '$username'] } } },
+        },
+      }
+      /* eslint-enable quote-props */
+      pipeline.push(matchArchive)
+      pipeline.push(matchUserType)
+      pipeline.push(group)
+      archivedUserList = await users.aggregate(pipeline).toArray()
+    } catch (e) {
+      log(e)
+      return false
+    }
+    return archivedUserList
+  }
+
   async getAllUsers(filter = {}) {
     // log(`s.namespace: ${this._db.s.namespace.collection}`)
     let users
@@ -295,7 +398,8 @@ class Users {
     }
     const validToken = /[^+\s]*[A-Za-z0-9._-]*/g.exec(token)
     if (validToken && validToken[1] !== '') {
-      const filter = { 'jwts.token': token }
+      // const filter = { 'jwts.token': token }
+      const filter = { 'jwts.token': token, archived: false }
       try {
         result.user = await this._db.findOne(filter)
         log(`Found user by token: ${result.user.username}`)
@@ -334,7 +438,8 @@ class Users {
       error('What happened to the mongoclient?')
       throw new Error('DB connection error')
     }
-    const filter = { 'emails.primary': email }
+    // const filter = { 'emails.primary': email }
+    const filter = { 'emails.primary': email, archived: false }
     try {
       // log(`email: ${email}`)
       // log(`password: ${password}`)
