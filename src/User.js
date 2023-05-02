@@ -90,6 +90,8 @@ class User {
     this._emojis = config?.emojis ?? []
     this._followers_count = config?.followers_count ?? 0
     this._following_count = config?.following_count ?? 0
+    // Is this user account archived?
+    this._archived = config?.archived ?? false
   }
 
   /**
@@ -162,7 +164,8 @@ class User {
    */
   static async cmpPassword(email, password) {
     let userToComparePassword
-    const filter = { email }
+    // const filter = { email }
+    const filter = { email, archived: false }
     const options = { projection: { hashedPassword: 1 } }
     let result
     try {
@@ -315,6 +318,7 @@ class User {
       //   description: foundUserByEmail.description,
       //   sessionId: foundUserByEmail?.sessionId,
       //   schemaVer: foundUserByEmail?.schemaVer,
+      //   archived: foundUserByEmail?.archived,
       // })
     }
     return foundUserByEmail
@@ -362,8 +366,9 @@ class User {
       //   created_on: foundUserById.createdOn,
       //   updated_on: foundUserById.updatedOn,
       //   description: foundUserById.description,
-      //   schemaVer: foundUserById?.schemaVer,
-      //   sessionId: foundUserById.sessionId,
+      //   sessionId: foundUserByEmail?.sessionId,
+      //   schemaVer: foundUserByEmail?.schemaVer,
+      //   archived: foundUserByEmail?.archived,
       // })
     }
     return foundUserById
@@ -408,8 +413,9 @@ class User {
       //   created_on: foundUserByUsername.createdOn,
       //   updated_on: foundUserByUsername.updatedOn,
       //   desciption: foundUserByUsername.description,
-      //   schemaVer: foundUserByUsername?.schemaVer,
-      //   sessionId: foundUserByUsername?.sessionId,
+      //   sessionId: foundUserByEmail?.sessionId,
+      //   schemaVer: foundUserByEmail?.schemaVer,
+      //   archived: foundUserByEmail?.archived,
       // })
     }
     return foundUserByUsername
@@ -455,8 +461,9 @@ class User {
       //   created_on: foundUserBySessionId.createdOn,
       //   updated_on: foundUserBySessionId.updatedOn,
       //   description: foundUserBySessionId.description,
-      //   schemaVer: foundUserBySessionId?.schemaVer,
-      //   sessionId: foundUserBySessionId?.sessionId,
+      //   sessionId: foundUserByEmail?.sessionId,
+      //   schemaVer: foundUserByEmail?.schemaVer,
+      //   archived: foundUserByEmail?.archived,
       // })
     }
     return foundUserBySessionId
@@ -481,12 +488,13 @@ class User {
       avatar: this._avatar,
       header: this._header,
       // password: this._hashedPassword,
-      description: this._description,
+      jwts: this._jwts,
       created_on: this._created_on,
       updated_on: this._updated_on,
+      description: this._description,
       sessionId: this._sessionId,
       schemaVer: this._schemaVer,
-      jwts: this._jwts,
+      archived: this._archived,
     }, null, 2)
   }
 
@@ -495,7 +503,7 @@ class User {
    * @return {string} - A stringified version of a JSON literal of user properties.
    */
   serialize() {
-    const propertiesToSerialize = ['_type', '_userStatus', '_first', '_last', '_name', '_emails', '_username', '_displayName', '_url', '_avatar', '_header', '_hashedPassword', '_created_on', '_updated_on', '_description', '_jwts', '_sessionId', '_schemaVer']
+    const propertiesToSerialize = ['_type', '_userStatus', '_first', '_last', '_name', '_emails', '_username', '_displayName', '_url', '_avatar', '_header', '_hashedPassword', '_created_on', '_updated_on', '_description', '_jwts', '_sessionId', '_schemaVer', '_archived']
     const that = this
     log(that._jwts)
     return JSON.stringify(that, propertiesToSerialize)
@@ -595,6 +603,7 @@ class User {
           userStatus: this._userStatus,
           sessionId: this._sessionId,
           schemaVer: this._schemaVer,
+          archived: this._archived,
           // Mastodon fields
           locked: this._isLocked,
           bot: this._isBot,
@@ -662,10 +671,11 @@ class User {
         jwts: this._jwts,
         createdOn: this._created_on,
         updatedOn: this._updated_on,
-        description: this._description,
         userStatus: this._userStatus,
+        description: this._description,
         sessionId: this._sessionId,
         schemaVer: this._schemaVer,
+        archived: this._archived,
       }
       const options = { writeConcern: { w: 'majority' } }
       log('6: Calling insertOne.')
@@ -684,8 +694,6 @@ class User {
       await this.dbClient.close()
     }
     log('9: returning the newly created ObjectId value')
-    // return this._id
-    // return result
     return this
   }
 
@@ -703,6 +711,22 @@ class User {
    */
   get id() {
     return this._id
+  }
+
+  /**
+   * Archived property setter.
+   * @param {boolean} isArchived - A boolean value for whether account is archived or not.
+   */
+  set archived(isArchived) {
+    this._archived = isArchived
+  }
+
+  /**
+   * Archived property getter.
+   * @return {boolean} - Current boolean value of user account archive status.
+   */
+  get archived() {
+    return this._archived
   }
 
   /**
