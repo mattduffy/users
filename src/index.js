@@ -16,9 +16,9 @@
  * matt = await matt.update()
  */
 
-import { stat, mkdir, readFile } from 'node:fs/promises'
+import { rename, stat, mkdir, readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
-import { rename } from 'node:fs'
+// import { rename } from 'node:fs'
 import path from 'node:path'
 import bcrypt from 'bcrypt'
 import Debug from 'debug'
@@ -101,6 +101,7 @@ class Users {
     let user
     try {
       user = await User.findById(id, this._db)
+      user = await this.factory(user, user.type)
       if (!user) {
         return false
       }
@@ -128,7 +129,8 @@ class Users {
       const fullUserArchivePath = path.resolve(`${archiveDir}/${id}`)
       log(`fullUseArchivePath: ${fullUserArchivePath}`)
       try {
-        await mkdir(fullUserArchivePath)
+        await mkdir(`${fullUserArchivePath}/public/a`, { recursive: true })
+        await mkdir(`${fullUserArchivePath}/private/a`, { recursive: true })
       } catch (e) {
         error(`Failed to make user archive dir: ${fullUserArchivePath}`)
       }
@@ -156,7 +158,7 @@ class Users {
           if (pubDirExists) {
             const newPath = path.resolve(archiveDir, shortPublicArchive)
             await rename(fullPublicPath, newPath)
-            user.publicDir = shortPublicArchive
+            // user.publicDir = `archive/${shortPublicArchive}`
           }
         } catch (e) {
           error(`Moving @${user.username}'s public folder to archive failed.`)
@@ -166,12 +168,13 @@ class Users {
           if (priDirExists) {
             const newPath = path.resolve(archiveDir, shortPrivateArchive)
             await rename(fullPrivatePath, newPath)
-            user.privateDir = shortPrivateArchive
+            // user.privateDir = `archive/${shortPrivateArchive}`
           }
         } catch (e) {
           error(`Moving @${user.username}'s private folder to archive failed.`)
           error(e)
         }
+        user = await user.update()
         return {
           username: user.username,
           newDirs: {
@@ -365,6 +368,7 @@ class Users {
       }
       const match = {
         '$match': {
+          'archived': false,
           'type': { '$in': typeFilter },
         },
       }
