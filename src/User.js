@@ -2,7 +2,7 @@
  * @module @mattduffy/users
  * @file /src/User.js
  */
-import { mkdir, stat } from 'node:fs/promises'
+import { mkdir } from 'node:fs/promises'
 import { rename } from 'node:fs'
 import path from 'node:path'
 import { createHash } from 'node:crypto'
@@ -278,11 +278,11 @@ class User {
    * @static
    * @async
    * @param { string } email - Email address to search by in the database.
-   * @param { Mongodbclient } db - Connection to db if needed.
+   * @param { Mongodbclient } _db - Connection to db if needed.
    * @param { object } o - Additional optional filtering values.
    * @return { Promise(<User>|null) } - Instance of User with properties populated.
    */
-  static async findByEmail(email, db, o) {
+  static async findByEmail(email, _db, o) {
     let foundUserByEmail
     // const filter = { email }
     const filter = { 'emails.primary': email, archived: o.archived }
@@ -331,11 +331,11 @@ class User {
    * @static
    * @async
    * @param {string} id - ObjectId value to search by in the database.
-   * @param { Mongodbclient } db - Connection to db if needed.
+   * @param { Mongodbclient } _db - Connection to db if needed.
    * @param {object} o - Additional optional filtering values.
    * @return {Promise(<User>|null)} - Instance of User with properties populated.
    */
-  static async findById(id, db, o) {
+  static async findById(id, _db, o) {
     let foundUserById
     try {
       await client.connect()
@@ -530,11 +530,11 @@ class User {
    */
   checkRequired() {
     const missing = []
-    for(const key of this.requiredProperties()) {
+    this.requiredProperties.forEach((key) => {
       if (!this[key] || this[key] === null || this[key] === 'undefined' || this[key] === '') {
         missing.push(key)
       }
-    }
+    })
     if (missing.length > 0) {
       const msg = missing.map((item) => item.slice(1)).join(', ')
       throw new Error(`Missing the follwing required properties: ${msg}`)
