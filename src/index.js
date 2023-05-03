@@ -190,7 +190,7 @@ class Users {
     return false
   }
 
-  async getById(id = null) {
+  async getById(id = null, options = {}) {
     if (this._db === null) {
       error(this.NO_DB_OBJECT)
       throw new Error(this.NO_DB_OBJECT)
@@ -199,8 +199,9 @@ class Users {
       error('Static method User.getById() called without the id value.')
       throw new Error('Missing user id value.')
     }
+    const opts = { archived: false, ...options }
     try {
-      const user = await User.findById(id, this._db)
+      const user = await User.findById(id, this._db, opts)
       if (!user) {
         return false
       }
@@ -211,7 +212,7 @@ class Users {
     }
   }
 
-  async getByEmail(email = null) {
+  async getByEmail(email = null, options = {}) {
     if (this._db === null) {
       error(this.NO_DB_OBJECT)
       throw new Error(this.NO_DB_OBJECT)
@@ -220,8 +221,9 @@ class Users {
       error('Static method User.getByEmail() called without the email value.')
       throw new Error('Missing email value.')
     }
+    const opts = { archived: false, ...options }
     try {
-      const user = await User.findByEmail(email, this._db)
+      const user = await User.findByEmail(email, this._db, opts)
       if (!user) {
         return false
       }
@@ -232,18 +234,21 @@ class Users {
     }
   }
 
-  async getByUsername(username = null) {
+  async getByUsername(ausername = null, options = {}) {
     if (this._db === null) {
       error(this.NO_DB_OBJECT)
       throw new Error(this.NO_DB_OBJECT)
     }
-    if (username === null) {
+    if (ausername === null) {
       error('Static method User.getByUsername() called without the username parameter.')
       throw new Error('Missing username parameter.')
     }
+    const username = (ausername[0] === '@') ? ausername.slice(1) : ausername
+    const opts = { archived: false, ...options }
     try {
-      const user = await User.findByUsername(username)
-      if (!username) {
+      const user = await User.findByUsername(username, opts)
+      // if (!username) {
+      if (!user) {
         return false
       }
       return await this.factory(user, user.type)
@@ -253,7 +258,7 @@ class Users {
     }
   }
 
-  async getBySessionId(sessionId = null) {
+  async getBySessionId(sessionId = null, options = {}) {
     if (this._db === null) {
       error(this.NO_DB_OBJECT)
       throw new Error(this.NO_DB_OBJECT)
@@ -262,8 +267,9 @@ class Users {
       error('Static method User.getBySessionId() called without the session id value.')
       throw new Error('Missing session id value')
     }
+    const opts = { archived: false, ...options }
     try {
-      const user = await User.findBySessionId(sessionId)
+      const user = await User.findBySessionId(sessionId, opts)
       if (!user) {
         return false
       }
