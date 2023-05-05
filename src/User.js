@@ -530,7 +530,8 @@ class User {
    */
   checkRequired() {
     const missing = []
-    this.requiredProperties.forEach((key) => {
+    const props = this.requiredProperties()
+    props.forEach((key) => {
       if (!this[key] || this[key] === null || this[key] === 'undefined' || this[key] === '') {
         missing.push(key)
       }
