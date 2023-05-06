@@ -362,12 +362,18 @@ class Users {
       typeFilter = filter.userTypes
     }
     if (users === undefined) {
-      error('what happened to the mongoclient?')
-      throw new Error('DB connection error')
+      error('what happened to the user model?')
+      throw new Error('User model error')
     }
     try {
       const pipeline = []
       /* eslint-disable quote-props */
+      const match = {
+        '$match': {
+          'archived': false,
+          'type': { '$in': typeFilter },
+        },
+      }
       const unwind = {
         '$unwind': {
           'path': '$emails',
@@ -378,12 +384,6 @@ class Users {
           _id: '$type',
           count: { '$sum': 1 },
           users: { '$push': { id: '$_id', primary_email: '$emails.primary', name: '$first', status: '$userStatus', username: '$username' } },
-        },
-      }
-      const match = {
-        '$match': {
-          'archived': false,
-          'type': { '$in': typeFilter },
         },
       }
       /* eslint-enable quote-props */
