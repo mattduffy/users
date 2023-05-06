@@ -335,13 +335,14 @@ class User {
    * @param {object} o - Additional optional filtering values.
    * @return {Promise(<User>|null)} - Instance of User with properties populated.
    */
-  static async findById(id, _db, o) {
+  static async findById(id, _db, o = {}) {
     let foundUserById
+    const opts = { archived: false, ...o }
     try {
       await client.connect()
       const db = client.db(DATABASE)
       const users = db.collection(COLLECTION)
-      foundUserById = await users.findOne({ _id: ObjectId(id), archived: o.archived })
+      foundUserById = await users.findOne({ _id: ObjectId(id), archived: opts.archived })
     } catch (err) {
       error(`Exception during findById(${id})`)
       error(err.message)

@@ -105,12 +105,12 @@ class Users {
       if (!user) {
         return false
       }
-      const fullPublicPath = path.resolve(ctx.app.dirs.public.dir, user.publicDir)
-      const fullPrivatePath = path.resolve(ctx.app.dirs.private.dir, user.privateDir)
+      const userFullPublicPath = path.resolve(ctx.app.dirs.public.dir, user.publicDir)
+      const userFullPrivatePath = path.resolve(ctx.app.dirs.private.dir, user.privateDir)
       log(`archiveUser archiveDir: ${archiveDir}`)
       log(`         app.publicDir: ${ctx.app.dirs.public.dir}`)
-      log(`        user.publicDir: ${fullPublicPath}`)
-      log(`       user.privateDir: ${fullPrivatePath}`)
+      log(`        user.publicDir: ${userFullPublicPath}`)
+      log(`       user.privateDir: ${userFullPrivatePath}`)
       let archiveDirExists = false
       try {
         const stats = await stat(archiveDir)
@@ -129,25 +129,26 @@ class Users {
       const fullUserArchivePath = path.resolve(`${archiveDir}/${id}`)
       log(`fullUseArchivePath: ${fullUserArchivePath}`)
       try {
-        await mkdir(`${fullUserArchivePath}/public/a`, { recursive: true })
-        await mkdir(`${fullUserArchivePath}/private/a`, { recursive: true })
+        await mkdir(`${fullUserArchivePath}/public/a/`, { recursive: true })
+        await mkdir(`${fullUserArchivePath}/private/a/`, { recursive: true })
       } catch (e) {
         error(`Failed to make user archive dir: ${fullUserArchivePath}`)
+        error(e)
       }
       let pubDirExists
       try {
-        pubDirExists = await stat(fullPublicPath)
+        pubDirExists = await stat(userFullPublicPath)
         pubDirExists = pubDirExists.isDirectory()
       } catch (e) {
-        error(`User public dir is missing.  Should be ${fullPublicPath}`)
+        error(`User public dir is missing.  Should be ${userFullPublicPath}`)
         pubDirExists = false
       }
       let priDirExists
       try {
-        priDirExists = await stat(fullPrivatePath)
+        priDirExists = await stat(userFullPrivatePath)
         priDirExists = priDirExists.isDirectory()
       } catch (e) {
-        error(`User private dir is missing.  Should be ${fullPrivatePath}`)
+        error(`User private dir is missing.  Should be ${userFullPrivatePath}`)
         priDirExists = false
       }
       const shortPublicArchive = `${id}/public/${user.publicDir}`
@@ -156,8 +157,9 @@ class Users {
         // App archive directory exists, safe to move user's public & private directories.
         try {
           if (pubDirExists) {
+            log(`shortPublicArchive: ${shortPublicArchive}`)
             const newPath = path.resolve(archiveDir, shortPublicArchive)
-            await rename(fullPublicPath, newPath)
+            await rename(userFullPublicPath, newPath)
             // user.publicDir = `archive/${shortPublicArchive}`
           }
         } catch (e) {
@@ -167,19 +169,25 @@ class Users {
         try {
           if (priDirExists) {
             const newPath = path.resolve(archiveDir, shortPrivateArchive)
-            await rename(fullPrivatePath, newPath)
+            await rename(userFullPrivatePath, newPath)
             // user.privateDir = `archive/${shortPrivateArchive}`
           }
         } catch (e) {
           error(`Moving @${user.username}'s private folder to archive failed.`)
           error(e)
         }
+        user.archived = true
         user = await user.update()
+        log(`Is ${user.username} archived? ${user.archived}`)
         return {
           username: user.username,
-          newDirs: {
-            public: shortPublicArchive,
-            private: shortPrivateArchive,
+          public: {
+            path: shortPublicArchive,
+            success: pubDirExists,
+          },
+          private: {
+            path: shortPrivateArchive,
+            success: priDirExists,
           },
         }
       }
