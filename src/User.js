@@ -2,12 +2,12 @@
  * @module @mattduffy/users
  * @file /src/User.js
  */
-import { mkdir } from 'node:fs/promises'
-import { rename } from 'node:fs'
-import path from 'node:path'
-import { createHash } from 'node:crypto'
-import bcrypt from 'bcrypt'
 import Debug from 'debug'
+import bcrypt from 'bcrypt'
+import path from 'node:path'
+import { rename } from 'node:fs'
+import { mkdir } from 'node:fs/promises'
+import { createHash, generateKeyPairSync, KeyObject } from 'node:crypto'
 import { client, ObjectId } from './mongoclient.js'
 
 const log = Debug('users:User')
@@ -204,6 +204,26 @@ class User {
       error(`Failed to mkdir ${directory}`)
       throw e
     }
+  }
+
+  /**
+   * Create public/private encryption keys.
+   * @summary Create public/private encryption keys.
+   * @return { undefined }
+   */
+  generateKeys() {
+    const keys = generateKeyPairSync('rsa', {
+      modulusLength: 2048,
+      publicKeyEncoding: {
+        type: 'spki',
+        format: 'pem',
+      },
+      privateKeyEncoding: {
+        type: 'pkcs8',
+        format: 'pem',
+      },
+    })
+    return keys
   }
 
   /**

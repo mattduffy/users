@@ -18,7 +18,6 @@
 
 import { rename, stat, mkdir, readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
-// import { rename } from 'node:fs'
 import path from 'node:path'
 import bcrypt from 'bcrypt'
 import Debug from 'debug'
