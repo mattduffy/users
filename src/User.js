@@ -7,7 +7,7 @@ import bcrypt from 'bcrypt'
 import path from 'node:path'
 import { rename } from 'node:fs'
 import { mkdir } from 'node:fs/promises'
-import { createHash, generateKeyPairSync, KeyObject } from 'node:crypto'
+import { createHash, subtle } from 'node:crypto'
 import { client, ObjectId } from './mongoclient.js'
 
 const log = Debug('users:User')
@@ -209,20 +209,20 @@ class User {
   /**
    * Create public/private encryption keys.
    * @summary Create public/private encryption keys.
+   * @see https://www.nearform.com/blog/implementing-the-web-cryptography-api-for-node-js-core/
    * @return { undefined }
    */
   generateKeys() {
-    const keys = generateKeyPairSync('rsa', {
-      modulusLength: 2048,
-      publicKeyEncoding: {
-        type: 'spki',
-        format: 'pem',
+    const keys = subtle.generateKey(
+      {
+        name: 'RSASSA-PKCS1-v1_5',
+        modulusLength: 2048,
+        publicExponent: new Uint8Array([1, 0, 1]),
+        hash: 'SHA-256',
       },
-      privateKeyEncoding: {
-        type: 'pkcs8',
-        format: 'pem',
-      },
-    })
+      true,
+      ['sign', 'verify'],
+    )
     return keys
   }
 
