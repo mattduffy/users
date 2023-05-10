@@ -6,7 +6,7 @@ import Debug from 'debug'
 import bcrypt from 'bcrypt'
 import path from 'node:path'
 import { rename } from 'node:fs'
-import { mkdir } from 'node:fs/promises'
+import { stat, writeFile, readFile, mkdir } from 'node:fs/promises'
 import { createHash, subtle } from 'node:crypto'
 import { client, ObjectId } from './mongoclient.js'
 
@@ -209,10 +209,30 @@ class User {
   /**
    * Create public/private encryption keys.
    * @summary Create public/private encryption keys.
+   * @async
    * @see https://www.nearform.com/blog/implementing-the-web-cryptography-api-for-node-js-core/
    * @return { undefined }
    */
-  generateKeys() {
+  async generateKeys() {
+    if (this._archived) {
+      // no-op
+      return
+    }
+    let keyExists
+    const pubKey = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/rs256-pub.pem`)
+    const jwkey = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/rs256.jwk`)
+    const priKey = path.resolve(this._ctx.app.dirs.public.dir, `${this.privateDir}/rs256-pub.pem`)
+    try {
+      keyExists = await stat(pubKey)
+      if (keyExists.isFile()) {
+        // Check if keys already exists.  If so, no-op.
+        return
+      }
+    } catch (e) {
+      error(`fs.stat(${pubKey}) failed.  Keys not created yet.`)
+      keyExists = false
+    }
+    log(`Creating ${this.username}'s RS256 keypair.`)
     const keys = subtle.generateKey(
       {
         name: 'RSASSA-PKCS1-v1_5',
