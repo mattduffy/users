@@ -209,41 +209,84 @@ class User {
   /**
    * Create public/private encryption keys.
    * @summary Create public/private encryption keys.
-   * @async
    * @see https://www.nearform.com/blog/implementing-the-web-cryptography-api-for-node-js-core/
-   * @return { undefined }
+   * @async
+   * @param { object } o - Webcrypto Subtle key generation options.
+   * @return { object } An object literal with success or error status.
    */
-  async generateKeys() {
+  async generateKeys(o = {}) {
     if (this._archived) {
       // no-op
-      return
+      return { status: null }
+    }
+    const keyOpts = {
+      name: 'RSASSA-PKCS1-v1_5',
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: 'SHA-256',
+      uses: ['sign', 'verify'],
+      ...o,
     }
     let keyExists
-    const pubKey = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/rs256-pub.pem`)
-    const jwkey = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/rs256.jwk`)
-    const priKey = path.resolve(this._ctx.app.dirs.public.dir, `${this.privateDir}/rs256-pub.pem`)
+    const pubKeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/rs256-pub.pem`)
+    const jwkeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/rs256.jwk`)
+    const priKeyPath = path.resolve(this._ctx.app.dirs.private.dir, `${this.privateDir}/rs256-pub.pem`)
     try {
-      keyExists = await stat(pubKey)
+      keyExists = await stat(pubKeyPath)
       if (keyExists.isFile()) {
         // Check if keys already exists.  If so, no-op.
-        return
+        return { status: null }
       }
     } catch (e) {
-      error(`fs.stat(${pubKey}) failed.  Keys not created yet.`)
+      error(`fs.stat(${pubKeyPath}) failed.  Keys not created yet.`)
       keyExists = false
     }
     log(`Creating ${this.username}'s RS256 keypair.`)
     const keys = subtle.generateKey(
       {
-        name: 'RSASSA-PKCS1-v1_5',
-        modulusLength: 2048,
-        publicExponent: new Uint8Array([1, 0, 1]),
-        hash: 'SHA-256',
+        name: keyOpts.name,
+        modulusLength: keyOpts.modulusLength,
+        publicExponent: keyOpts.publicExponent,
+        hash: keyOpts.hash,
       },
       true,
-      ['sign', 'verify'],
+      keyOpts.uses,
     )
-    return keys
+    let pub
+    let jwk
+    let pri
+    try {
+      jwk = await subtle.exportKey('jwk', keys.publicKey)
+      keys.jwk = jwk
+      pub = await subtle.exportKey('spki', keys.publicKey)
+      pri = await subtle.exportKey('pkcs8', keys.privateKey)
+    } catch (e) {
+      error('Failed to export newly generated keypair.')
+      error(e)
+      return { status: null }
+    }
+    //
+    // Code goes here to convert raw keys to PEM encoded files.
+    //
+    try {
+      log(`Saving ${pubKeyPath}`)
+      await writeFile(pubKeyPath, pub)
+      log(`Saving ${jwkeyPath}`)
+      await writeFile(jwkeyPath, jwk)
+      log(`Saving ${pubKeyPath}`)
+      await writeFile(priKeyPath, pri)
+    } catch (e) {
+      error(`Failed to save newly generated keypair to ${this.username}'s account.`)
+      error(e)
+      return { status: null }
+    }
+
+    return {
+      status: 'success',
+      publicKey: pubKeyPath,
+      privateKey: priKeyPath,
+      jwk: jwkeyPath,
+    }
   }
 
   /**
