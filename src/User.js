@@ -72,6 +72,7 @@ class User {
     // this._avatar = this.#fixAvatarUrl(this._avatar)
     this._header = config?.header ?? config?._header ?? '/i/accounts/headers/generic.png'
     // this._header = this.#fixHeaderUrl(this._header)
+    this._keys = config?.keys ?? {}
     this._jwts = config?.jwts ?? null
     this._created_on = config?.createdOn ?? config?.created_on ?? Date.now()
     this._updated_on = config?.updatedOn ?? config?.updated_on ?? null
@@ -207,30 +208,18 @@ class User {
   }
 
   /**
-   * Create public/private encryption keys.
-   * @summary Create public/private encryption keys.
-   * @see https://www.nearform.com/blog/implementing-the-web-cryptography-api-for-node-js-core/
+   * Private class method to generate Webcrypto Subtle signing key pair.
+   * @summary Private class method to generate Webcrypto Subtle signing key pair.
    * @async
    * @param { object } o - Webcrypto Subtle key generation options.
-   * @return { object } An object literal with success or error status.
+   * @return { object } An object literal with status and generated keys.
    */
-  async generateKeys(o = {}) {
-    if (this._archived) {
-      // no-op
-      return { status: null }
-    }
-    const keyOpts = {
-      name: 'RSASSA-PKCS1-v1_5',
-      modulusLength: 2048,
-      publicExponent: new Uint8Array([1, 0, 1]),
-      hash: 'SHA-256',
-      uses: ['sign', 'verify'],
-      ...o,
-    }
+  async #generateSigningKeys(o = {}) {
+    const keyOpts = o
     let keyExists
     const pubKeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/rs256-pub.pem`)
     const jwkeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/rs256.jwk`)
-    const priKeyPath = path.resolve(this._ctx.app.dirs.private.dir, `${this.privateDir}/rs256-pub.pem`)
+    const priKeyPath = path.resolve(this._ctx.app.dirs.private.dir, `${this.privateDir}/rs256-pri.pem`)
     try {
       keyExists = await stat(pubKeyPath)
       if (keyExists.isFile()) {
@@ -249,7 +238,7 @@ class User {
         publicExponent: keyOpts.publicExponent,
         hash: keyOpts.hash,
       },
-      true,
+      keyOpts.extractable,
       keyOpts.uses,
     )
     let pub
@@ -268,24 +257,170 @@ class User {
     //
     // Code goes here to convert raw keys to PEM encoded files.
     //
+    let pubToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pub)), 'binary').toString('base64')
+    pubToPem = pubToPem.match(/.{1,64}/g).join('\n')
+    pubToPem = `-----BEGIN PUBLIC KEY-----\n${pubToPem}\n-----END PUBLIC KEY-----`
+    let priToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pri)), 'binary').toString('base64')
+    priToPem = priToPem.match(/.{1,64}/g).join('\n')
+    priToPem = `-----BEGIN PRIVATE KEY-----\n${pubToPem}\n-----END PRIVATE KEY-----`
     try {
       log(`Saving ${pubKeyPath}`)
-      await writeFile(pubKeyPath, pub)
+      await writeFile(pubKeyPath, pubToPem)
       log(`Saving ${jwkeyPath}`)
       await writeFile(jwkeyPath, jwk)
       log(`Saving ${pubKeyPath}`)
-      await writeFile(priKeyPath, pri)
+      await writeFile(priKeyPath, priToPem)
     } catch (e) {
       error(`Failed to save newly generated keypair to ${this.username}'s account.`)
       error(e)
       return { status: null }
     }
-
     return {
       status: 'success',
+      name: keyOpts.name,
+      hash: keyOpts.hash,
+      bits: keyOpts.modulusLength,
       publicKey: pubKeyPath,
       privateKey: priKeyPath,
-      jwk: jwkeyPath,
+      jwk,
+    }
+  }
+
+  /**
+   * Private class method to generate Webcrypto Subtle encrypting key pair.
+   * @summary Private class method to generate Webcrypto Subtle encrypting key pair.
+   * @async
+   * @param { object } o - Webcrypto Subtle key generation options.
+   * @return { object } An object literal with status and generated keys.
+   */
+  async #generateEncryptingKeys(o = {}) {
+    const keyOpts = o
+    let keyExists
+    const pubKeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/rsa-oaep-pub.pem`)
+    const jwkeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/rsa-oaep.jwk`)
+    const priKeyPath = path.resolve(this._ctx.app.dirs.private.dir, `${this.privateDir}/rsa-oaep-pri.pem`)
+    try {
+      keyExists = await stat(pubKeyPath)
+      if (keyExists.isFile()) {
+        // Check if keys already exists.  If so, no-op.
+        return { status: null }
+      }
+    } catch (e) {
+      error(`fs.stat(${pubKeyPath}) failed.  RSA-OAEP encrypting keypair not created yet.`)
+      keyExists = false
+    }
+    log(`Creating ${this.username}'s RSA-OAEP keypair.`)
+    const keys = subtle.generateKey(
+      {
+        name: keyOpts.name,
+        modulusLength: keyOpts.modulusLength,
+        publicExponent: keyOpts.publicExponent,
+        hash: keyOpts.hash,
+      },
+      keyOpts.extractable,
+      keyOpts.uses,
+    )
+    let pub
+    let jwk
+    let pri
+    try {
+      jwk = await subtle.exportKey('jwk', keys.publicKey)
+      keys.jwk = jwk
+      pub = await subtle.exportKey('spki', keys.publicKey)
+      pri = await subtle.exportKey('pkcs8', keys.privateKey)
+    } catch (e) {
+      error('Failed to export newly generated AES-OAEP keypair.')
+      error(e)
+      return { status: null }
+    }
+    //
+    // Code goes here to convert raw keys to PEM encoded files.
+    //
+    let pubToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pub)), 'binary').toString('base64')
+    pubToPem = pubToPem.match(/.{1,64}/g).join('\n')
+    pubToPem = `-----BEGIN PUBLIC KEY-----\n${pubToPem}\n-----END PUBLIC KEY-----`
+    let priToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pri)), 'binary').toString('base64')
+    priToPem = priToPem.match(/.{1,64}/g).join('\n')
+    priToPem = `-----BEGIN PRIVATE KEY-----\n${pubToPem}\n-----END PRIVATE KEY-----`
+    try {
+      log(`Saving ${pubKeyPath}`)
+      await writeFile(pubKeyPath, pubToPem)
+      log(`Saving ${jwkeyPath}`)
+      await writeFile(jwkeyPath, jwk)
+      log(`Saving ${pubKeyPath}`)
+      await writeFile(priKeyPath, priToPem)
+    } catch (e) {
+      error(`Failed to save newly generated AES-OAEP keypair to ${this.username}'s account.`)
+      error(e)
+      return { status: null }
+    }
+    return {
+      status: 'success',
+      name: keyOpts.name,
+      hash: keyOpts.hash,
+      bits: keyOpts.modulusLength,
+      publicKey: pubKeyPath,
+      privateKey: priKeyPath,
+      jwk,
+    }
+  }
+
+  /**
+   * Create public/private encryption keys.
+   * @summary Create public/private encryption keys.
+   * @see https://www.nearform.com/blog/implementing-the-web-cryptography-api-for-node-js-core/
+   * @async
+   * @param { object } sign - Webcrypto Subtle signing key generation options.
+   * @param { object } enc - Webcrypto Subtle encrypting key generation options.
+   * @return { object } An object literal with success or error status.
+   */
+  async generateKeys(sign = {}, enc = {}) {
+    if (this._archived) {
+      // no-op
+      return { status: null }
+    }
+    const signingKeyOpts = {
+      name: process.env.SIGNING_KEY_TYPE ?? 'RSASSA-PKCS1-v1_5',
+      modulusLength: process.env.SIGNING_KEY_BITS ?? 2048,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: process.env.SIGNING_KEY_HASH ?? 'SHA-256',
+      extractable: process.env.SIGNING_KEY_EXTRACTABLE ?? true,
+      uses: ['sign', 'verify'],
+      ...sign,
+    }
+    const encryptingKeyOpts = {
+      name: process.env.SIGNING_KEY_TYPE ?? 'RSA-OAEP',
+      modulusLength: process.env.SIGNING_KEY_BITS ?? 2048,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: process.env.ENCRYPTING_KEY_TYPE ?? 'SHA-256',
+      extractable: process.env.ENCRYPTING_KEY_EXTRACTABLE ?? true,
+      uses: ['encrypt', 'decrypt'],
+      ...enc,
+    }
+    let signingKeys
+    try {
+      signingKeys = await this.#generateSigningKeys(signingKeyOpts)
+      this._keys.signing = signingKeys
+      delete this._keys.signing.status
+    } catch (e) {
+      error('Failed to generate Webcrypto.subtle signing keys.')
+      error(e)
+      return { status: 'failed' }
+    }
+    let encryptingKeys
+    try {
+      encryptingKeys = await this.#generateEncryptingKeys(encryptingKeyOpts)
+      this._keys.encrypting = encryptingKeys
+      delete this._keys.encrypting.status
+    } catch (e) {
+      error('Failed to generate Webcrypto.subtle encrypting keys.')
+      error(e)
+      return { status: 'failed' }
+    }
+    return {
+      status: 'success',
+      signing: signingKeys,
+      encrypting: encryptingKeys,
     }
   }
 
@@ -398,6 +533,7 @@ class User {
       //   emails: foundUserByEmail?.emails,
       //   hashedPassword: foundUserByEmail.hashedPassword,
       //   jwts: foundUserByEmail.jwts,
+      //   keys: foundUserByEmail.keys,
       //   created_on: foundUserByEmail.createdOn,
       //   updated_on: foundUserByEmail.updatedOn,
       //   description: foundUserByEmail.description,
@@ -451,6 +587,7 @@ class User {
       //   emails: foundUserById?.emails,
       //   hashedPassword: foundUserById.hashedPassword,
       //   jwts: foundUserById.jwts,
+      //   keys: foundUserById.keys,
       //   created_on: foundUserById.createdOn,
       //   updated_on: foundUserById.updatedOn,
       //   description: foundUserById.description,
@@ -499,6 +636,7 @@ class User {
       //   header: foundUserByUsername?.header,
       //   hashedPassword: foundUserByUsername.hashedPassword,
       //   jwts: foundUserByUsername.jwts,
+      //   keys: foundUserByUsername.keys,
       //   created_on: foundUserByUsername.createdOn,
       //   updated_on: foundUserByUsername.updatedOn,
       //   desciption: foundUserByUsername.description,
@@ -548,6 +686,7 @@ class User {
       //   header: foundUserBySessionId?.header,
       //   hashedPassword: foundUserBySessionId.hashedPassword,
       //   jwts: foundUserBySessionId.jwts,
+      //   keys: foundUserBySessionId.keys,
       //   created_on: foundUserBySessionId.createdOn,
       //   updated_on: foundUserBySessionId.updatedOn,
       //   description: foundUserBySessionId.description,
@@ -689,6 +828,7 @@ class User {
           privateDir: this._privateDir,
           hashedPassword: this._hashedPassword,
           jwts: this._jwts,
+          keys: this._keys,
           updatedOn: Date.now(),
           description: this._description,
           userStatus: this._userStatus,
@@ -760,6 +900,7 @@ class User {
         header: this._header,
         hashedPassword: this._hashedPassword,
         jwts: this._jwts,
+        keys: this._keys,
         createdOn: this._created_on,
         updatedOn: this._updated_on,
         userStatus: this._userStatus,
@@ -1162,10 +1303,33 @@ class User {
 
   /**
    * JTW object property getter.
-   * @return {Object} - User JWT object literal.
+   * @return {object} - User JWT object literal.
    */
   get jwts() {
     return this._jwts
+  }
+
+  /**
+   * Public signing key getter.
+   * @return {object}
+   */
+  get publicSigningKey() {
+    return this.#psk()
+  }
+
+  async #psk() {
+    let pem = null
+    if (this._keys?.signing?.publicKey !== '') {
+      try {
+        const key = this._keys.signing.publicKey
+        log(`Getting public signing key ${key}`)
+        pem = await readFile(key)
+        pem = pem.toString()
+      } catch (e) {
+        error(e)
+      }
+    }
+    return pem
   }
 
   /**
