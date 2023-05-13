@@ -231,7 +231,7 @@ class User {
       keyExists = false
     }
     log(`Creating ${this.username}'s RS256 keypair.`)
-    const keys = subtle.generateKey(
+    const keys = await subtle.generateKey(
       {
         name: keyOpts.name,
         modulusLength: keyOpts.modulusLength,
@@ -259,15 +259,19 @@ class User {
     //
     let pubToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pub)), 'binary').toString('base64')
     pubToPem = pubToPem.match(/.{1,64}/g).join('\n')
-    pubToPem = `-----BEGIN PUBLIC KEY-----\n${pubToPem}\n-----END PUBLIC KEY-----`
+    pubToPem = '-----BEGIN PUBLIC KEY-----\n'
+      + `${pubToPem}\n`
+      + '-----END PUBLIC KEY-----\n'
     let priToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pri)), 'binary').toString('base64')
     priToPem = priToPem.match(/.{1,64}/g).join('\n')
-    priToPem = `-----BEGIN PRIVATE KEY-----\n${pubToPem}\n-----END PRIVATE KEY-----`
+    priToPem = '-----BEGIN PRIVATE KEY-----\n'
+      + `${priToPem}\n`
+      + '-----END PRIVATE KEY-----\n'
     try {
       log(`Saving ${pubKeyPath}`)
       await writeFile(pubKeyPath, pubToPem)
       log(`Saving ${jwkeyPath}`)
-      await writeFile(jwkeyPath, jwk)
+      await writeFile(jwkeyPath, JSON.stringify(jwk))
       log(`Saving ${pubKeyPath}`)
       await writeFile(priKeyPath, priToPem)
     } catch (e) {
@@ -282,7 +286,7 @@ class User {
       bits: keyOpts.modulusLength,
       publicKey: pubKeyPath,
       privateKey: priKeyPath,
-      jwk,
+      jwk: jwkeyPath,
     }
   }
 
@@ -310,7 +314,7 @@ class User {
       keyExists = false
     }
     log(`Creating ${this.username}'s RSA-OAEP keypair.`)
-    const keys = subtle.generateKey(
+    const keys = await subtle.generateKey(
       {
         name: keyOpts.name,
         modulusLength: keyOpts.modulusLength,
@@ -338,15 +342,19 @@ class User {
     //
     let pubToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pub)), 'binary').toString('base64')
     pubToPem = pubToPem.match(/.{1,64}/g).join('\n')
-    pubToPem = `-----BEGIN PUBLIC KEY-----\n${pubToPem}\n-----END PUBLIC KEY-----`
+    pubToPem = '-----BEGIN PUBLIC KEY-----\n'
+      + `${pubToPem}\n`
+      + '-----END PUBLIC KEY-----\n'
     let priToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pri)), 'binary').toString('base64')
     priToPem = priToPem.match(/.{1,64}/g).join('\n')
-    priToPem = `-----BEGIN PRIVATE KEY-----\n${pubToPem}\n-----END PRIVATE KEY-----`
+    priToPem = '-----BEGIN PRIVATE KEY-----\n'
+      + `${priToPem}\n`
+      + '-----END PRIVATE KEY-----\n'
     try {
       log(`Saving ${pubKeyPath}`)
       await writeFile(pubKeyPath, pubToPem)
       log(`Saving ${jwkeyPath}`)
-      await writeFile(jwkeyPath, jwk)
+      await writeFile(jwkeyPath, JSON.stringify(jwk))
       log(`Saving ${pubKeyPath}`)
       await writeFile(priKeyPath, priToPem)
     } catch (e) {
@@ -361,7 +369,7 @@ class User {
       bits: keyOpts.modulusLength,
       publicKey: pubKeyPath,
       privateKey: priKeyPath,
-      jwk,
+      jwk: jwkeyPath,
     }
   }
 
@@ -370,11 +378,12 @@ class User {
    * @summary Create public/private encryption keys.
    * @see https://www.nearform.com/blog/implementing-the-web-cryptography-api-for-node-js-core/
    * @async
+   * @param { object } both - Object containing boolean for creating both types of keys.
    * @param { object } sign - Webcrypto Subtle signing key generation options.
    * @param { object } enc - Webcrypto Subtle encrypting key generation options.
    * @return { object } An object literal with success or error status.
    */
-  async generateKeys(sign = {}, enc = {}) {
+  async generateKeys(both = { signing: true, encrypting: true }, sign = {}, enc = {}) {
     if (this._archived) {
       // no-op
       return { status: null }
@@ -397,31 +406,46 @@ class User {
       uses: ['encrypt', 'decrypt'],
       ...enc,
     }
-    let signingKeys
-    try {
-      signingKeys = await this.#generateSigningKeys(signingKeyOpts)
-      this._keys.signing = signingKeys
-      delete this._keys.signing.status
-    } catch (e) {
-      error('Failed to generate Webcrypto.subtle signing keys.')
-      error(e)
-      return { status: 'failed' }
+    // signing {
+    //   status: 'success',
+    //   name: keyOpts.name,
+    //   hash: keyOpts.hash,
+    //   bits: keyOpts.modulusLength,
+    //   publicKey: pubKeyPath,
+    //   privateKey: priKeyPath,
+    //   jwk,
+    // }
+    const result = {}
+    if (both.signing) {
+      let signingKeys
+      try {
+        signingKeys = await this.#generateSigningKeys(signingKeyOpts)
+        this._keys.signing = signingKeys
+        delete this._keys.signing.status
+        result.signing = signingKeys
+      } catch (e) {
+        error('Failed to generate Webcrypto.subtle signing keys.')
+        error(e)
+        // result.signingStatus = 'failed'
+        return { result: 'failed' }
+      }
     }
-    let encryptingKeys
-    try {
-      encryptingKeys = await this.#generateEncryptingKeys(encryptingKeyOpts)
-      this._keys.encrypting = encryptingKeys
-      delete this._keys.encrypting.status
-    } catch (e) {
-      error('Failed to generate Webcrypto.subtle encrypting keys.')
-      error(e)
-      return { status: 'failed' }
+    if (both.encrypting) {
+      let encryptingKeys
+      try {
+        encryptingKeys = await this.#generateEncryptingKeys(encryptingKeyOpts)
+        this._keys.encrypting = encryptingKeys
+        delete this._keys.encrypting.status
+        result.encrypting = encryptingKeys
+      } catch (e) {
+        error('Failed to generate Webcrypto.subtle encrypting keys.')
+        error(e)
+        // result.encryptingStatus = 'failed'
+        return { result: 'failed' }
+      }
     }
-    return {
-      status: 'success',
-      signing: signingKeys,
-      encrypting: encryptingKeys,
-    }
+    result.status = 'success'
+    return result
   }
 
   /**
@@ -1314,16 +1338,25 @@ class User {
    * @return {object}
    */
   get publicSigningKey() {
-    return this.#psk()
+    return this.#pks('signing')
   }
 
-  async #psk() {
+  /**
+   * Public encrypting key getter.
+   * @return {object}
+   */
+  get publicEncryptingKey() {
+    return this.#pks('encrypting')
+  }
+
+  async #pks(type = '') {
+    if (type === '') return null
     let pem = null
-    if (this._keys?.signing?.publicKey !== '') {
+    const getKey = this._keys[type]?.publicKey ?? null
+    if (getKey !== null) {
       try {
-        const key = this._keys.signing.publicKey
-        log(`Getting public signing key ${key}`)
-        pem = await readFile(key)
+        log(`Getting public ${type} key ${getKey}`)
+        pem = await readFile(getKey)
         pem = pem.toString()
       } catch (e) {
         error(e)
