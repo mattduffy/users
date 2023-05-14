@@ -1431,6 +1431,22 @@ class User {
   }
 
   /**
+   * Public signing JWK getter.
+   * @return {object}
+   */
+  get signingJwk() {
+    return this.#pks('signing', 'jwk')
+  }
+
+  /**
+   * Public encrypting JWK getter.
+   * @return {object}
+   */
+  get encryptingJwk() {
+    return this.#pks('encrypting', 'jwk')
+  }
+
+  /**
    * Public encrypting key getter.
    * @return {object}
    */
@@ -1438,20 +1454,37 @@ class User {
     return this.#pks('encrypting')
   }
 
-  async #pks(type = '') {
+  async #pks(type = 'signing', format = 'publicKey') {
     if (type === '') return null
-    let pem = null
-    const getKey = this._keys[type]?.publicKey ?? null
+    let key = null
+    const getKey = this._keys[type][format] ?? null
+    log(`key type: ${type} format: ${format}, ${getKey}`)
     if (getKey !== null) {
       try {
         log(`Getting public ${type} key ${getKey}`)
-        pem = await readFile(getKey)
-        pem = pem.toString()
+        key = await readFile(getKey)
+        key = key.toString()
+        if (format === 'jwk') {
+          key = this.#prettyPrintJwk(key)
+        }
       } catch (e) {
         error(e)
       }
     }
-    return pem
+    return key
+  }
+
+  #prettyPrintJwk(jwk) {
+    const matches = jwk.match(/(?<key_ops>"key_ops":\[.*\]),(?<ext>"ext":(?:true|false)),(?<kty>"kty":"(?:RSA|AES|ECDSA|HMAC)"),(?<n>"n":"(?<n_val>.*)"),(?<e>"e":".*"),(?<alg>"alg":".*")/).groups
+    const string = '{\n'
+      + `\t${matches.key_ops},\n`
+      + `\t${matches.ext},\n`
+      + `\t${matches.kty},\n`
+      + `\t"n":"${matches.n_val.match(/.{1,64}/g).join('\n\t    ')}",\n`
+      + `\t${matches.e},\n`
+      + `\t${matches.alg}\n`
+      + '}'
+    return string
   }
 
   /**
