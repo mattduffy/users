@@ -211,6 +211,7 @@ class User {
    * Private class method to generate Webcrypto Subtle signing key pair.
    * @summary Private class method to generate Webcrypto Subtle signing key pair.
    * @async
+   * @private
    * @param { object } o - Webcrypto Subtle key generation options.
    * @return { object } An object literal with status and generated keys.
    */
@@ -261,12 +262,12 @@ class User {
     pubToPem = pubToPem.match(/.{1,64}/g).join('\n')
     pubToPem = '-----BEGIN PUBLIC KEY-----\n'
       + `${pubToPem}\n`
-      + '-----END PUBLIC KEY-----\n'
+      + '-----END PUBLIC KEY-----'
     let priToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pri)), 'binary').toString('base64')
     priToPem = priToPem.match(/.{1,64}/g).join('\n')
     priToPem = '-----BEGIN PRIVATE KEY-----\n'
       + `${priToPem}\n`
-      + '-----END PRIVATE KEY-----\n'
+      + '-----END PRIVATE KEY-----'
     try {
       log(`Saving ${pubKeyPath}`)
       await writeFile(pubKeyPath, pubToPem)
@@ -294,6 +295,7 @@ class User {
    * Private class method to generate Webcrypto Subtle encrypting key pair.
    * @summary Private class method to generate Webcrypto Subtle encrypting key pair.
    * @async
+   * @private
    * @param { object } o - Webcrypto Subtle key generation options.
    * @return { object } An object literal with status and generated keys.
    */
@@ -344,12 +346,12 @@ class User {
     pubToPem = pubToPem.match(/.{1,64}/g).join('\n')
     pubToPem = '-----BEGIN PUBLIC KEY-----\n'
       + `${pubToPem}\n`
-      + '-----END PUBLIC KEY-----\n'
+      + '-----END PUBLIC KEY-----'
     let priToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pri)), 'binary').toString('base64')
     priToPem = priToPem.match(/.{1,64}/g).join('\n')
     priToPem = '-----BEGIN PRIVATE KEY-----\n'
       + `${priToPem}\n`
-      + '-----END PRIVATE KEY-----\n'
+      + '-----END PRIVATE KEY-----'
     try {
       log(`Saving ${pubKeyPath}`)
       await writeFile(pubKeyPath, pubToPem)
@@ -406,15 +408,6 @@ class User {
       uses: ['encrypt', 'decrypt'],
       ...enc,
     }
-    // signing {
-    //   status: 'success',
-    //   name: keyOpts.name,
-    //   hash: keyOpts.hash,
-    //   bits: keyOpts.modulusLength,
-    //   publicKey: pubKeyPath,
-    //   privateKey: priKeyPath,
-    //   jwk,
-    // }
     const result = {}
     if (both.signing) {
       let signingKeys
@@ -446,6 +439,102 @@ class User {
     }
     result.status = 'success'
     return result
+  }
+
+  /**
+   * Import the RSASSA-PKCS1-v1_5 private signing key.
+   * @summary Import the RSASSA-PKCS1-v1_5 private signing key.
+   * @async
+   * @private
+   * @return { CryptoKey } An imported RSA private crypto key.
+   */
+  async #importSigningPrivateKey() {
+    const pemfile = await readFile(this._keys.signing.privateKey)
+    const b64lines = pemfile.toString()
+      .replace(/-----(BEGIN|END) PRIVATE KEY-----/g, '')
+      .replace(/\s/g, '')
+    const bytestring = atob(b64lines)
+    const bytearray = new Uint8Array(bytestring.length)
+    for (let i = 0; i < bytestring.length; i += 1) {
+      bytearray[i] = bytestring.charCodeAt(i)
+    }
+    const privateKey = await subtle.importKey(
+      'pkcs8',
+      bytearray,
+      { name: this._keys.signing.name, hash: this._keys.signing.hash },
+      true,
+      ['sign'],
+    )
+    return privateKey
+  }
+
+  /**
+   * Import the RSASSA-PKCS1-v1_5 public signing key.
+   * @summary Import the RSASSA-PKCS1-v1_5 public signing key.
+   * @async
+   * @private
+   * @return { CryptoKey } An imported RSA public signing key.
+   */
+  async #importSigningPublicKey() {
+    const pemfile = await readFile(this._keys.signing.publicKey)
+    const b64lines = pemfile.toString()
+      .replace(/-----(BEGIN|END) PUBLIC KEY-----/g, '')
+      .replace(/\s/g, '')
+    const bytestring = atob(b64lines)
+    const bytearray = new Uint8Array(bytestring.length)
+    for (let i = 0; i < bytestring.length; i += 1) {
+      bytearray[i] = bytestring.charCodeAt(i)
+    }
+    const publicKey = await subtle.importKey(
+      'spki',
+      bytearray,
+      { name: this._keys.signing.name, hash: this._keys.signing.hash },
+      true,
+      ['verify'],
+    )
+    return publicKey
+  }
+
+  /**
+   * Use RSA public signing key to verify signature.
+   * @summary Use RSA public signing key to verify signature.
+   * @async
+   * @param { ArrayBuffer } signature - Array buffer containing the signature to verify.
+   * @param { ArrayBuffer } data - Array buffer containg the data whose signature is to be verified.
+   * @return { boolean } True if the signature is valid, False otherwise.
+   */
+  async verify(signature, data) {
+    if (!data || !signature) {
+      return false
+    }
+    const result = subtle.verify(
+      this._keys.signing.name,
+      await this.#importSigningPublicKey(),
+      signature,
+      data,
+    )
+    return result
+  }
+
+  /** Use RSA private signing key to sign data.
+   * @summary Use RSA private signing key to sign data.
+   * @async
+   * @param { string } data - String data to be signed.
+   * @return { ArrayBuffer } Array buffer containing signed data.
+   */
+  async sign(data) {
+    if (!data) {
+      return null
+    }
+    const ec = new TextEncoder()
+    const dataToSign = ec.encode(data)
+    // const privateKey = await this.#importSigningPrivateKey()
+    const signature = await subtle.sign(
+      this._keys.signing.name,
+      await this.#importSigningPrivateKey(),
+      dataToSign,
+    )
+    return signature
   }
 
   /**
