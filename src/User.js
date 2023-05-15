@@ -617,18 +617,19 @@ class User {
    * @summary Use RSA private encryption key to decrypt data.
    * @async
    * @param { ArrayBuffer } data - Array buffer of data to be decrypted.
-   * @return { ArrayBuffer } Array buffer containing decrypted data, if successful.
+   * @return { string } String containing decrypted data, if successful.
    */
   async decrypt(data) {
     if (!data) {
       return null
     }
+    const dc = new TextDecoder()
     const decryptedData = await subtle.decrypt(
       { name: this._keys.encrypting.name },
       await this.#importEncryptingPrivateKey(),
       data,
     )
-    return decryptedData
+    return dc.decode(decryptedData)
   }
 
   /**
@@ -1524,11 +1525,11 @@ class User {
     return {
       signing: {
         pem: await this.#pks('signing'),
-        jwk: await this.#pks('signing', 'jwk'),
+        jwk: await this.#pks('signing', 'jwk', false),
       },
       encrypting: {
         pem: await this.#pks('encrypting'),
-        jwk: await this.#pks('encrypting', 'jwk'),
+        jwk: await this.#pks('encrypting', 'jwk', false),
       },
     }
   }
@@ -1565,7 +1566,7 @@ class User {
     return this.#pks('encrypting')
   }
 
-  async #pks(type = 'signing', format = 'publicKey') {
+  async #pks(type = 'signing', format = 'publicKey', pretty = 'true') {
     if (type === '') return null
     let key = null
     const getKey = this._keys[type][format] ?? null
@@ -1575,7 +1576,7 @@ class User {
         log(`Getting public ${type} key ${getKey}`)
         key = await readFile(getKey)
         key = key.toString()
-        if (format === 'jwk') {
+        if (format === 'jwk' && pretty) {
           key = this.#prettyPrintJwk(key)
         }
       } catch (e) {
