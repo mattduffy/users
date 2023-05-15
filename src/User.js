@@ -496,6 +496,60 @@ class User {
   }
 
   /**
+   * Import the RSA-OAEP public encrypting key.
+   * @summary Import the RSA-OAEP public encrypting key.
+   * @async
+   * @private
+   * @return { CryptoKey } An imported RSA public encrypting key.
+   */
+  async #importEncryptingPublicKey() {
+    const pemfile = await readFile(this._keys.encrypting.publicKey)
+    const b64lines = pemfile.toString()
+      .replace(/-----(BEGIN|END) PUBLIC KEY-----/g, '')
+      .replace(/\s/g, '')
+    const bytestring = atob(b64lines)
+    const bytearray = new Uint8Array(bytestring.length)
+    for (let i = 0; i < bytestring.length; i += 1) {
+      bytearray[i] = bytestring.charCodeAt(i)
+    }
+    const publicKey = await subtle.importKey(
+      'spki',
+      bytearray,
+      { name: this._keys.encrypting.name, hash: this._keys.encrypting.hash },
+      true,
+      ['encrypt'],
+    )
+    return publicKey
+  }
+
+  /**
+   * Import the RSA-OAEP private encrypting key.
+   * @summary Import the RSA-OAEP private encrypting key.
+   * @async
+   * @private
+   * @return { CryptoKey } An imported RSA private encrypting key.
+   */
+  async #importEncryptingPrivateKey() {
+    const pemfile = await readFile(this._keys.encrypting.privateKey)
+    const b64lines = pemfile.toString()
+      .replace(/-----(BEGIN|END) PRIVATE KEY-----/g, '')
+      .replace(/\s/g, '')
+    const bytestring = atob(b64lines)
+    const bytearray = new Uint8Array(bytestring.length)
+    for (let i = 0; i < bytestring.length; i += 1) {
+      bytearray[i] = bytestring.charCodeAt(i)
+    }
+    const privateKey = await subtle.importKey(
+      'pkcs8',
+      bytearray,
+      { name: this._keys.encrypting.name, hash: this._keys.encrypting.hash },
+      true,
+      ['decrypt'],
+    )
+    return privateKey
+  }
+
+  /**
    * Use RSA public signing key to verify signature.
    * @summary Use RSA public signing key to verify signature.
    * @async
@@ -535,6 +589,46 @@ class User {
       dataToSign,
     )
     return signature
+  }
+
+  /**
+   * Use RSA public encryption key to encrypt data.
+   * @summary Use RSA public encryption key to encrypt data.
+   * @async
+   * @param { ArrayBuffer } data - Array buffer of data to be encrypted.
+   * @return { ArrayBuffer } Array buffer containing encrypted data, if successful.
+   */
+  async encrypt(data) {
+    if (!data) {
+      return null
+    }
+    const ec = new TextEncoder()
+    const dataToEncrypt = ec.encode(data)
+    const encryptedData = await subtle.encrypt(
+      { name: this._keys.encrypting.name },
+      await this.#importEncryptingPublicKey(),
+      dataToEncrypt,
+    )
+    return encryptedData
+  }
+
+  /**
+   * Use RSA private encryption key to decrypt data.
+   * @summary Use RSA private encryption key to decrypt data.
+   * @async
+   * @param { ArrayBuffer } data - Array buffer of data to be decrypted.
+   * @return { ArrayBuffer } Array buffer containing decrypted data, if successful.
+   */
+  async decrypt(data) {
+    if (!data) {
+      return null
+    }
+    const decryptedData = await subtle.decrypt(
+      { name: this._keys.encrypting.name },
+      await this.#importEncryptingPrivateKey(),
+      data,
+    )
+    return decryptedData
   }
 
   /**
@@ -1420,6 +1514,23 @@ class User {
    */
   get jwts() {
     return this._jwts
+  }
+
+  /**
+   * Public signing keys getter.
+   * @return {object}
+   */
+  async publicKeys() {
+    return {
+      signing: {
+        pem: await this.#pks('signing'),
+        jwk: await this.#pks('signing', 'jwk'),
+      },
+      encrypting: {
+        pem: await this.#pks('encrypting'),
+        jwk: await this.#pks('encrypting', 'jwk'),
+      },
+    }
   }
 
   /**
