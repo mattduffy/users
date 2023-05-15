@@ -596,20 +596,24 @@ class User {
    * @summary Use RSA public encryption key to encrypt data.
    * @async
    * @param { ArrayBuffer } data - Array buffer of data to be encrypted.
+   * @param { string } output - String value specifying output as either 'raw' or 'base64'.
    * @return { ArrayBuffer } Array buffer containing encrypted data, if successful.
    */
-  async encrypt(data) {
+  async encrypt(data, output = 'raw') {
     if (!data) {
       return null
     }
     const ec = new TextEncoder()
     const dataToEncrypt = ec.encode(data)
-    const encryptedData = await subtle.encrypt(
+    let cipherText = await subtle.encrypt(
       { name: this._keys.encrypting.name },
       await this.#importEncryptingPublicKey(),
       dataToEncrypt,
     )
-    return encryptedData
+    if (output === 'base64') {
+      cipherText = Buffer.from(String.fromCharCode(...new Uint8Array(cipherText)), 'binary').toString('base64')
+    }
+    return cipherText
   }
 
   /**
@@ -617,19 +621,24 @@ class User {
    * @summary Use RSA private encryption key to decrypt data.
    * @async
    * @param { ArrayBuffer } data - Array buffer of data to be decrypted.
+   * @param { string } format - String specifying input format of cipher text, either 'base64' or 'buffer'.
    * @return { string } String containing decrypted data, if successful.
    */
-  async decrypt(data) {
+  async decrypt(data, format = 'buffer') {
     if (!data) {
       return null
     }
-    const dc = new TextDecoder()
-    const decryptedData = await subtle.decrypt(
+    let cipherText = data
+    if (format === 'base64') {
+      cipherText = new Uint8Array(Buffer.from(data, 'base64'))
+    }
+    const plainText = await subtle.decrypt(
       { name: this._keys.encrypting.name },
       await this.#importEncryptingPrivateKey(),
-      data,
+      cipherText,
     )
-    return dc.decode(decryptedData)
+    const dc = new TextDecoder()
+    return dc.decode(plainText)
   }
 
   /**
