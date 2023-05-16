@@ -580,9 +580,7 @@ class User {
     if (!data) {
       return null
     }
-    const ec = new TextEncoder()
-    const dataToSign = ec.encode(data)
-    // const privateKey = await this.#importSigningPrivateKey()
+    const dataToSign = new TextEncoder().encode(data)
     const signature = await subtle.sign(
       this._keys.signing.name,
       await this.#importSigningPrivateKey(),
@@ -603,8 +601,7 @@ class User {
     if (!data) {
       return null
     }
-    const ec = new TextEncoder()
-    const dataToEncrypt = ec.encode(data)
+    const dataToEncrypt = new TextEncoder().encode(data)
     let cipherText = await subtle.encrypt(
       { name: this._keys.encrypting.name },
       await this.#importEncryptingPublicKey(),
@@ -637,8 +634,7 @@ class User {
       await this.#importEncryptingPrivateKey(),
       cipherText,
     )
-    const dc = new TextDecoder()
-    return dc.decode(plainText)
+    return new TextDecoder().decode(plainText)
   }
 
   /**
@@ -1552,6 +1548,14 @@ class User {
   }
 
   /**
+   * Private signing key getter.
+   * @return {object}
+   */
+  get privateSigningKey() {
+    return this.#pks('signing', 'privateKey')
+  }
+
+  /**
    * Public signing JWK getter.
    * @return {object}
    */
@@ -1560,19 +1564,27 @@ class User {
   }
 
   /**
-   * Public encrypting JWK getter.
-   * @return {object}
-   */
-  get encryptingJwk() {
-    return this.#pks('encrypting', 'jwk')
-  }
-
-  /**
    * Public encrypting key getter.
    * @return {object}
    */
   get publicEncryptingKey() {
     return this.#pks('encrypting')
+  }
+
+  /**
+   * Private encrypting key getter.
+   * @return {object}
+   */
+  get privateEncryptingKey() {
+    return this.#pks('encrypting', 'privateKey')
+  }
+
+  /**
+   * Public encrypting JWK getter.
+   * @return {object}
+   */
+  get encryptingJwk() {
+    return this.#pks('encrypting', 'jwk')
   }
 
   async #pks(type = 'signing', format = 'publicKey', pretty = 'true') {
@@ -1597,13 +1609,15 @@ class User {
 
   #prettyPrintJwk(jwk) {
     const matches = jwk.match(/(?<key_ops>"key_ops":\[.*\]),(?<ext>"ext":(?:true|false)),(?<kty>"kty":"(?:RSA|AES|ECDSA|HMAC)"),(?<n>"n":"(?<n_val>.*)"),(?<e>"e":".*"),(?<alg>"alg":".*")/).groups
+    // const indent = '\t'
+    const indent = '  '
     const string = '{\n'
-      + `\t${matches.key_ops},\n`
-      + `\t${matches.ext},\n`
-      + `\t${matches.kty},\n`
-      + `\t"n":"${matches.n_val.match(/.{1,64}/g).join('\n\t    ')}",\n`
-      + `\t${matches.e},\n`
-      + `\t${matches.alg}\n`
+      + `${indent}${matches.key_ops},\n`
+      + `${indent}${matches.ext},\n`
+      + `${indent}${matches.kty},\n`
+      + `${indent}"n":"${matches.n_val.match(/.{1,64}/g).join(`\n${indent}`)}",\n`
+      + `${indent}${matches.e},\n`
+      + `${indent}${matches.alg}\n`
       + '}'
     return string
   }
