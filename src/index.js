@@ -21,6 +21,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import bcrypt from 'bcrypt'
 import Debug from 'debug'
+import * as jose from 'jose'
 import { User } from './User.js'
 import { AdminUser } from './AdminUser.js'
 import { CreatorUser } from './CreatorUser.js'
@@ -47,6 +48,7 @@ class Users {
   constructor(mongoClient, ctx) {
     this._db = mongoClient
     this._ctx = ctx
+    this._jose = jose
   }
 
   async newUser(type = 'basic') {
@@ -67,7 +69,7 @@ class Users {
   }
 
   async factory(config, type = 'null') {
-    const conf = { ctx: this._ctx, ...config }
+    const conf = { ctx: this._ctx, jwt: jose, ...config }
     if (this._db === null) {
       log(this.NO_DB_OBJECT)
       throw new Error(this.NO_DB_OBJECT)
@@ -241,16 +243,16 @@ class Users {
     }
   }
 
-  async getByUsername(ausername = null, options = {}) {
+  async getByUsername(aUsername = null, options = {}) {
     if (this._db === null) {
       error(this.NO_DB_OBJECT)
       throw new Error(this.NO_DB_OBJECT)
     }
-    if (ausername === null) {
+    if (aUsername === null) {
       error('Static method User.getByUsername() called without the username parameter.')
       throw new Error('Missing username parameter.')
     }
-    const username = (ausername[0] === '@') ? ausername.slice(1) : ausername
+    const username = (aUsername[0] === '@') ? aUsername.slice(1) : aUsername
     const opts = { archived: false, ...options }
     try {
       const user = await User.findByUsername(username, opts)

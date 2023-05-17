@@ -27,7 +27,7 @@
   "engines": {
     "node": ">=14.16"
   },
- "devDependencies": {
+  "devDependencies": {
     "eslint": "8.29.0",
     "eslint-config-airbnb-base": "15.0.0",
     "eslint-plugin-import": "2.26.0"
@@ -35,10 +35,11 @@
   "dependencies": {
     "assert": "2.0.0",
     "bcrypt": "^5.0.1",
-    "jsonwebtoken": "^8.5.1",
-    "mongodb": "^4.5.0",
+    "debug": "^4.3.4",
     "dotenv": "^16.0.0",
-    "debug": "^4.3.4"
+    "jose": "4.14.4",
+    "jsonwebtoken": "^8.5.1",
+    "mongodb": "^4.5.0"
   },
   "keywords": [
     "user-type",

@@ -48,6 +48,7 @@ class User {
     this.dbClient = client
     this.dbDatabase = 'mattmadethese'
     this.dbCollection = 'users'
+    this.jwt = config.jwt
     this._ctx = config?.ctx ?? {}
     this._id = config?._id ?? config?.id ?? null
     this._type = config?.type ?? 'User'
@@ -638,6 +639,20 @@ class User {
   }
 
   /**
+   *
+   */
+  async signJWT() {
+    const jwt = new this.jwt.SignJWT({ 'urn:example:claim': true })
+      .setProtectedHeader({ alg: 'RS256' })
+      .setIssuedAt()
+      .setIssuer(this._ctx.origin)
+      .setAudience(this._ctx.origin)
+      .setExpirationTime('2h')
+      .sign(await this.#importSigningPrivateKey())
+    return jwt
+  }
+
+  /**
    * Simple class method wrapper around fs/promises.rename function.
    * @summary Simple class method wrapper around fs/promises.rename function.
    * @param { string } directory - Path of directory to be renamed.
@@ -1104,23 +1119,33 @@ class User {
         type: this._type,
         first: this._first,
         last: this._last,
-        // email: this._email,
         emails: this._emails,
         username: this._username,
         displayName: this._displayName,
         url: this._url,
         avatar: this._avatar,
         header: this._header,
+        publicDir: this._publicDir,
+        privateDir: this._privateDir,
         hashedPassword: this._hashedPassword,
         jwts: this._jwts,
         keys: this._keys,
-        createdOn: this._created_on,
         updatedOn: this._updated_on,
-        userStatus: this._userStatus,
+        createdOn: this._created_on,
         description: this._description,
+        userStatus: this._userStatus,
         sessionId: this._sessionId,
-        schemaVer: this._schemaVer,
         archived: this._archived,
+        schemaVer: this._schemaVer,
+        // Mastodon fields
+        locked: this._isLocked,
+        bot: this._isBot,
+        discoverable: this._isDiscoverable,
+        group: this._isGroup,
+        emojis: this._emojis,
+        fields: this._fields,
+        followers_count: this._followers_count,
+        following_count: this._following_count,
       }
       const options = { writeConcern: { w: 'majority' } }
       log('6: Calling insertOne.')
