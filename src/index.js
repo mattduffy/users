@@ -464,7 +464,7 @@ class Users {
       // log(`password: ${password}`)
       result.user = await this._db.findOne(filter)
       log(`User found: ${result.user?.emails[0].primary}`)
-      log(result.user)
+      // log(result.user)
       if (result.user !== null) {
         if (result.user.userStatus === 'inactive') {
           result.user = false

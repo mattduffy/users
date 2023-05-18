@@ -7,7 +7,7 @@ import bcrypt from 'bcrypt'
 import path from 'node:path'
 import { rename } from 'node:fs'
 import { stat, writeFile, readFile, mkdir } from 'node:fs/promises'
-import { createHash, subtle } from 'node:crypto'
+import { randomUUID, createHash, subtle } from 'node:crypto'
 import { client, ObjectId } from './mongoclient.js'
 
 const log = Debug('users:User')
@@ -659,21 +659,32 @@ class User {
   }
 
   /**
-   * @TODO...
+   * Generate a signed JWT with user accounts private RSASSA-PKCS1-v1_5 signing key.
+   * @summary Generate a signed JWT with user accounts private RSASSA-PKCS1-v1_5 signing key.
+   * @async
+   * @return { string } - A baseUrlEncoded string representing the signed JWT.
    */
   async signJWT() {
-    // log(await this.#importSigningJwk())
-    const thumbprint = await this.jwt.calculateJwkThumbprint(await this.#importSigningJwk(), 'sha256')
+    // save this kid value somewhere...
+    const kid = randomUUID()
+    let thumbprint
     const { origin } = this._ctx.request
     const claims = {
-      jti: 'unique-identifier-1234-5678-9000',
+      email: this.emails[0].primary,
+
     }
     const headers = {
       alg: 'RS256',
       typ: 'jwt',
-      kid: 'kid...',
-      jku: `${origin}/${this.username}/jwks.json`,
-      x5t: thumbprint,
+      kid,
+      jku: `${origin}/@${this.username}/jwks.json`,
+    }
+    try {
+      thumbprint = await this.jwt.calculateJwkThumbprint(await this.#importSigningJwk(), 'sha256')
+      headers.x5t = thumbprint
+    } catch (e) {
+      error(`Failed to create thumbprint of JWK: ${this._keys.signing.key}`)
+      error(e)
     }
     const jwt = new this.jwt.SignJWT(claims)
       .setProtectedHeader(headers)
@@ -681,17 +692,36 @@ class User {
       .setIssuer(origin)
       .setAudience(origin)
       .setExpirationTime('2h')
+      .setSubject(this.username)
       .setJti('unique-identifier-1234-5678-9001')
       .sign(await this.#importSigningPrivateKey())
     return jwt
   }
 
   /**
-   * @TODO...
+   * Verifies the payload format and the included JWS signature.
+   * @summary Verifies the payload format and the included JWS signature.
+   * @async
+   * @param { string } token - A signed JWT to decode.
+   * @return { JWTVerifyResult } An object literal containing decoded payload and any protected headers.
    */
   async verifyJWT(token) {
-    const jwk = await this.jwt.importJWK(await this.#importSigningJwk(), 'RS256')
-    const result = await this.jwt.jwtVerify(token, jwk)
+    let result
+    let jwk
+    try {
+      jwk = await this.jwt.importJWK(await this.#importSigningJwk(), 'RS256')
+    } catch (e) {
+      error(`Failed to import ${this.username}'s JWK: ${this._keys.signing.jwk}`)
+      error(e)
+      return false
+    }
+    try {
+      result = await this.jwt.jwtVerify(token, jwk)
+    } catch (e) {
+      error(`Failed to verify token: ${token}`)
+      error(e)
+      return false
+    }
     return result
   }
 
@@ -1588,6 +1618,20 @@ class User {
    */
   get jwts() {
     return this._jwts
+  }
+
+  /**
+   * JWKS.json
+   * @summary JWKS.json
+   * @return { object } Object literal with signing JWK and encrypting JWK.
+   */
+  async jwksjson() {
+    return {
+      keys: [
+        JSON.parse(await this.#pks('signing', 'jwk', false)),
+        JSON.parse(await this.#pks('encrypting', 'jwk', false)),
+      ],
+    }
   }
 
   /**
