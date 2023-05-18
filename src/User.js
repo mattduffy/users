@@ -497,6 +497,26 @@ class User {
   }
 
   /**
+   * Import the RSASSA-PKCS1-v1_5 JWK signing key.
+   * @summary Import the RSASSA-PKCS1-v1_5 JWK signing key.
+   * @async
+   * @private
+   * @return { CryptoKey } An imported RSA JWK signing key.
+   */
+  async #importSigningJwk() {
+    const jwkfile = await readFile(this._keys.signing.jwk)
+    const jwk = JSON.parse(jwkfile.toString())
+    return jwk
+    // return await subtle.importKey(
+    //   'jwk',
+    //   jwk,
+    //   { name: this._keys.signing.name, hash: this._keys.signing.hash },
+    //   true,
+    //   ['verify'],
+    // )
+  }
+
+  /**
    * Import the RSA-OAEP public encrypting key.
    * @summary Import the RSA-OAEP public encrypting key.
    * @async
@@ -639,17 +659,40 @@ class User {
   }
 
   /**
-   *
+   * @TODO...
    */
   async signJWT() {
-    const jwt = new this.jwt.SignJWT({ 'urn:example:claim': true })
-      .setProtectedHeader({ alg: 'RS256' })
+    // log(await this.#importSigningJwk())
+    const thumbprint = await this.jwt.calculateJwkThumbprint(await this.#importSigningJwk(), 'sha256')
+    const { origin } = this._ctx.request
+    const claims = {
+      jti: 'unique-identifier-1234-5678-9000',
+    }
+    const headers = {
+      alg: 'RS256',
+      typ: 'jwt',
+      kid: 'kid...',
+      jku: `${origin}/${this.username}/jwks.json`,
+      x5t: thumbprint,
+    }
+    const jwt = new this.jwt.SignJWT(claims)
+      .setProtectedHeader(headers)
       .setIssuedAt()
-      .setIssuer(this._ctx.origin)
-      .setAudience(this._ctx.origin)
+      .setIssuer(origin)
+      .setAudience(origin)
       .setExpirationTime('2h')
+      .setJti('unique-identifier-1234-5678-9001')
       .sign(await this.#importSigningPrivateKey())
     return jwt
+  }
+
+  /**
+   * @TODO...
+   */
+  async verifyJWT(token) {
+    const jwk = await this.jwt.importJWK(await this.#importSigningJwk(), 'RS256')
+    const result = await this.jwt.jwtVerify(token, jwk)
+    return result
   }
 
   /**
