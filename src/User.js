@@ -209,6 +209,44 @@ class User {
   }
 
   /**
+   * Check to see if the keys directories are present in public and private user dirs.
+   * @summary Check to see if the keys directories are present in public and private user dirs.
+   * @async
+   * @return { boolean } Returns true if keys dirs exist or are successfully created.
+   * @throws { Error } If keys dirs cannot be created.
+   */
+  async #keyDirs() {
+    const pubKeyDir = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys`)
+    const priKeyDir = path.resolve(this._ctx.app.dirs.private.dir, `${this.privateDir}/keys`)
+    try {
+      try {
+        if ((await stat(pubKeyDir)).isDirectory()) {
+          log('keys public directory exists')
+        } else {
+          error('not a directory')
+        }
+      } catch (e) {
+        error('no such directory')
+        await this.makedir(pubKeyDir)
+      }
+      try {
+        if ((await stat(priKeyDir)).isDirectory()) {
+          log('keys private directory exists')
+        } else {
+          error('not a directory')
+        }
+      } catch (e) {
+        error('no such directory')
+        await this.makedir(priKeyDir)
+      }
+    } catch (e) {
+      error(`Failed to create keys directories for user ${this.username}`)
+      throw new Error(e)
+    }
+    return true
+  }
+
+  /**
    * Private class method to generate Webcrypto Subtle signing key pair.
    * @summary Private class method to generate Webcrypto Subtle signing key pair.
    * @async
@@ -219,9 +257,15 @@ class User {
   async #generateSigningKeys(o = {}) {
     const keyOpts = o
     let keyExists
-    const pubKeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/rs256-pub.pem`)
-    const jwkeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/rs256.jwk`)
-    const priKeyPath = path.resolve(this._ctx.app.dirs.private.dir, `${this.privateDir}/rs256-pri.pem`)
+    const pubKeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rs256-pub.pem`)
+    const jwkeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rs256.jwk`)
+    const priKeyPath = path.resolve(this._ctx.app.dirs.private.dir, `${this.privateDir}/keys/rs256-pri.pem`)
+    try {
+      await this.#keyDirs()
+    } catch (e) {
+      error(e)
+      throw new Error(e)
+    }
     try {
       keyExists = await stat(pubKeyPath)
       if (keyExists.isFile()) {
@@ -303,9 +347,15 @@ class User {
   async #generateEncryptingKeys(o = {}) {
     const keyOpts = o
     let keyExists
-    const pubKeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/rsa-oaep-pub.pem`)
-    const jwkeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/rsa-oaep.jwk`)
-    const priKeyPath = path.resolve(this._ctx.app.dirs.private.dir, `${this.privateDir}/rsa-oaep-pri.pem`)
+    const pubKeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rsa-oaep-pub.pem`)
+    const jwkeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rsa-oaep.jwk`)
+    const priKeyPath = path.resolve(this._ctx.app.dirs.private.dir, `${this.privateDir}/keys/rsa-oaep-pri.pem`)
+    try {
+      await this.#keyDirs()
+    } catch (e) {
+      error(e)
+      throw new Error(e)
+    }
     try {
       keyExists = await stat(pubKeyPath)
       if (keyExists.isFile()) {
@@ -416,6 +466,7 @@ class User {
         signingKeys = await this.#generateSigningKeys(signingKeyOpts)
         this._keys.signing = signingKeys
         delete this._keys.signing.status
+        this._keys.signing.kid = randomUUID()
         result.signing = signingKeys
       } catch (e) {
         error('Failed to generate Webcrypto.subtle signing keys.')
@@ -430,6 +481,7 @@ class User {
         encryptingKeys = await this.#generateEncryptingKeys(encryptingKeyOpts)
         this._keys.encrypting = encryptingKeys
         delete this._keys.encrypting.status
+        this._keys.encrypting.kid = randomUUID()
         result.encrypting = encryptingKeys
       } catch (e) {
         error('Failed to generate Webcrypto.subtle encrypting keys.')
@@ -506,14 +558,8 @@ class User {
   async #importSigningJwk() {
     const jwkfile = await readFile(this._keys.signing.jwk)
     const jwk = JSON.parse(jwkfile.toString())
+    jwk.kid = this._keys.signing.kid
     return jwk
-    // return await subtle.importKey(
-    //   'jwk',
-    //   jwk,
-    //   { name: this._keys.signing.name, hash: this._keys.signing.hash },
-    //   true,
-    //   ['verify'],
-    // )
   }
 
   /**
@@ -666,17 +712,15 @@ class User {
    */
   async signJWT() {
     // save this kid value somewhere...
-    const kid = randomUUID()
     let thumbprint
     const { origin } = this._ctx.request
     const claims = {
       email: this.emails[0].primary,
-
     }
     const headers = {
       alg: 'RS256',
       typ: 'jwt',
-      kid,
+      kid: this._keys.signing.kid,
       jku: `${origin}/@${this.username}/jwks.json`,
     }
     try {
