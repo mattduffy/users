@@ -17,7 +17,7 @@ const COLLECTION = 'users'
 
 /**
  * @todo [ ] Create a test to authenticate user accounts base on permissions.
- * @todo [ ] Integrate with the @mattduffy/mft package to add JWT functionality.
+ * @todo [ ] Add JWT functionality.
  * @todo [ ] Add method - list albums
  */
 
@@ -290,8 +290,10 @@ class User {
     let pub
     let jwk
     let pri
+    const kid = randomUUID()
     try {
       jwk = await subtle.exportKey('jwk', keys.publicKey)
+      jwk.kid = kid
       keys.jwk = jwk
       pub = await subtle.exportKey('spki', keys.publicKey)
       pri = await subtle.exportKey('pkcs8', keys.privateKey)
@@ -330,6 +332,7 @@ class User {
       name: keyOpts.name,
       hash: keyOpts.hash,
       bits: keyOpts.modulusLength,
+      kid,
       publicKey: pubKeyPath,
       privateKey: priKeyPath,
       jwk: jwkeyPath,
@@ -380,8 +383,10 @@ class User {
     let pub
     let jwk
     let pri
+    const kid = randomUUID()
     try {
       jwk = await subtle.exportKey('jwk', keys.publicKey)
+      jwk.kid = kid
       keys.jwk = jwk
       pub = await subtle.exportKey('spki', keys.publicKey)
       pri = await subtle.exportKey('pkcs8', keys.privateKey)
@@ -420,6 +425,7 @@ class User {
       name: keyOpts.name,
       hash: keyOpts.hash,
       bits: keyOpts.modulusLength,
+      kid,
       publicKey: pubKeyPath,
       privateKey: priKeyPath,
       jwk: jwkeyPath,
@@ -442,20 +448,20 @@ class User {
       return { status: null }
     }
     const signingKeyOpts = {
-      name: process.env.SIGNING_KEY_TYPE ?? 'RSASSA-PKCS1-v1_5',
-      modulusLength: process.env.SIGNING_KEY_BITS ?? 2048,
+      name: process.env.RSA_SIG_KEY_NAME ?? 'RSASSA-PKCS1-v1_5',
+      modulusLength: process.env.RSA_SIG_KEY_MOD ?? 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
-      hash: process.env.SIGNING_KEY_HASH ?? 'SHA-256',
-      extractable: process.env.SIGNING_KEY_EXTRACTABLE ?? true,
+      hash: process.env.RSA_SIG_KEY_HASH ?? 'SHA-256',
+      extractable: process.env.RSA_SIG_KEY_EXTRACTABLE ?? true,
       uses: ['sign', 'verify'],
       ...sign,
     }
     const encryptingKeyOpts = {
-      name: process.env.SIGNING_KEY_TYPE ?? 'RSA-OAEP',
-      modulusLength: process.env.SIGNING_KEY_BITS ?? 2048,
+      name: process.env.RSA_ENC_KEY_TYPE ?? 'RSA-OAEP',
+      modulusLength: process.env.RSA_ENC_KEY_MOD ?? 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
-      hash: process.env.ENCRYPTING_KEY_TYPE ?? 'SHA-256',
-      extractable: process.env.ENCRYPTING_KEY_EXTRACTABLE ?? true,
+      hash: process.env.RSA_ENC_KEY_TYPE ?? 'SHA-256',
+      extractable: process.env.RSA_ENC_KEY_EXTRACTABLE ?? true,
       uses: ['encrypt', 'decrypt'],
       ...enc,
     }
@@ -466,7 +472,7 @@ class User {
         signingKeys = await this.#generateSigningKeys(signingKeyOpts)
         this._keys.signing = signingKeys
         delete this._keys.signing.status
-        this._keys.signing.kid = randomUUID()
+        // this._keys.signing.kid = randomUUID()
         result.signing = signingKeys
       } catch (e) {
         error('Failed to generate Webcrypto.subtle signing keys.')
@@ -1764,11 +1770,12 @@ class User {
   }
 
   #prettyPrintJwk(jwk) {
-    const matches = jwk.match(/(?<key_ops>"key_ops":\[.*\]),(?<ext>"ext":(?:true|false)),(?<kty>"kty":"(?:RSA|AES|ECDSA|HMAC)"),(?<n>"n":"(?<n_val>.*)"),(?<e>"e":".*"),(?<alg>"alg":".*")/).groups
+    const matches = jwk.match(/(?<key_ops>"key_ops":\[.*\]),(?<kid>"kid":".*"),(?<ext>"ext":(?:true|false)),(?<kty>"kty":"(?:RSA|AES|ECDSA|HMAC)"),(?<n>"n":"(?<n_val>.*)"),(?<e>"e":".*"),(?<alg>"alg":".*")/).groups
     // const indent = '\t'
     const indent = '  '
     const string = '{\n'
       + `${indent}${matches.key_ops},\n`
+      + `${indent}${matches.kid},\n`
       + `${indent}${matches.ext},\n`
       + `${indent}${matches.kty},\n`
       + `${indent}"n":"${matches.n_val.match(/.{1,64}/g).join(`\n${indent}`)}",\n`
