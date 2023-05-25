@@ -73,7 +73,7 @@ class User {
     // this._avatar = this.#fixAvatarUrl(this._avatar)
     this._header = config?.header ?? config?._header ?? '/i/accounts/headers/generic.png'
     // this._header = this.#fixHeaderUrl(this._header)
-    this._keys = config?.keys ?? {}
+    this._keys = config?.keys ?? { signing: [], encrypting: [] }
     this._jwts = config?.jwts ?? null
     this._created_on = config?.createdOn ?? config?.created_on ?? Date.now()
     this._updated_on = config?.updatedOn ?? config?.updated_on ?? null
@@ -256,10 +256,11 @@ class User {
    */
   async #generateSigningKeys(o = {}) {
     const keyOpts = o
+    const keyIndex = o?.keyIndex ?? 0
     let keyExists
-    const pubKeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rs256-pub.pem`)
-    const jwkeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rs256.jwk`)
-    const priKeyPath = path.resolve(this._ctx.app.dirs.private.dir, `${this.privateDir}/keys/rs256-pri.pem`)
+    const pubKeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rs256-public-${keyIndex}.pem`)
+    const jwkeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rs256-${keyIndex}.jwk`)
+    const priKeyPath = path.resolve(this._ctx.app.dirs.private.dir, `${this.privateDir}/keys/rs256-private-${keyIndex}.pem`)
     try {
       await this.#keyDirs()
     } catch (e) {
@@ -349,10 +350,11 @@ class User {
    */
   async #generateEncryptingKeys(o = {}) {
     const keyOpts = o
+    const keyIndex = o?.keyIndex ?? 0
     let keyExists
-    const pubKeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rsa-oaep-pub.pem`)
-    const jwkeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rsa-oaep.jwk`)
-    const priKeyPath = path.resolve(this._ctx.app.dirs.private.dir, `${this.privateDir}/keys/rsa-oaep-pri.pem`)
+    const pubKeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rsa-oaep-public-${keyIndex}.pem`)
+    const jwkeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rsa-oaep-${keyIndex}.jwk`)
+    const priKeyPath = path.resolve(this._ctx.app.dirs.private.dir, `${this.privateDir}/keys/rsa-oaep-private-${keyIndex}.pem`)
     try {
       await this.#keyDirs()
     } catch (e) {
@@ -470,14 +472,13 @@ class User {
       let signingKeys
       try {
         signingKeys = await this.#generateSigningKeys(signingKeyOpts)
-        this._keys.signing = signingKeys
+        // this._keys.signing = signingKeys
+        this._keys.signing.unshift(signingKeys)
         delete this._keys.signing.status
-        // this._keys.signing.kid = randomUUID()
         result.signing = signingKeys
       } catch (e) {
         error('Failed to generate Webcrypto.subtle signing keys.')
         error(e)
-        // result.signingStatus = 'failed'
         return { result: 'failed' }
       }
     }
@@ -485,14 +486,13 @@ class User {
       let encryptingKeys
       try {
         encryptingKeys = await this.#generateEncryptingKeys(encryptingKeyOpts)
-        this._keys.encrypting = encryptingKeys
+        // this._keys.encrypting = encryptingKeys
+        this._keys.encrypting.unshift(encryptingKeys)
         delete this._keys.encrypting.status
-        this._keys.encrypting.kid = randomUUID()
         result.encrypting = encryptingKeys
       } catch (e) {
         error('Failed to generate Webcrypto.subtle encrypting keys.')
         error(e)
-        // result.encryptingStatus = 'failed'
         return { result: 'failed' }
       }
     }
@@ -505,10 +505,12 @@ class User {
    * @summary Import the RSASSA-PKCS1-v1_5 private signing key.
    * @async
    * @private
+   * @param { Number } keyIndex - The index of the signing keys array.
    * @return { CryptoKey } An imported RSA private crypto key.
    */
-  async #importSigningPrivateKey() {
-    const pemfile = await readFile(this._keys.signing.privateKey)
+  async #importSigningPrivateKey(keyIndex = 0) {
+    // const pemfile = await readFile(this._keys.signing.privateKey)
+    const pemfile = await readFile(this._keys.signing[keyIndex].privateKey)
     const b64lines = pemfile.toString()
       .replace(/-----(BEGIN|END) PRIVATE KEY-----/g, '')
       .replace(/\s/g, '')
@@ -520,7 +522,8 @@ class User {
     const privateKey = await subtle.importKey(
       'pkcs8',
       bytearray,
-      { name: this._keys.signing.name, hash: this._keys.signing.hash },
+      // { name: this._keys.signing.name, hash: this._keys.signing.hash },
+      { name: this._keys.signing[keyIndex].name, hash: this._keys.signing[keyIndex].hash },
       true,
       ['sign'],
     )
@@ -532,10 +535,12 @@ class User {
    * @summary Import the RSASSA-PKCS1-v1_5 public signing key.
    * @async
    * @private
+   * @param { Number } keyIndex - The index of the encrypting keys array.
    * @return { CryptoKey } An imported RSA public signing key.
    */
-  async #importSigningPublicKey() {
-    const pemfile = await readFile(this._keys.signing.publicKey)
+  async #importSigningPublicKey(keyIndex = 0) {
+    // const pemfile = await readFile(this._keys.signing.publicKey)
+    const pemfile = await readFile(this._keys.signing[keyIndex].publicKey)
     const b64lines = pemfile.toString()
       .replace(/-----(BEGIN|END) PUBLIC KEY-----/g, '')
       .replace(/\s/g, '')
@@ -547,7 +552,8 @@ class User {
     const publicKey = await subtle.importKey(
       'spki',
       bytearray,
-      { name: this._keys.signing.name, hash: this._keys.signing.hash },
+      // { name: this._keys.signing.name, hash: this._keys.signing.hash },
+      { name: this._keys.signing[keyIndex].name, hash: this._keys.signing[keyIndex].hash },
       true,
       ['verify'],
     )
@@ -559,12 +565,15 @@ class User {
    * @summary Import the RSASSA-PKCS1-v1_5 JWK signing key.
    * @async
    * @private
+   * @param { Number } keyIndex - The index of the signing keys array.
    * @return { CryptoKey } An imported RSA JWK signing key.
    */
-  async #importSigningJwk() {
-    const jwkfile = await readFile(this._keys.signing.jwk)
+  async #importSigningJwk(keyIndex = 0) {
+    // const jwkfile = await readFile(this._keys.signing.jwk)
+    const jwkfile = await readFile(this._keys.signing[keyIndex].jwk)
     const jwk = JSON.parse(jwkfile.toString())
-    jwk.kid = this._keys.signing.kid
+    // jwk.kid = this._keys.signing.kid
+    jwk.kid = this._keys.signing[keyIndex].kid
     return jwk
   }
 
@@ -573,10 +582,12 @@ class User {
    * @summary Import the RSA-OAEP public encrypting key.
    * @async
    * @private
+   * @param { Number } keyIndex - The index of the encrypting keys array.
    * @return { CryptoKey } An imported RSA public encrypting key.
    */
-  async #importEncryptingPublicKey() {
-    const pemfile = await readFile(this._keys.encrypting.publicKey)
+  async #importEncryptingPublicKey(keyIndex = 0) {
+    // const pemfile = await readFile(this._keys.encrypting.publicKey)
+    const pemfile = await readFile(this._keys.encrypting[keyIndex].publicKey)
     const b64lines = pemfile.toString()
       .replace(/-----(BEGIN|END) PUBLIC KEY-----/g, '')
       .replace(/\s/g, '')
@@ -588,7 +599,8 @@ class User {
     const publicKey = await subtle.importKey(
       'spki',
       bytearray,
-      { name: this._keys.encrypting.name, hash: this._keys.encrypting.hash },
+      // { name: this._keys.encrypting.name, hash: this._keys.encrypting.hash },
+      { name: this._keys.encrypting[keyIndex].name, hash: this._keys.encrypting[keyIndex].hash },
       true,
       ['encrypt'],
     )
@@ -600,10 +612,12 @@ class User {
    * @summary Import the RSA-OAEP private encrypting key.
    * @async
    * @private
+   * @param { Number } keyIndex - The index of the encrypting keys array.
    * @return { CryptoKey } An imported RSA private encrypting key.
    */
-  async #importEncryptingPrivateKey() {
-    const pemfile = await readFile(this._keys.encrypting.privateKey)
+  async #importEncryptingPrivateKey(keyIndex = 0) {
+    // const pemfile = await readFile(this._keys.encrypting.privateKey)
+    const pemfile = await readFile(this._keys.encrypting[keyIndex].privateKey)
     const b64lines = pemfile.toString()
       .replace(/-----(BEGIN|END) PRIVATE KEY-----/g, '')
       .replace(/\s/g, '')
@@ -615,7 +629,8 @@ class User {
     const privateKey = await subtle.importKey(
       'pkcs8',
       bytearray,
-      { name: this._keys.encrypting.name, hash: this._keys.encrypting.hash },
+      // { name: this._keys.encrypting.name, hash: this._keys.encrypting.hash },
+      { name: this._keys.encrypting[keyIndex].name, hash: this._keys.encrypting[keyIndex].hash },
       true,
       ['decrypt'],
     )
@@ -628,15 +643,17 @@ class User {
    * @async
    * @param { ArrayBuffer } signature - Array buffer containing the signature to verify.
    * @param { ArrayBuffer } data - Array buffer containg the data whose signature is to be verified.
+   * @param { Number } keyIndex - The index of the signing keys array.
    * @return { boolean } True if the signature is valid, False otherwise.
    */
-  async verify(signature, data) {
+  async verify(signature, data, keyIndex = 0) {
     if (!data || !signature) {
       return false
     }
     const result = subtle.verify(
-      this._keys.signing.name,
-      await this.#importSigningPublicKey(),
+      // this._keys.signing.name,
+      this._keys.signing[keyIndex].name,
+      await this.#importSigningPublicKey(keyIndex),
       signature,
       data,
     )
@@ -647,16 +664,18 @@ class User {
    * @summary Use RSA private signing key to sign data.
    * @async
    * @param { string } data - String data to be signed.
+   * @param { Number } keyIndex - The index of the signing key array.
    * @return { ArrayBuffer } Array buffer containing signed data.
    */
-  async sign(data) {
+  async sign(data, keyIndex = 0) {
     if (!data) {
       return null
     }
     const dataToSign = new TextEncoder().encode(data)
     const signature = await subtle.sign(
-      this._keys.signing.name,
-      await this.#importSigningPrivateKey(),
+      // this._keys.signing.name,
+      this._keys.signing[keyIndex].name,
+      await this.#importSigningPrivateKey(keyIndex),
       dataToSign,
     )
     return signature
@@ -668,16 +687,18 @@ class User {
    * @async
    * @param { ArrayBuffer } data - Array buffer of data to be encrypted.
    * @param { string } output - String value specifying output as either 'raw' or 'base64'.
+   * @param { Number } keyIndex - The index of the encrypting keys array.
    * @return { ArrayBuffer } Array buffer containing encrypted data, if successful.
    */
-  async encrypt(data, output = 'raw') {
+  async encrypt(data, output = 'raw', keyIndex = 0) {
     if (!data) {
       return null
     }
     const dataToEncrypt = new TextEncoder().encode(data)
     let cipherText = await subtle.encrypt(
-      { name: this._keys.encrypting.name },
-      await this.#importEncryptingPublicKey(),
+      // { name: this._keys.encrypting.name },
+      { name: this._keys.encrypting[keyIndex].name },
+      await this.#importEncryptingPublicKey(keyIndex),
       dataToEncrypt,
     )
     if (output === 'base64') {
@@ -692,9 +713,10 @@ class User {
    * @async
    * @param { ArrayBuffer } data - Array buffer of data to be decrypted.
    * @param { string } format - String specifying input format of cipher text, either 'base64' or 'buffer'.
+   * @param { Number } keyIndex - The index of the encrypting keys array.
    * @return { string } String containing decrypted data, if successful.
    */
-  async decrypt(data, format = 'buffer') {
+  async decrypt(data, format = 'buffer', keyIndex = 0) {
     if (!data) {
       return null
     }
@@ -703,8 +725,9 @@ class User {
       cipherText = new Uint8Array(Buffer.from(data, 'base64'))
     }
     const plainText = await subtle.decrypt(
-      { name: this._keys.encrypting.name },
-      await this.#importEncryptingPrivateKey(),
+      // { name: this._keys.encrypting.name },
+      { name: this._keys.encrypting[keyIndex].name },
+      await this.#importEncryptingPrivateKey(keyIndex),
       cipherText,
     )
     return new TextDecoder().decode(plainText)
@@ -714,9 +737,10 @@ class User {
    * Generate a signed JWT with user accounts private RSASSA-PKCS1-v1_5 signing key.
    * @summary Generate a signed JWT with user accounts private RSASSA-PKCS1-v1_5 signing key.
    * @async
+   * @param { Number } keyIndex - The index of the signing key array.
    * @return { string } - A baseUrlEncoded string representing the signed JWT.
    */
-  async signJWT() {
+  async signJWT(keyIndex = 0) {
     // save this kid value somewhere...
     let thumbprint
     const { origin } = this._ctx.request
@@ -726,14 +750,17 @@ class User {
     const headers = {
       alg: 'RS256',
       typ: 'jwt',
-      kid: this._keys.signing.kid,
-      jku: `${origin}/@${this.username}/jwks.json`,
+      // kid: this._keys.signing.kid,
+      kid: this._keys.signing[keyIndex].kid,
+      // jku: `${origin}/@${this.username}/jwks.json`,
+      jku: `${origin}/@${this.username}/jwks-${keyIndex}.json`,
     }
     try {
-      thumbprint = await this.jwt.calculateJwkThumbprint(await this.#importSigningJwk(), 'sha256')
+      thumbprint = await this.jwt.calculateJwkThumbprint(await this.#importSigningJwk(keyIndex), 'sha256')
       headers.x5t = thumbprint
     } catch (e) {
-      error(`Failed to create thumbprint of JWK: ${this._keys.signing.key}`)
+      // error(`Failed to create thumbprint of JWK: ${this._keys.signing.key}`)
+      error(`Failed to create thumbprint of JWK: ${this._keys.signing[keyIndex].key}`)
       error(e)
     }
     const jwt = new this.jwt.SignJWT(claims)
@@ -744,7 +771,7 @@ class User {
       .setExpirationTime('2h')
       .setSubject(this.username)
       .setJti('unique-identifier-1234-5678-9001')
-      .sign(await this.#importSigningPrivateKey())
+      .sign(await this.#importSigningPrivateKey(keyIndex))
     return jwt
   }
 
@@ -753,15 +780,17 @@ class User {
    * @summary Verifies the payload format and the included JWS signature.
    * @async
    * @param { string } token - A signed JWT to decode.
+   * @param { Number } keyIndex - The index of the signing keys array.
    * @return { JWTVerifyResult } An object literal containing decoded payload and any protected headers.
    */
-  async verifyJWT(token) {
+  async verifyJWT(token, keyIndex = 0) {
     let result
     let jwk
     try {
-      jwk = await this.jwt.importJWK(await this.#importSigningJwk(), 'RS256')
+      jwk = await this.jwt.importJWK(await this.#importSigningJwk(keyIndex), 'RS256')
     } catch (e) {
-      error(`Failed to import ${this.username}'s JWK: ${this._keys.signing.jwk}`)
+      // error(`Failed to import ${this.username}'s JWK: ${this._keys.signing.jwk}`)
+      error(`Failed to import ${this.username}'s JWK: ${this._keys.signing[keyIndex].jwk}`)
       error(e)
       return false
     }
@@ -1673,30 +1702,50 @@ class User {
   /**
    * JWKS.json
    * @summary JWKS.json
+   * @async
+   * @param { Number|String } keyIndex - The index of the key arrays, or 'all'.
    * @return { object } Object literal with signing JWK and encrypting JWK.
    */
-  async jwksjson() {
-    return {
-      keys: [
-        JSON.parse(await this.#pks('signing', 'jwk', false)),
-        JSON.parse(await this.#pks('encrypting', 'jwk', false)),
-      ],
+  async jwksjson(keyIndex = 0) {
+    // need to update to iterate of each keys array
+    // this._keys.signing[]
+    // this._keys.encrypting[]
+    if (keyIndex === 'all') {
+      // return all versions of the jwkeys
+      return { keys: 'Not functional yet.' }
     }
+    const jwks = { keys: [] }
+    const sig = JSON.parse(await this.#pks('signing', 'jwk', false, keyIndex))
+    if (sig !== null) {
+      jwks.keys.push(sig)
+    }
+    const enc = JSON.parse(await this.#pks('encrypting', 'jwk', false, keyIndex))
+    if (enc !== null) {
+      jwks.keys.push(enc)
+    }
+    return jwks
   }
 
   /**
    * Public signing keys getter.
+   * @summary Public signing keys getter.
+   * @async
+   * @param { Number|String } keyIndex - The index of the key arrays or 'all'.
    * @return {object}
    */
-  async publicKeys() {
+  async publicKeys(keyIndex = 0) {
+    if (keyIndex === 'all') {
+      // return all the versions of the jwkeys
+      return { keys: 'Not functional yet.' }
+    }
     return {
       signing: {
-        pem: await this.#pks('signing'),
-        jwk: await this.#pks('signing', 'jwk', false),
+        pem: await this.#pks('signing', 'publicKey', false, keyIndex),
+        jwk: await this.#pks('signing', 'jwk', false, keyIndex),
       },
       encrypting: {
-        pem: await this.#pks('encrypting'),
-        jwk: await this.#pks('encrypting', 'jwk', false),
+        pem: await this.#pks('encrypting', 'publicKey', false, keyIndex),
+        jwk: await this.#pks('encrypting', 'jwk', false, keyIndex),
       },
     }
   }
@@ -1706,7 +1755,7 @@ class User {
    * @return {object}
    */
   get publicSigningKey() {
-    return this.#pks('signing')
+    return this.#pks('signing', 'publicKey', false, 0)
   }
 
   /**
@@ -1714,7 +1763,7 @@ class User {
    * @return {object}
    */
   get privateSigningKey() {
-    return this.#pks('signing', 'privateKey')
+    return this.#pks('signing', 'privateKey', false, 0)
   }
 
   /**
@@ -1722,7 +1771,7 @@ class User {
    * @return {object}
    */
   get signingJwk() {
-    return this.#pks('signing', 'jwk')
+    return this.#pks('signing', 'jwk', true, 0)
   }
 
   /**
@@ -1730,7 +1779,7 @@ class User {
    * @return {object}
    */
   get publicEncryptingKey() {
-    return this.#pks('encrypting')
+    return this.#pks('encrypting', 'publicKey', false, 0)
   }
 
   /**
@@ -1738,7 +1787,7 @@ class User {
    * @return {object}
    */
   get privateEncryptingKey() {
-    return this.#pks('encrypting', 'privateKey')
+    return this.#pks('encrypting', 'privateKey', false, 0)
   }
 
   /**
@@ -1746,17 +1795,17 @@ class User {
    * @return {object}
    */
   get encryptingJwk() {
-    return this.#pks('encrypting', 'jwk')
+    return this.#pks('encrypting', 'jwk', true, 0)
   }
 
-  async #pks(type = 'signing', format = 'publicKey', pretty = 'true') {
-    if (type === '') return null
+  async #pks(type = 'signing', format = 'publicKey', pretty = true, keyIndex = 0) {
     let key = null
-    const getKey = this._keys[type][format] ?? null
-    log(`key type: ${type} format: ${format}, ${getKey}`)
+    // const getKey = this._keys[type][format] ?? null
+    const getKey = this._keys[type]?.[keyIndex]?.[format] ?? null
     if (getKey !== null) {
+      const access = format === 'publicKey' ? 'public' : 'private'
       try {
-        log(`Getting public ${type} key ${getKey}`)
+        log(`Getting ${access} ${type} key ${getKey}`)
         key = await readFile(getKey)
         key = key.toString()
         if (format === 'jwk' && pretty) {
@@ -1770,17 +1819,17 @@ class User {
   }
 
   #prettyPrintJwk(jwk) {
-    const matches = jwk.match(/(?<key_ops>"key_ops":\[.*\]),(?<kid>"kid":".*"),(?<ext>"ext":(?:true|false)),(?<kty>"kty":"(?:RSA|AES|ECDSA|HMAC)"),(?<n>"n":"(?<n_val>.*)"),(?<e>"e":".*"),(?<alg>"alg":".*")/).groups
+    const matches = jwk.match(/(?<key_ops>"key_ops":\[.*\]),(?<ext>"ext":(?:true|false)),(?<kty>"kty":"(?:RSA|AES|ECDSA|HMAC)"),(?<n>"n":"(?<n_val>.*)"),(?<e>"e":".*"),(?<alg>"alg":".*"),(?<kid>"kid":".*")/).groups
     // const indent = '\t'
     const indent = '  '
     const string = '{\n'
       + `${indent}${matches.key_ops},\n`
-      + `${indent}${matches.kid},\n`
       + `${indent}${matches.ext},\n`
       + `${indent}${matches.kty},\n`
       + `${indent}"n":"${matches.n_val.match(/.{1,64}/g).join(`\n${indent}`)}",\n`
       + `${indent}${matches.e},\n`
       + `${indent}${matches.alg}\n`
+      + `${indent}${matches.kid},\n`
       + '}'
     return string
   }
