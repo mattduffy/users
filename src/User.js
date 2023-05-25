@@ -256,7 +256,7 @@ class User {
    */
   async #generateSigningKeys(o = {}) {
     const keyOpts = o
-    const keyIndex = o?.keyIndex ?? 0
+    const keyIndex = o?.keyIndex ?? this._keys.signing.length
     let keyExists
     const pubKeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rs256-public-${keyIndex}.pem`)
     const jwkeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rs256-${keyIndex}.jwk`)
@@ -328,8 +328,7 @@ class User {
       error(e)
       return { status: null }
     }
-    return {
-      status: 'success',
+    const result = {
       name: keyOpts.name,
       hash: keyOpts.hash,
       bits: keyOpts.modulusLength,
@@ -338,6 +337,9 @@ class User {
       privateKey: priKeyPath,
       jwk: jwkeyPath,
     }
+    this._keys.signing.unshift(result)
+    result.status = 'success'
+    return result
   }
 
   /**
@@ -350,7 +352,7 @@ class User {
    */
   async #generateEncryptingKeys(o = {}) {
     const keyOpts = o
-    const keyIndex = o?.keyIndex ?? 0
+    const keyIndex = o?.keyIndex ?? this._keys.encrypting.length
     let keyExists
     const pubKeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rsa-oaep-public-${keyIndex}.pem`)
     const jwkeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rsa-oaep-${keyIndex}.jwk`)
@@ -422,8 +424,7 @@ class User {
       error(e)
       return { status: null }
     }
-    return {
-      status: 'success',
+    const result = {
       name: keyOpts.name,
       hash: keyOpts.hash,
       bits: keyOpts.modulusLength,
@@ -432,6 +433,9 @@ class User {
       privateKey: priKeyPath,
       jwk: jwkeyPath,
     }
+    this._keys.encrypting.unshift(result)
+    result.status = 'success'
+    return result
   }
 
   /**
@@ -473,8 +477,8 @@ class User {
       try {
         signingKeys = await this.#generateSigningKeys(signingKeyOpts)
         // this._keys.signing = signingKeys
-        this._keys.signing.unshift(signingKeys)
-        delete this._keys.signing.status
+        // this._keys.signing.unshift(signingKeys)
+        // delete this._keys.signing.status
         result.signing = signingKeys
       } catch (e) {
         error('Failed to generate Webcrypto.subtle signing keys.')
@@ -487,8 +491,8 @@ class User {
       try {
         encryptingKeys = await this.#generateEncryptingKeys(encryptingKeyOpts)
         // this._keys.encrypting = encryptingKeys
-        this._keys.encrypting.unshift(encryptingKeys)
-        delete this._keys.encrypting.status
+        // this._keys.encrypting.unshift(encryptingKeys)
+        // delete this._keys.encrypting.status
         result.encrypting = encryptingKeys
       } catch (e) {
         error('Failed to generate Webcrypto.subtle encrypting keys.')
