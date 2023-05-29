@@ -255,7 +255,7 @@ class User {
    * @return { object } An object literal with status and generated keys.
    */
   async #generateSigningKeys(o = {}) {
-    const keyOpts = o
+    const keyOpts = { ...o }
     const keyIndex = o?.keyIndex ?? this._keys.signing.length
     let keyExists
     const pubKeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rs256-public-${keyIndex}.pem`)
@@ -455,19 +455,19 @@ class User {
     }
     const signingKeyOpts = {
       name: process.env.RSA_SIG_KEY_NAME ?? 'RSASSA-PKCS1-v1_5',
-      modulusLength: process.env.RSA_SIG_KEY_MOD ?? 2048,
+      modulusLength: parseInt(process.env.RSA_SIG_KEY_MOD, 10) ?? 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
       hash: process.env.RSA_SIG_KEY_HASH ?? 'SHA-256',
-      extractable: process.env.RSA_SIG_KEY_EXTRACTABLE ?? true,
+      extractable: (process.env.RSA_SIG_KEY_EXTRACTABLE.toLowerCase() === 'true') ?? true,
       uses: ['sign', 'verify'],
       ...sign,
     }
     const encryptingKeyOpts = {
-      name: process.env.RSA_ENC_KEY_TYPE ?? 'RSA-OAEP',
-      modulusLength: process.env.RSA_ENC_KEY_MOD ?? 2048,
+      name: process.env.RSA_ENC_KEY_NAME ?? 'RSA-OAEP',
+      modulusLength: parseInt(process.env.RSA_ENC_KEY_MOD, 10) ?? 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
       hash: process.env.RSA_ENC_KEY_TYPE ?? 'SHA-256',
-      extractable: process.env.RSA_ENC_KEY_EXTRACTABLE ?? true,
+      extractable: (process.env.RSA_ENC_KEY_EXTRACTABLE.toLowerCase() === 'true') ?? true,
       uses: ['encrypt', 'decrypt'],
       ...enc,
     }
@@ -1655,7 +1655,7 @@ class User {
    * @return {string} - User display name.
    */
   get display_name() {
-    return this.displayName()
+    return this.displayName
   }
 
   /**
