@@ -1735,21 +1735,23 @@ class User {
    * @summary Public signing keys getter.
    * @async
    * @param { Number|String } keyIndex - The index of the key arrays or 'all'.
+   * @param { Boolean|String } pretty - Whether to pretty print or not, especially for JWks.'
    * @return {object}
    */
-  async publicKeys(keyIndex = 0) {
+  async publicKeys(keyIndex = 0, pretty = false) {
     if (keyIndex === 'all') {
       // return all the versions of the jwkeys
       return { keys: 'Not functional yet.' }
     }
+    const pp = (pretty === 'jwk')
     return {
       signing: {
         pem: await this.#pks('signing', 'publicKey', false, keyIndex),
-        jwk: await this.#pks('signing', 'jwk', false, keyIndex),
+        jwk: await this.#pks('signing', 'jwk', pp, keyIndex),
       },
       encrypting: {
         pem: await this.#pks('encrypting', 'publicKey', false, keyIndex),
-        jwk: await this.#pks('encrypting', 'jwk', false, keyIndex),
+        jwk: await this.#pks('encrypting', 'jwk', pp, keyIndex),
       },
     }
   }
