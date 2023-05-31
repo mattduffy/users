@@ -295,6 +295,7 @@ class User {
     try {
       jwk = await subtle.exportKey('jwk', keys.publicKey)
       jwk.kid = kid
+      jwk.use = 'sig'
       keys.jwk = jwk
       pub = await subtle.exportKey('spki', keys.publicKey)
       pri = await subtle.exportKey('pkcs8', keys.privateKey)
@@ -391,6 +392,7 @@ class User {
     try {
       jwk = await subtle.exportKey('jwk', keys.publicKey)
       jwk.kid = kid
+      jwk.use = 'enc'
       keys.jwk = jwk
       pub = await subtle.exportKey('spki', keys.publicKey)
       pri = await subtle.exportKey('pkcs8', keys.privateKey)
@@ -639,6 +641,37 @@ class User {
       ['decrypt'],
     )
     return privateKey
+  }
+
+  /**
+   * Get JWK by key ID.
+   * @summary Get JWK by key ID.
+   * @async
+   * @param { String } kid - The kid property of a JWK to find and return.
+   * @return { KeyObject|Boolean } The JWK that matches the kid parameter or false.
+   */
+  async findKeyById(kid) {
+    if (!kid) {
+      return false
+    }
+    const database = this.dbClient.db(this.dbDatabase)
+    const users = database.collection(this.dbCollection)
+    const sig = { _id: this.objectId(this._id), 'keys.signing': { $elemMatch: { kid } } }
+    const enc = { _id: this.objectId(this._id), 'keys.encrypting': { $elemMatch: { kid } } }
+    log(sig)
+    log(enc)
+    const key = {}
+    try {
+      key.sig = await users.findOne(sig, { projection: { _id: 0, 'keys.signing.$': 1 } })
+      key.enc = await users.findOne(enc, { projection: { _id: 0, 'keys.encrypting.$': 1 } })
+      //
+      // Now check to see if either sig or enc found the key.
+      // If found, get the jwk from the path.
+      //
+    } catch (e) {
+      error(e)
+    }
+    return key
   }
 
   /**
