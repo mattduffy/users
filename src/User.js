@@ -658,20 +658,26 @@ class User {
     const users = database.collection(this.dbCollection)
     const sig = { _id: this.objectId(this._id), 'keys.signing': { $elemMatch: { kid } } }
     const enc = { _id: this.objectId(this._id), 'keys.encrypting': { $elemMatch: { kid } } }
-    log(sig)
-    log(enc)
+    // log(sig)
+    // log(enc)
     const key = {}
+    let index
     try {
       key.sig = await users.findOne(sig, { projection: { _id: 0, 'keys.signing.$': 1 } })
-      key.enc = await users.findOne(enc, { projection: { _id: 0, 'keys.encrypting.$': 1 } })
-      //
-      // Now check to see if either sig or enc found the key.
-      // If found, get the jwk from the path.
-      //
+      // log(key.sig)
+      if (key.sig !== null) {
+        index = /\/.*(\d)\.jwk$/.exec(key.sig.keys.signing[0].jwk).groups
+        return this.#pks('signing', 'jwk', false, index)
+      }
+      if (key.enc !== null) {
+        key.enc = await users.findOne(enc, { projection: { _id: 0, 'keys.encrypting.$': 1 } })
+        index = /\/.*(\d)\.jwk$/.exec(key.enc.keys.encrypting[0].jwk).groups
+        return this.#pks('encrypting', 'jwk', false, index)
+      }
     } catch (e) {
       error(e)
     }
-    return key
+    return false
   }
 
   /**
@@ -789,8 +795,8 @@ class User {
       typ: 'jwt',
       // kid: this._keys.signing.kid,
       kid: this._keys.signing[keyIndex].kid,
-      // jku: `${origin}/@${this.username}/jwks.json`,
-      jku: `${origin}/@${this.username}/jwks-${keyIndex}.json`,
+      jku: `${origin}/@${this.username}/jwks.json`,
+      // jku: `${origin}/@${this.username}/jwks-${keyIndex}.json`,
     }
     try {
       thumbprint = await this.jwt.calculateJwkThumbprint(await this.#importSigningJwk(keyIndex), 'sha256')
