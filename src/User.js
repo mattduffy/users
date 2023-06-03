@@ -7,7 +7,8 @@ import bcrypt from 'bcrypt'
 import path from 'node:path'
 import { rename } from 'node:fs'
 import { stat, writeFile, readFile, mkdir } from 'node:fs/promises'
-import { randomUUID, createHash, subtle } from 'node:crypto'
+import { createHash, subtle } from 'node:crypto'
+import { ulid } from 'ulid'
 import { client, ObjectId } from './mongoclient.js'
 
 const log = Debug('users:User')
@@ -291,7 +292,7 @@ class User {
     let pub
     let jwk
     let pri
-    const kid = randomUUID()
+    const kid = ulid()
     try {
       jwk = await subtle.exportKey('jwk', keys.publicKey)
       jwk.kid = kid
@@ -388,7 +389,7 @@ class User {
     let pub
     let jwk
     let pri
-    const kid = randomUUID()
+    const kid = ulid()
     try {
       jwk = await subtle.exportKey('jwk', keys.publicKey)
       jwk.kid = kid
