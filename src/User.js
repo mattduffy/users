@@ -305,9 +305,6 @@ class User {
       error(e)
       return { status: null }
     }
-    //
-    // Code goes here to convert raw keys to PEM encoded files.
-    //
     let pubToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pub)), 'binary').toString('base64')
     pubToPem = pubToPem.match(/.{1,64}/g).join('\n')
     pubToPem = '-----BEGIN PUBLIC KEY-----\n'
@@ -402,9 +399,6 @@ class User {
       error(e)
       return { status: null }
     }
-    //
-    // Code goes here to convert raw keys to PEM encoded files.
-    //
     let pubToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pub)), 'binary').toString('base64')
     pubToPem = pubToPem.match(/.{1,64}/g).join('\n')
     pubToPem = '-----BEGIN PUBLIC KEY-----\n'
@@ -1865,17 +1859,21 @@ class User {
   }
 
   #prettyPrintJwk(jwk) {
-    const matches = jwk.match(/(?<key_ops>"key_ops":\[.*\]),(?<ext>"ext":(?:true|false)),(?<kty>"kty":"(?:RSA|AES|ECDSA|HMAC)"),(?<n>"n":"(?<n_val>.*)"),(?<e>"e":".*"),(?<alg>"alg":".*"),(?<kid>"kid":".*")/).groups
-    // const indent = '\t'
+    console.log(jwk)
+    // const matches = jwk.match(/(?<key_ops>"key_ops":\[.*\]),(?<ext>"ext":(?:true|false)),(?<kty>"kty":"(?:RSA|AES|ECDSA|HMAC)"),(?<n>"n":"(?<n_val>.*)"),(?<e>"e":".*"),(?<alg>"alg":".*"),(?<kid>"kid":".*"),?(?<use>"use":".*")?/)?.groups
+    const matches = jwk.match(/"key_ops":(?<key_ops>\[.*\]),"ext":(?<ext>(true|false)),"kty":(?<kty>".*"),"n":(?<n>".*"),"e":(?<e>".*"),"alg":(?<alg>".*"),"kid":(?<kid>".*"),?(?:"use":(?<use>".*"))?/)
+    const groups = matches?.groups
     const indent = '  '
     const string = '{\n'
-      + `${indent}${matches.key_ops},\n`
-      + `${indent}${matches.ext},\n`
-      + `${indent}${matches.kty},\n`
-      + `${indent}"n":"${matches.n_val.match(/.{1,64}/g).join(`\n${indent}`)}",\n`
-      + `${indent}${matches.e},\n`
-      + `${indent}${matches.alg}\n`
-      + `${indent}${matches.kid},\n`
+      + `${indent}"key_ops": ${groups?.key_ops},\n`
+      // + `${indent}"ext": ${groups?.ext},\n`
+      + `${indent}"kty": ${groups?.kty},\n`
+      // + `${indent}"n":" ${groups?.n_val.match(/.{1,64}/g).join(`\n${indent}`)}",\n`
+      + `${indent}"n": ${groups?.n.match(/.{1,64}/g).join(`\n${indent}`)},\n`
+      + `${indent}"e": ${groups?.e},\n`
+      + `${indent}"alg": ${groups?.alg}\n`
+      + `${indent}"kid": ${groups?.kid},\n`
+      + `${indent}"use": ${groups?.use}\n`
       + '}'
     return string
   }
