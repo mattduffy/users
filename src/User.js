@@ -1238,7 +1238,7 @@ class User {
           last: this._last,
           emails: this._emails,
           username: this._username,
-          diplayName: this._displayName,
+          displayName: this._displayName,
           url: this._url,
           avatar: this._avatar,
           header: this._header,
