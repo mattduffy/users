@@ -1,21 +1,12 @@
 /**
  * @module @mattduffy/users
+ * @file: src/AdminUser.js
  */
 import Debug from 'debug'
 import { User } from './User.js'
-import { client, ObjectId } from './mongoclient.js'
+import { ObjectId } from './mongoclient.js'
 
 const debug = Debug('users:AdminUser')
-
-/**
- * @todo [x] Create an Admin class.
- * @todo [x] Add admin method - listUsers
- * @todo [x] Add admin method - deleteUser
- * @todo [x] Add admin method - getUsersByType
- * @todo [ ] Add admin methods - upgradeUser / downgradeUser
- * @todo [ ] Add admin methods - suspendUser / reinstateUser
- * @todo [ ] Create a test to authenticate user accounts base on permissions.
- */
 
 /**
  * A class representing the Admin user model.  This class extends the basic User
@@ -27,7 +18,7 @@ const debug = Debug('users:AdminUser')
 class AdminUser extends User {
   /**
    * Create an admin user model and populate the properties.
-   * @param {Object} config - An object literal with properties to pass new user
+   * @param { Object } config - An object literal with properties to pass new user
    * to super to instantiate the base user model.
    */
   constructor(config) {
@@ -45,16 +36,19 @@ class AdminUser extends User {
 
   /**
    * Static property used to compare with instanceof expressions.
+   * @summary Static property used to compare with instanceof expressions.
    * @static
-   * @typeOfUser {string}
+   * @typeOfUser { string }
    */
   static typeOfUser = 'Admin'
 
   /**
    * A static class method to check if a given user object is an Admin User.
+   * @summary A static class method to check if a given user object is an Admin User.
    * @static
-   * @param {object} obj - Object to check instanceof against.
-   * @return {boolean} - True if object checked is instance of AdminUser class.
+   * @param { Object } obj - Object to check instanceof against.
+   * @param { string } obj.typeOfUser - Class property defining user type.
+   * @return { boolean } - True if object checked is instance of AdminUser class.
    */
   static [Symbol.hasInstance](obj) {
     if (obj.typeOfUser === this.typeOfUser) return true
@@ -63,9 +57,10 @@ class AdminUser extends User {
 
   /**
    * Upgrade a user account to the next higher privilege level.
+   * @summary Upgrade a user account to the next higher privilege level.
    * @static
-   * @param {string} id - String value of ObjectId of the user to upgrade.
-   * @return {boolean} - True if successful, false otherwise.
+   * @param { string } id - String value of ObjectId of the user to upgrade.
+   * @return { boolean } - True if successful, false otherwise.
    */
   static async upgradeUser(id = null) {
     const wasSuccessful = false
@@ -78,9 +73,11 @@ class AdminUser extends User {
       debug('1: Calling dbClient.connect method')
       const database = this.dbClient.db(this.dbDatabase)
       const users = database.collection(this.dbCollection)
+      /* eslint-disable no-unused-vars */
       const filter = { _id: this.objectId(id) }
       const options = {}
       const userToUpgrade = users.findOne({ _id: ObjectId(id) })
+      /* eslint-enable no-unused-vars */
     } catch (error) {
       debug(error)
     } finally {
@@ -91,9 +88,11 @@ class AdminUser extends User {
 
   /**
    * Query the database for all existing user accounts.
+   * @summary Query the database for all existing user accounts.
    * @async
-   * @param {object} options - Options object to pass parameters for filtering results.
-   * @return {(Promise<array>|Error)} - An array of users.
+   * @param { Object } options - Options object to pass parameters for filtering results.
+   * @throws { Error }
+   * @return { Promise<Users[]> } - An array of users.
    */
   async listUsers(options = {}) {
     this.checkDB()
@@ -142,9 +141,11 @@ class AdminUser extends User {
 
   /**
    * Query the database for all users by type.
+   * @summary Query the database for all users by type.
    * @async
-   * @param {string} type - User type to query by.
-   * @return {(Promise<array>|Error)} - An array of users.
+   * @param { string } type - User type to query by.
+   * @throws { Error }
+   * @return { Promise<Users[]> } - An array of users.
    */
   async getUsersByType(type = 'all') {
     debug(`What is going on with the <type> param? ${type}`)
@@ -198,10 +199,11 @@ class AdminUser extends User {
 
   /**
    * Delete a user from the database, identified by either id or email address.
+   * @summary Delete a user from the database, identified by either id or email address.
    * @async
-   * @param {string} id - String value of an ObjectId
-   * @param {string} email = String value of an email address.
-   * @return {Promise<boolean>} - True if delete is successful, false if not.
+   * @param { string } id - String value of an ObjectId
+   * @param { string } email = String value of an email address.
+   * @return { Promise<boolean> } - True if delete is successful, false if not.
    */
   async deleteUser(id = null, email = null) {
     if (id === null && email === null) {

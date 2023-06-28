@@ -19,11 +19,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 /**
  * Create a new instance of the User class with the default type = User.  This
  * type of user has only basic application privileges.  The properties param
- * is checked for the minimum required User properties before being passed to
- * the User constructor.
- * @param {Object} properties - An object literal containing properties to be
- * assigned to the new user instance.
- * @return {User} - A new (unsaved) instance of User.
+ * is checked for the minimum required User properties before being passed to the User constructor.
+ * @param { Object } properties - An object literal containing properties to be assigned to the new user instance.
+ * @return { User } - A new (unsaved) instance of User.
  */
 function createNewBasicUser(properties = {}) {
   debug('Creating a new basic user')
@@ -42,9 +40,8 @@ function createNewBasicUser(properties = {}) {
  * Create a new instance of the AdminUser class.  The properties param
  * is checked for the minimum required User properties before being passed to
  * the AdminUser constructor.
- * @param {Object} properties - An object literal containing properties to be
- * assigned to the new user instance.
- * @return {AdminUser} - A new (unsaved) instance of AdminUser.
+ * @param { Object } properties - An object literal containing properties to be assigned to the new user instance.
+ * @return { AdminUser } - A new (unsaved) instance of AdminUser.
  */
 function createNewAdminUser(adminProperties = {}) {
   debug('Creating a new admin user')
@@ -62,8 +59,9 @@ function createNewAdminUser(adminProperties = {}) {
 /**
  * Query the database for an existing user by email address.
  * @async
- * @param {string} email - Email address to query by.
- * @return {Promise(<User>|Error)} - A populated User instance or throws an Error.
+ * @param { string } email - Email address to query by.
+ * @throws { Error }
+ * @return { Promise<User> } - A populated User instance or throws an Error.
  */
 async function getUserByEmailAddress(email = null) {
   if (!email) {
@@ -75,8 +73,9 @@ async function getUserByEmailAddress(email = null) {
 /**
  * Query the database for an existing user by ObjectId value.
  * @async
- * @param {string} id - A valid ObjectId value to query by.
- * @return {Promise(<User|Error)} - A populated User instance or throws an Error.
+ * @param { string } id - A valid ObjectId value to query by.
+ * @throw { Error }
+ * @return { Promise<User> } - A populated User instance or throws an Error.
  */
 async function getUserById(id = null) {
   if (!id) {
@@ -90,9 +89,10 @@ async function getUserById(id = null) {
  * supplied cleartext password with the Bcrypt hashed and salted password
  * associated with email address, if one is found.
  * @async
- * @param {string} email - Email address to query the database by.
- * @param {string} password - Cleartext password to compare with hash.
- * @return {Promise(<boolean|Error)} - True if passwords match, False if not.
+ * @param { string } email - Email address to query the database by.
+ * @param { string } password - Cleartext password to compare with hash.
+ * @throws { Error }
+ * @return { Promise<boolean> } - True if passwords match, False if not.
  */
 async function comparePasswords(email = null, password = null) {
   if (!email || !password) {

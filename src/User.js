@@ -17,12 +17,6 @@ const DATABASE = 'mattmadethese'
 const COLLECTION = 'users'
 
 /**
- * @todo [ ] Create a test to authenticate user accounts base on permissions.
- * @todo [ ] Add JWT functionality.
- * @todo [ ] Add method - list albums
- */
-
-/**
  * A class representing the basic user model.  This class contains the generic
  * properties and methods necessary to create a simple application user.
  * Methods include saveing/updating properties, comparing password for
@@ -41,7 +35,7 @@ class User {
 
   /**
    * Create a user model and populate the properties.
-   * @param {Object} config - An object literal with properties to initialize new user.
+   * @param { Object } config - An object literal with properties to initialize new user.
    */
   constructor(config) {
     this.log = log
@@ -140,7 +134,7 @@ class User {
   /**
    * Static property used to compare with instanceof expressions.
    * @static
-   * @typeOfUser {string}
+   * @typeOfUser { string }
    */
   static typeOfUser = 'User'
 
@@ -163,7 +157,8 @@ class User {
    * @async
    * @param { string } email - Email address used to find existing user in the database.
    * @param { string } password - Cleartext password provided for comparison with hash.
-   * @return { (boolean|Error) } - True/False result of comparison or throws Error.
+   * @throws { Error }
+   * @return { boolean } - True/False result of comparison.
    */
   static async cmpPassword(email, password) {
     let userToComparePassword
@@ -195,8 +190,8 @@ class User {
    * @summary Simple class method wrapper around fs/promises.mkdir function.
    * @async
    * @param { string } directory - Path of directory to be created.
-   * @return { undefined }
    * @throws { Error } If directory argument is missing or already exists.
+   * @return { undefined }
    */
   /* eslint-disable-next-line class-methods-use-this */
   async makedir(directory) {
@@ -213,8 +208,8 @@ class User {
    * Check to see if the keys directories are present in public and private user dirs.
    * @summary Check to see if the keys directories are present in public and private user dirs.
    * @async
-   * @return { boolean } Returns true if keys dirs exist or are successfully created.
    * @throws { Error } If keys dirs cannot be created.
+   * @return { boolean } Returns true if keys dirs exist or are successfully created.
    */
   async #keyDirs() {
     const pubKeyDir = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys`)
@@ -252,8 +247,14 @@ class User {
    * @summary Private class method to generate Webcrypto Subtle signing key pair.
    * @async
    * @private
-   * @param { object } o - Webcrypto Subtle key generation options.
-   * @return { object } An object literal with status and generated keys.
+   * @param { Object } o - Webcrypto Subtle key generation options.
+   * @param { string } o.name - Key type name.
+   * @param { number } o.modulusLength - The length in bits of the RSA modulus.
+   * @param { Array } o.publicExponent - The RSA public exponent, as an Uint8Array.
+   * @param { string } o.hash - The name of the hash function used.
+   * @param { boolean } o.extractable - Is this key extractable?
+   * @param { string[] } o.uses - What the key is used for.
+   * @return { Object } An object literal with status and generated keys.
    */
   async #generateSigningKeys(o = {}) {
     const keyOpts = { ...o }
@@ -347,6 +348,12 @@ class User {
    * @async
    * @private
    * @param { object } o - Webcrypto Subtle key generation options.
+   * @param { string } o.name - Key type name.
+   * @param { number } o.modulusLength - The length in bits of the RSA modulus.
+   * @param { Array } o.publicExponent - The RSA public exponent, as an Uint8Array.
+   * @param { string } o.hash - The name of the hash function used.
+   * @param { boolean } o.extractable - Is this key extractable?
+   * @param { string[] } o.uses - What the key is used for.
    * @return { object } An object literal with status and generated keys.
    */
   async #generateEncryptingKeys(o = {}) {
@@ -441,6 +448,8 @@ class User {
    * @see https://www.nearform.com/blog/implementing-the-web-cryptography-api-for-node-js-core/
    * @async
    * @param { object } both - Object containing boolean for creating both types of keys.
+   * @param { boolean } both.signing - Should generate signing keys.
+   * @param { boolean } both.encrypting - Should generate encrypting keys.
    * @param { object } sign - Webcrypto Subtle signing key generation options.
    * @param { object } enc - Webcrypto Subtle encrypting key generation options.
    * @return { object } An object literal with success or error status.
@@ -506,7 +515,7 @@ class User {
    * @summary Import the RSASSA-PKCS1-v1_5 private signing key.
    * @async
    * @private
-   * @param { Number } keyIndex - The index of the signing keys array.
+   * @param { number } keyIndex - The index of the signing keys array.
    * @return { CryptoKey } An imported RSA private crypto key.
    */
   async #importSigningPrivateKey(keyIndex = 0) {
@@ -536,7 +545,7 @@ class User {
    * @summary Import the RSASSA-PKCS1-v1_5 public signing key.
    * @async
    * @private
-   * @param { Number } keyIndex - The index of the encrypting keys array.
+   * @param { number } keyIndex - The index of the encrypting keys array.
    * @return { CryptoKey } An imported RSA public signing key.
    */
   async #importSigningPublicKey(keyIndex = 0) {
@@ -566,7 +575,7 @@ class User {
    * @summary Import the RSASSA-PKCS1-v1_5 JWK signing key.
    * @async
    * @private
-   * @param { Number } keyIndex - The index of the signing keys array.
+   * @param { number } keyIndex - The index of the signing keys array.
    * @return { CryptoKey } An imported RSA JWK signing key.
    */
   async #importSigningJwk(keyIndex = 0) {
@@ -583,7 +592,7 @@ class User {
    * @summary Import the RSA-OAEP public encrypting key.
    * @async
    * @private
-   * @param { Number } keyIndex - The index of the encrypting keys array.
+   * @param { number } keyIndex - The index of the encrypting keys array.
    * @return { CryptoKey } An imported RSA public encrypting key.
    */
   async #importEncryptingPublicKey(keyIndex = 0) {
@@ -613,7 +622,7 @@ class User {
    * @summary Import the RSA-OAEP private encrypting key.
    * @async
    * @private
-   * @param { Number } keyIndex - The index of the encrypting keys array.
+   * @param { number } keyIndex - The index of the encrypting keys array.
    * @return { CryptoKey } An imported RSA private encrypting key.
    */
   async #importEncryptingPrivateKey(keyIndex = 0) {
@@ -642,7 +651,7 @@ class User {
    * Get JWK by key ID.
    * @summary Get JWK by key ID.
    * @async
-   * @param { String } kid - The kid property of a JWK to find and return.
+   * @param { string } kid - The kid property of a JWK to find and return.
    * @return { KeyObject|Boolean } The JWK that matches the kid parameter or false.
    */
   async findKeyById(kid) {
@@ -681,7 +690,7 @@ class User {
    * @async
    * @param { ArrayBuffer } signature - Array buffer containing the signature to verify.
    * @param { ArrayBuffer } data - Array buffer containg the data whose signature is to be verified.
-   * @param { Number } keyIndex - The index of the signing keys array.
+   * @param { number } keyIndex - The index of the signing keys array.
    * @return { boolean } True if the signature is valid, False otherwise.
    */
   async verify(signature, data, keyIndex = 0) {
@@ -702,7 +711,7 @@ class User {
    * @summary Use RSA private signing key to sign data.
    * @async
    * @param { string } data - String data to be signed.
-   * @param { Number } keyIndex - The index of the signing key array.
+   * @param { number } keyIndex - The index of the signing key array.
    * @return { ArrayBuffer } Array buffer containing signed data.
    */
   async sign(data, keyIndex = 0) {
@@ -725,7 +734,7 @@ class User {
    * @async
    * @param { ArrayBuffer } data - Array buffer of data to be encrypted.
    * @param { string } output - String value specifying output as either 'raw' or 'base64'.
-   * @param { Number } keyIndex - The index of the encrypting keys array.
+   * @param { number } keyIndex - The index of the encrypting keys array.
    * @return { ArrayBuffer } Array buffer containing encrypted data, if successful.
    */
   async encrypt(data, output = 'raw', keyIndex = 0) {
@@ -751,7 +760,7 @@ class User {
    * @async
    * @param { ArrayBuffer } data - Array buffer of data to be decrypted.
    * @param { string } format - String specifying input format of cipher text, either 'base64' or 'buffer'.
-   * @param { Number } keyIndex - The index of the encrypting keys array.
+   * @param { number } keyIndex - The index of the encrypting keys array.
    * @return { string } String containing decrypted data, if successful.
    */
   async decrypt(data, format = 'buffer', keyIndex = 0) {
@@ -775,7 +784,7 @@ class User {
    * Generate a signed JWT with user accounts private RSASSA-PKCS1-v1_5 signing key.
    * @summary Generate a signed JWT with user accounts private RSASSA-PKCS1-v1_5 signing key.
    * @async
-   * @param { Number } keyIndex - The index of the signing key array.
+   * @param { number } keyIndex - The index of the signing key array.
    * @return { string } - A baseUrlEncoded string representing the signed JWT.
    */
   async signJWT(keyIndex = 0) {
@@ -818,7 +827,7 @@ class User {
    * @summary Verifies the payload format and the included JWS signature.
    * @async
    * @param { string } token - A signed JWT to decode.
-   * @param { Number } keyIndex - The index of the signing keys array.
+   * @param { number } keyIndex - The index of the signing keys array.
    * @return { JWTVerifyResult } An object literal containing decoded payload and any protected headers.
    */
   async verifyJWT(token, keyIndex = 0) {
@@ -846,8 +855,8 @@ class User {
    * Simple class method wrapper around fs/promises.rename function.
    * @summary Simple class method wrapper around fs/promises.rename function.
    * @param { string } directory - Path of directory to be renamed.
-   * @return { undefined }
    * @throws { Error } If directory argument is missing or doesn't already exists.
+   * @return { undefined }
    */
   /* eslint-disable-next-line class-methods-use-this */
   renamedir(newName) {
@@ -873,7 +882,8 @@ class User {
    * @async
    * @param { string } currentPassword - User's current password, to test is correct.
    * @param { string } newPassword - New string value to be hashed and saved.
-   * @return { object } - Object literal with success message or error.
+   * @throws { Error }
+   * @return { Object } - Object literal with success message.
    */
   async updatePassword(currentPassword = null, newPassword = null) {
     const result = {
@@ -915,7 +925,8 @@ class User {
    * @async
    * @param { string } email - Email address to search by in the database.
    * @param { Mongodbclient } _db - Connection to db if needed.
-   * @param { object } o - Additional optional filtering values.
+   * @param { Object } o - Additional optional filtering values.
+   * @param { boolean } o.archived - Is the user account archived.
    * @return { Promise(<User>|null) } - Instance of User with properties populated.
    */
   static async findByEmail(email, _db, o) {
@@ -969,8 +980,9 @@ class User {
    * @async
    * @param {string} id - ObjectId value to search by in the database.
    * @param { Mongodbclient } _db - Connection to db if needed.
-   * @param {object} o - Additional optional filtering values.
-   * @return {Promise(<User>|null)} - Instance of User with properties populated.
+   * @param { Object } o - Additional optional filtering values.
+   * @param { boolean } o.archived - Is the user account archived.
+   * @return { Promise(<User>|null) } - Instance of User with properties populated.
    */
   static async findById(id, _db, o = {}) {
     let foundUserById
@@ -1020,9 +1032,10 @@ class User {
   /**
    * @static
    * @async
-   * @param {string} username - Find the single user with the username parameter.
-   * @param {object} o - Additional optional filtering values.
-   * @return {Promise(<User>|null} - Instance of a User with the properties populated.
+   * @param { string } username - Find the single user with the username parameter.
+   * @param { object } o - Additional optional filtering values.
+   * @param { boolean } o.archived - Is the user account archived.
+   * @return { Promise(<User>|null } - Instance of a User with the properties populated.
    */
   static async findByUsername(username, o) {
     let foundUserByUsername
@@ -1070,9 +1083,10 @@ class User {
    * Static class method to find user in the database, searching by sessionId value.
    * @static
    * @async
-   * @param {string} sessId - Current session ID of user as stored by redis.
-   * @param {object} o - Additional optional filtering values.
-   * @return {Promise(<User>|null} - Instance of a User with properties populated.
+   * @param { string } sessId - Current session ID of user as stored by redis.
+   * @param { object } o - Additional optional filtering values.
+   * @param { boolean } o.archived - Is the user account archived.
+   * @return { Promise(<User>|null } - Instance of a User with properties populated.
    */
   static async findBySessionId(sessId, o) {
     let foundUserBySessionId
@@ -1118,7 +1132,8 @@ class User {
 
   /**
    * Stringifies the instance properties of the user, excluding and DB stuff.
-   * @return {string} - A stringified version of a JSON literal of user properties.
+   * @summary Stringifies the instance properties of the user, excluding and DB stuff.
+   * @return { string } - A stringified version of a JSON literal of user properties.
    */
   toString() {
     return JSON.stringify({
@@ -1147,7 +1162,8 @@ class User {
 
   /**
    * Stringifies the instance properties of the user, excluding and DB stuff.
-   * @return {string} - A stringified version of a JSON literal of user properties.
+   * @summary Stringifies the instance properties of the user, excluding and DB stuff.
+   * @return { string } - A stringified version of a JSON literal of user properties.
    */
   serialize() {
     const propertiesToSerialize = ['_type', '_userStatus', '_first', '_last', '_name', '_emails', '_username', '_displayName', '_url', '_avatar', '_header', '_hashedPassword', '_created_on', '_updated_on', '_description', '_jwts', '_sessionId', '_schemaVer', '_archived']
@@ -1167,7 +1183,8 @@ class User {
 
   /**
    * Sanity check to ensure all required properties have a value before saving the user.
-   * @return {(boolean|Error)} - True or throws Error if missing any required properties.
+   * @throws { Error }
+   * @return { boolean } - True or throws Error if missing any required properties.
    */
   checkRequired() {
     const missing = []
@@ -1187,7 +1204,8 @@ class User {
   /**
    * Sanity check to ensure a valid database client connection object is present before
    * issuing any database queries.
-   * @return {(boolean|Error)} - True or throws Error is client connection is not working.
+   * @throws { Error }
+   * @return { boolean } - True or throws Error is client connection is not working.
    */
   checkDB() {
     const missing = []
@@ -1212,7 +1230,8 @@ class User {
    * back to the database during the update.  Update query requires the user to have
    * a valid ObjectId value.
    * @async
-   * @return {Promise(<UpdateResult>|Error)} - MongoDB UpdateResult object or throws an Error.
+   * @throws { Error }
+   * @return { Promise<UpdateResult> } - MongoDB UpdateResult object or throws an Error.
    */
   async update() {
     // Check required properties are all non-null values.
@@ -1285,7 +1304,8 @@ class User {
    * to the database during the insert.  Insert query requires the user to have
    * a unique email address.
    * @async
-   * @return {Promise(<User>|Error)} - A populated user instance or throws an Error.
+   * @throws { Error }
+   * @return { Promise<User> } - A populated user instance or throws an Error.
    */
   async save() {
     // Check required properties are all non-null values.
@@ -1359,7 +1379,7 @@ class User {
 
   /**
    * Id property setter.
-   * @param {string} id - A value to be used as a valid ObjectId.
+   * @param { string } id - A value to be used as a valid ObjectId.
    */
   set id(id) {
     this._id = id
@@ -1367,7 +1387,7 @@ class User {
 
   /**
    * Id proptery getter.
-   * @return {string} - Current value to be used as a valid ObjectId.
+   * @return { string } - Current value to be used as a valid ObjectId.
    */
   get id() {
     return this._id
@@ -1375,7 +1395,7 @@ class User {
 
   /**
    * Archived property setter.
-   * @param {boolean} isArchived - A boolean value for whether account is archived or not.
+   * @param { boolean } isArchived - A boolean value for whether account is archived or not.
    */
   set archived(isArchived) {
     this._archived = isArchived
@@ -1383,7 +1403,7 @@ class User {
 
   /**
    * Archived property getter.
-   * @return {boolean} - Current boolean value of user account archive status.
+   * @return { boolean } - Current boolean value of user account archive status.
    */
   get archived() {
     return this._archived
@@ -1391,7 +1411,7 @@ class User {
 
   /**
    * SCHEMA_VERSION currently used to define class properties.
-   * @return {float}
+   * @return { number }
    */
   get schemaVersion() {
     return this._schemaVer
@@ -1399,7 +1419,7 @@ class User {
 
   /**
    * Password proptery setter.
-   * @param {string} password - Value to be Bcyrpt hashed and salted.
+   * @param { string } password - Value to be Bcyrpt hashed and salted.
    */
   set password(password) {
     // Have to, for now, rely on synchronous hash method
@@ -1415,7 +1435,7 @@ class User {
 
   /**
    * Password property getter.
-   * @return {string} - Bcrypt hashed and salted password value.
+   * @return { string } - Bcrypt hashed and salted password value.
    */
   get password() {
     return this._hashedPassword
@@ -1423,7 +1443,7 @@ class User {
 
   /**
    * First name propety setter.
-   * @param {string} first - User first name value.
+   * @param { string } first - User first name value.
    */
   set firstName(first) {
     this._first = first
@@ -1436,7 +1456,7 @@ class User {
 
   /**
    * First name property getter.
-   * @return {string} - User first name value.
+   * @return { string } - User first name value.
    */
   get firstName() {
     return this._first
@@ -1444,7 +1464,7 @@ class User {
 
   /**
    * Last name propety setter.
-   * @param {string} last - User last name value.
+   * @param { string } last - User last name value.
    */
   set lastName(last) {
     this._last = last
@@ -1457,7 +1477,7 @@ class User {
 
   /**
    * Last name property getter.
-   * @return {string} - User last name value.
+   * @return { string } - User last name value.
    */
   get lastName() {
     return this._last
@@ -1466,7 +1486,7 @@ class User {
   /**
    * Alias for primary email address property setter.
    * @alias primaryEmail
-   * @param {string} - User email address value.
+   * @param { string } - User email address value.
    */
   set email(email) {
     this.primaryEmail = email
@@ -1474,7 +1494,7 @@ class User {
 
   /**
    * Alias primary email address property getter.
-   * @return {string} - User email address value.
+   * @return { string } - User email address value.
    */
   get email() {
     return this._emails[0]
@@ -1482,7 +1502,7 @@ class User {
 
   /**
    * Primary email address property setter.
-   * @param {string} - User email address value.
+   * @param { string } - User email address value.
    */
   set primaryEmail(email) {
     // this._email = email
@@ -1497,7 +1517,7 @@ class User {
 
   /**
    * Primary email address property getter.
-   * @return {string} - User email address value.
+   * @return { string } - User email address value.
    */
   get primaryEmail() {
     return this._emails[0]
@@ -1505,7 +1525,7 @@ class User {
 
   /**
    * Seconday email address property setter.
-   * @param {string} - User email address value.
+   * @param { string } - User email address value.
    */
   set secondaryEmail(email) {
     // this._email = email
@@ -1526,7 +1546,7 @@ class User {
 
   /**
    * Secondary email address property getter.
-   * @return {string} - User email address value.
+   * @return { string } - User email address value.
    */
   get secondaryEmail() {
     return this._emails[1]
@@ -1534,7 +1554,7 @@ class User {
 
   /**
    * Array of at most two email addresses getter.
-   * @return {Array) - List of email addresses.
+   * @return { string[] } - List of email addresses.
    */
   get emails() {
     return this._emails
@@ -1542,7 +1562,7 @@ class User {
 
   /**
    * Array of at most two email addresses setter.
-   * @param {Array) - List of email addresses.
+   * @param { string[] } - List of email addresses.
    */
   set emails(emails) {
     // this._emails = emails
@@ -1552,7 +1572,7 @@ class User {
 
   /**
    * Username property setter.
-   * @param {string} - New username value.
+   * @param { string } - New username value.
    */
   set username(username) {
     this.log('This is a bad design pattern.')
@@ -1565,7 +1585,7 @@ class User {
 
   /**
    * Username property getter.
-   * @return {string} - Username value.
+   * @return { string } - Username value.
    */
   get username() {
     return this._username
@@ -1574,7 +1594,7 @@ class User {
   /**
    * Acct property setter (Mastodaon / Webfinger compatability).
    * @alias username
-   * @param {string} - New acct value.
+   * @param { string } - New acct value.
    */
   set acct(username) {
     // this._username = username
@@ -1584,7 +1604,7 @@ class User {
   /**
    * Acct property getter (Mastodaon / Webfinger compatability).
    * @alias username
-   * @return {string} - Acct value.
+   * @return { string } - Acct value.
    */
   get acct() {
     return this._username
@@ -1592,7 +1612,7 @@ class User {
 
   /**
    * Url property setter (Mastodon compatability).
-   * @param {string} - New url value.
+   * @param { string } - New url value.
    */
   set url(url) {
     let u = url
@@ -1608,7 +1628,7 @@ class User {
 
   /**
    * Url property getter (Mastodon compatability).
-   * @return {string} - Url value.
+   * @return { string } - Url value.
    */
   get url() {
     return this._url
@@ -1616,7 +1636,7 @@ class User {
 
   /**
    * Avatar url property setter (Mastodon compatability).
-   * @param {string} url - New avatar url value.
+   * @param { string } url - New avatar url value.
    */
   set avatar(url) {
     this._avatar = url
@@ -1624,7 +1644,7 @@ class User {
 
   /**
    * Avatar url property getter (Mastodon compatability).
-   * @return {string} - Avatar url value.
+   * @return { string } - Avatar url value.
    */
   get avatar() {
     return this._avatar
@@ -1632,7 +1652,7 @@ class User {
 
   /**
    * Header image url property setter (Mastodon compatability).
-   * @param {string} url - Header image url value.
+   * @param { string } url - Header image url value.
    */
   set header(url) {
     this._header = url
@@ -1640,7 +1660,7 @@ class User {
 
   /**
    * Header image url property getter (Mastodon compatability).
-   * @return {string} - Header image url value.
+   * @return { string } - Header image url value.
    */
   get header() {
     return this._header
@@ -1649,7 +1669,7 @@ class User {
   /**
    * Header image url property setter (Mastodon compatability).
    * @alias header
-   * @param {string} url - Header image url value.
+   * @param { string } url - Header image url value.
    */
   set headerStatic(url) {
     this._header = url
@@ -1658,7 +1678,7 @@ class User {
   /**
    * Header image url property getter (Mastodon compatability).
    * @alias header
-   * @return {string} - Header image url value.
+   * @return { string } - Header image url value.
    */
   get headerStatic() {
     return this._header
@@ -1666,7 +1686,7 @@ class User {
 
   /**
    * Display name property setter.
-   * @param {string} newDisplayName - User display name property value.
+   * @param { string } newDisplayName - User display name property value.
    */
   set displayName(newDisplayName) {
     this._displayName = newDisplayName
@@ -1674,7 +1694,7 @@ class User {
 
   /**
    * Display name property getter.
-   * @return {string} - User display name value.
+   * @return { string } - User display name value.
    */
   get displayName() {
     if (!this._displayName || this._displayName === '' || this._displayName === 'undefined') {
@@ -1686,7 +1706,7 @@ class User {
   /**
    * Mastodon compatible display name getter.
    * @alias displayName()
-   * @return {string} - User display name.
+   * @return { string } - User display name.
    */
   get display_name() {
     return this.displayName
@@ -1695,8 +1715,8 @@ class User {
   /**
    * Mastodon compatible display name setter.
    * @alias displayName()
-   * @param {string} newDisplayName - User display name proptery value.
-   * @return {undefined}
+   * @param { string } newDisplayName - User display name proptery value.
+   * @return { undefined }
    */
   set display_name(newDisplayName) {
     this.displayName = newDisplayName
@@ -1704,7 +1724,7 @@ class User {
 
   /**
    * Full name property setter.
-   * @param {string} newName - User full name property value.
+   * @param { string } newName - User full name property value.
    */
   set name(newName) {
     this._name = newName
@@ -1712,7 +1732,7 @@ class User {
 
   /**
    * Full name property getter.
-   * @return {string} - User full name value.
+   * @return { string } - User full name value.
    */
   get name() {
     if (!this._name || this._name === '' || this._name === 'undefined') {
@@ -1723,7 +1743,9 @@ class User {
 
   /**
    * JWT object property setter.
-   * @param {object} tokens - Object literal containing JW Tokens.
+   * @param { Object } tokens - Object literal containing JWTokens.
+   * @param { string } tokens.token - Serialized string format of access JWT.
+   * @param { string } tokens.refresh - Serialized string format of a refresh JWT.
    */
   set jwts(tokens) {
     this._jwts = tokens
@@ -1731,7 +1753,7 @@ class User {
 
   /**
    * JTW object property getter.
-   * @return {object} - User JWT object literal.
+   * @return { Object } - User JWT object literal.
    */
   get jwts() {
     return this._jwts
@@ -1741,8 +1763,8 @@ class User {
    * JWKS.json
    * @summary JWKS.json
    * @async
-   * @param { Number|String } keyIndex - The index of the key arrays, or 'all'.
-   * @return { object } Object literal with signing JWK and encrypting JWK.
+   * @param { number|string } keyIndex - The index of the key arrays, or 'all'.
+   * @return { Object } Object literal with signing JWK and encrypting JWK.
    */
   async jwksjson(keyIndex = 0) {
     // need to update to iterate of each keys array
@@ -1768,9 +1790,9 @@ class User {
    * Public signing keys getter.
    * @summary Public signing keys getter.
    * @async
-   * @param { Number|String } keyIndex - The index of the key arrays or 'all'.
-   * @param { Boolean|String } pretty - Whether to pretty print or not, especially for JWks.'
-   * @return {object}
+   * @param { number|string } keyIndex - The index of the key arrays or 'all'.
+   * @param { boolean|string } pretty - Whether to pretty print or not, especially for JWks.'
+   * @return { Object }
    */
   async publicKeys(keyIndex = 0, pretty = false) {
     if (keyIndex === 'all') {
@@ -1792,7 +1814,7 @@ class User {
 
   /**
    * Public signing key getter.
-   * @return {object}
+   * @return { Object }
    */
   get publicSigningKey() {
     return this.#pks('signing', 'publicKey', false, 0)
@@ -1800,7 +1822,7 @@ class User {
 
   /**
    * Private signing key getter.
-   * @return {object}
+   * @return { Object }
    */
   get privateSigningKey() {
     return this.#pks('signing', 'privateKey', false, 0)
@@ -1808,7 +1830,7 @@ class User {
 
   /**
    * Public signing JWK getter.
-   * @return {object}
+   * @return { Object }
    */
   get signingJwk() {
     return this.#pks('signing', 'jwk', true, 0)
@@ -1816,7 +1838,7 @@ class User {
 
   /**
    * Public encrypting key getter.
-   * @return {object}
+   * @return { Object }
    */
   get publicEncryptingKey() {
     return this.#pks('encrypting', 'publicKey', false, 0)
@@ -1824,7 +1846,7 @@ class User {
 
   /**
    * Private encrypting key getter.
-   * @return {object}
+   * @return { Object }
    */
   get privateEncryptingKey() {
     return this.#pks('encrypting', 'privateKey', false, 0)
@@ -1832,7 +1854,7 @@ class User {
 
   /**
    * Public encrypting JWK getter.
-   * @return {object}
+   * @return { Object }
    */
   get encryptingJwk() {
     return this.#pks('encrypting', 'jwk', true, 0)
@@ -1880,7 +1902,7 @@ class User {
 
   /**
    * Note property setter (alias to description - Mastodon compatability).
-   * @param {string} note - User account note value.
+   * @param { string } note - User account note value.
    */
   set note(note) {
     this._description = note
@@ -1888,7 +1910,7 @@ class User {
 
   /**
    * Note property getter(alias to description - Mastodon compatability).
-   * @return {string} - User note property value.
+   * @return { string } - User note property value.
    */
   get note() {
     return this._description
@@ -1896,7 +1918,7 @@ class User {
 
   /**
    * Description property setter.
-   * @param {string} description - User desciption value.
+   * @param { string } description - User desciption value.
    */
   set description(description) {
     this._description = description
@@ -1904,7 +1926,7 @@ class User {
 
   /**
    * Description property getter.
-   * @return {string} - User description property value.
+   * @return { string } - User description property value.
    */
   get description() {
     return this._description
@@ -1912,7 +1934,7 @@ class User {
 
   /**
    * User type property setter.
-   * @param {string} userType - User type property value.
+   * @param { string } userType - User type property value.
    */
   set type(userType = 'User') {
     if (userType.toLowerCase() === 'admin') {
@@ -1924,7 +1946,7 @@ class User {
 
   /**
    * User type property getter.
-   * @return {string} - User type property value.
+   * @return { string } - User type property value.
    */
   get type() {
     return this._type
@@ -1932,7 +1954,7 @@ class User {
 
   /**
    * User status property setter.
-   * @param {string} status - A value of either 'active' or 'inactive'.
+   * @param { string } status - A value of either 'active' or 'inactive'.
    */
   set status(status) {
     this._userStatus = status
@@ -1940,7 +1962,7 @@ class User {
 
   /**
    * User status property getter.
-   * @return {string} - Current status of user.
+   * @return { string } - Current status of user.
    */
   get status() {
     return this._userStatus
@@ -1948,8 +1970,8 @@ class User {
 
   /**
    * Mastodon compatibility - whether account manually approves follow requests.
-   * @param {boolean} isLocked - User manually approves follow requests.
-   * @return {undefined}
+   * @param { boolean } isLocked - User manually approves follow requests.
+   * @return { undefined }
    */
   set locked(isLocked) {
     this._isLocked = isLocked
@@ -1957,7 +1979,7 @@ class User {
 
   /**
    * Mastodon compatibility - does account manually approve follow requests?
-   * @return {boolean}
+   * @return { boolean }
    */
   get locked() {
     return this._isLocked
@@ -1965,8 +1987,8 @@ class User {
 
   /**
    * Mastodon compatibility - Additional metadata attached to a profile as an array of name-value pairs.
-   * @param {Object[]} field - name/value object literal (a.k.a field) or an array of name/value fields.
-   * @return {undefined}
+   * @param { Object[] } field - name/value object literal (a.k.a field) or an array of name/value fields.
+   * @return { undefined }
    */
   set fields(field) {
     if (Array.isArray(field)) {
@@ -1978,7 +2000,7 @@ class User {
 
   /**
    * Mastodon compatibility - Additional metadata fields attached to a profile.
-   * @return {Object[]} - name/value object literal.
+   * @return { Object[] } - name/value object literal.
    */
   get fields() {
     return this._fields
@@ -1986,8 +2008,8 @@ class User {
 
   /**
    * Mastodon compatibility - whether account is a bot or not.
-   * @param {boolean} isBot - User account is a bot or not.
-   * @return {undefined}
+   * @param { boolean } isBot - User account is a bot or not.
+   * @return { undefined }
    */
   set bot(isBot) {
     this._isBot = isBot
@@ -1995,7 +2017,7 @@ class User {
 
   /**
    * Mastodon compatibility - Is account a bot or not?
-   * @return {boolean}
+   * @return { boolean }
    */
   get bot() {
     return this._isBot
@@ -2003,8 +2025,8 @@ class User {
 
   /**
    * Mastodon compatibility - whether account is a discoverable or not.
-   * @param {boolean} isDiscoverable - User account is a discoverable or not.
-   * @return {undefined}
+   * @param { boolean } isDiscoverable - User account is a discoverable or not.
+   * @return { undefined }
    */
   set discoverable(isDiscoverable) {
     this._isDiscoverable = isDiscoverable
@@ -2012,7 +2034,7 @@ class User {
 
   /**
    * Mastodon compatibility - Is account discoverable or not?
-   * @return {boolean}
+   * @return { boolean }
    */
   get discoverable() {
     return this._isDiscoverable
@@ -2020,8 +2042,8 @@ class User {
 
   /**
    * Mastodon compatibility - Custom emoji entities to be used when rendering the profile.
-   * @param {Array} emojis - Custom emoji entities to be used when rendering the profile.
-   * @return {undefined}
+   * @param { string[] } emojis - Custom emoji entities to be used when rendering the profile.
+   * @return { undefined }
    */
   set emojis(emojis) {
     if (Array.isArray(emojis)) {
@@ -2033,7 +2055,7 @@ class User {
 
   /**
    * Mastodon compatibility - Custom emoji entities to be used when rendering the profile.
-   * @return {Array}
+   * @return { string[] }
    */
   get emojis() {
     return this._emojis
@@ -2041,8 +2063,8 @@ class User {
 
   /**
    * Mastodon compatibility - whether account is a group actor or not.
-   * @param {boolean} isGroup - User account is a group actor or not.
-   * @return {undefined}
+   * @param { boolean } isGroup - User account is a group actor or not.
+   * @return { undefined }
    */
   set group(isGroup) {
     this._isGroup = isGroup
@@ -2050,7 +2072,7 @@ class User {
 
   /**
    * Mastodon compatibility - Is account is a group actor or not?
-   * @return {boolean}
+   * @return { boolean }
    */
   get group() {
     return this._isGroup
@@ -2058,8 +2080,8 @@ class User {
 
   /**
    * Mastodon compatibility - The reported followers of this profile.
-   * @param {number} followersCount - The reported followers of this profile.
-   * @return {undefined}
+   * @param { number } followersCount - The reported followers of this profile.
+   * @return { undefined }
    */
   set followers_count(followersCount) {
     this._followers_count = followersCount
@@ -2067,7 +2089,7 @@ class User {
 
   /**
    * Mastodon compatibility - The reported followers of this profile?
-   * @return {number}
+   * @return { number }
    */
   get followers_count() {
     return this._followers_count
@@ -2075,8 +2097,8 @@ class User {
 
   /**
    * Mastodon compatibility - The reported follows of this profile.
-   * @param {number} followingCount - The reported follows of this profile.
-   * @return {undefined}
+   * @param { number } followingCount - The reported follows of this profile.
+   * @return { undefined }
    */
   set following_count(followingCount) {
     this._following_count = followingCount
@@ -2084,7 +2106,7 @@ class User {
 
   /**
    * Mastodon compatibility - The reported followers of this profile?
-   * @return {number}
+   * @return { number }
    */
   get following_count() {
     return this._following_count
@@ -2092,7 +2114,7 @@ class User {
 
   /**
    * User session ID property getter.
-   * @return {string} - Current session ID of user.
+   * @return { string } - Current session ID of user.
    */
   get sessionId() {
     return this._sessionId
@@ -2100,7 +2122,7 @@ class User {
 
   /**
    * User session ID property setter.
-   * @param {string} sessionId - The current session ID stored in redis.
+   * @param { string } sessionId - The current session ID stored in redis.
    */
   set sessionId(sessionId) {
     this._sessionId = sessionId
@@ -2108,7 +2130,7 @@ class User {
 
   /**
    * Database client property setter.
-   * @param {MongoClient} db -  User db connection property value.
+   * @param { MongoClient } db -  User db connection property value.
    */
   set db(db) {
     this.dbClient = db
@@ -2116,7 +2138,7 @@ class User {
 
   /**
    * Database client property getter.
-   * @return {MongoClient} - User db connection proertery value.
+   * @return { MongoClient } - User db connection proertery value.
    */
   get db() {
     return this.dbClient
@@ -2128,7 +2150,7 @@ class User {
    * @async
    * @param { string } - username to check in the database.
    * @throws { Error }
-   * @return { Boolean }
+   * @return { Boolean } True or False.
    */
   async isUsernameAvailable(check = false) {
     if (!check) {

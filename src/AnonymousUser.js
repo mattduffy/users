@@ -21,8 +21,8 @@ const debug = Debug('users:AnonymousUser')
 class AnonymousUser extends User {
   /**
    * Create an admin user model and populate the properties.
-   * @param {Object} config - An object literal with properties to pass new user
-   * to super to instantiate the base user model.
+   * @summary Create an admin user model and populate the properties.
+   * @param { Object } config - An object literal with properties to pass new user to super to instantiate the base user model.
    */
   constructor(config) {
     super(config)
@@ -33,15 +33,18 @@ class AnonymousUser extends User {
 
   /**
    * Static property used to compare with instanceof expressions.
+   * @summary Static property used to compare with instanceof expressions.
    * @static
-   * @typeOfUser {string}
+   * @typeOfUser { string }
    */
   static typeOfUser = 'Anonymous'
 
   /**
    * A static class method to check if a given user object is a Anonymous User.
+   * @summary A static class method to check if a given user object is a Anonymous User.
    * @static
-   * @param {object} obj - Object to check instanceof against.
+   * @param { Object } obj - Object to check instanceof against.
+   * @param { string } obj.typeOfUser - Class property defining user type.
    * @return {boolean} - True if object checked is instance of AnonymousUser class.
    */
   static [Symbol.hasInstance](obj) {

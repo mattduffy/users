@@ -27,8 +27,8 @@ const debug = Debug('users:CreatorUser')
 class CreatorUser extends AnonymousUser {
   /**
    * Create a creator user model and populate the properties.
-   * @param {Object} config - An object literal with properties to pass new user
-   * to super to instantiate the parent anonymous model.
+   * @summary Create a creator user model and populate the properties.
+   * @param { Object } config - An object literal with properties to pass new user to super to instantiate the parent anonymous model.
    */
   constructor(config) {
     super(config)
@@ -39,16 +39,19 @@ class CreatorUser extends AnonymousUser {
 
   /**
    * Static property used to compare with instanceof expressions.
+   * @summary Static property used to compare with instanceof expressions.
    * @static
-   * @typeOfUser {string}
+   * @typeOfUser { string }
    */
   typeOfUser = 'CreatorUser'
 
   /**
    * A static class method to check if a given user object is a Creator User.
+   * @summary A static class method to check if a given user object is a Creator User.
    * @static
-   * @param {object} obj - Object to check instanceof against.
-   * @return {boolean} - True if object checked is instance of CreatorUser class.
+   * @param { Object } obj - Object to check instanceof against.
+   * @param { string } obj.typeOfUser - Class property defining user type.
+   * @return { boolean } - True if object checked is instance of CreatorUser class.
    */
   static [Symbol.hasInstance](obj) {
     if (obj.typeOfUser === this.typeOfUser) return true
