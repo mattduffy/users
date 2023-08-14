@@ -25,10 +25,10 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
  */
 function createNewBasicUser(properties = {}) {
   debug('Creating a new basic user')
-  if (!Object.prototype.hasOwnProperty.call(properties, 'first_name') || !Object.prototype.hasOwnProperty.call(properties, 'last_name') || !Object.prototype.hasOwnProperty.call(properties, 'email') || !Object.prototype.hasOwnProperty.call(properties, 'password')) {
+  if (!Object.prototype.hasOwnProperty.call(properties, 'first') || !Object.prototype.hasOwnProperty.call(properties, 'last') || !Object.prototype.hasOwnProperty.call(properties, 'emails') || !Object.prototype.hasOwnProperty.call(properties, 'password')) {
     let msg = 'The following fields are required to create a new user:\n'
-    msg += '    - first_name: new user\'s first name.\n'
-    msg += '    - last_name: new user\'s last name.\n'
+    msg += '    - first: new user\'s first name.\n'
+    msg += '    - last: new user\'s last name.\n'
     msg += '    - email: new user\'s valid email address.\n'
     msg += '    - password: new user\'s password to be hashed.'
     throw new Error(msg)
@@ -45,11 +45,11 @@ function createNewBasicUser(properties = {}) {
  */
 function createNewAdminUser(adminProperties = {}) {
   debug('Creating a new admin user')
-  if (!Object.prototype.hasOwnPropertycall(adminProperties, 'first_name') || !Object.prototype.hasOwnProperty.call(adminProperties, 'last_name') || !Object.prototype.hasOwnProperty.call(adminProperties, 'email') || !Object.prototype.hasOwnPropertycall(adminProperties, 'password')) {
+  if (!Object.prototype.hasOwnProperty.call(adminProperties, 'first') || !Object.prototype.hasOwnProperty.call(adminProperties, 'last') || !Object.prototype.hasOwnProperty.call(adminProperties, 'emails') || !Object.prototype.hasOwnProperty.call(adminProperties, 'password')) {
     let msg = 'The following fields are required to create a new user:\n'
-    msg += '    - first_name: new user\'s first name.\n'
-    msg += '    - last_name: new user\'s last name.\n'
-    msg += '    - email: new user\'s valid email address.\n'
+    msg += '    - first: new user\'s first name.\n'
+    msg += '    - last: new user\'s last name.\n'
+    msg += '    - emails: new user\'s valid email address.\n'
     msg += '    - password: new user\'s password to be hashed.'
     throw new Error(msg)
   }

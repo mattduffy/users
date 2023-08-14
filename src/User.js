@@ -13,7 +13,7 @@ import { client, ObjectId } from './mongoclient.js'
 
 const log = Debug('users:User')
 const error = Debug('users:User_error')
-const DATABASE = 'mattmadethese'
+const DATABASE = process.env.MONGODB_DBNAME ?? 'koastub'
 const COLLECTION = 'users'
 
 /**
@@ -40,8 +40,8 @@ class User {
   constructor(config) {
     this.log = log
     this.objectId = ObjectId
-    this.dbClient = client
-    this.dbDatabase = 'mattmadethese'
+    this.dbClient = config?.client ?? client
+    this.dbDatabase = config?.dbName ?? process.env.MONGODB_DBNAME ?? 'koastub'
     this.dbCollection = 'users'
     this.jwt = config.jwt
     this._ctx = config?.ctx ?? {}
@@ -1196,7 +1196,8 @@ class User {
     })
     if (missing.length > 0) {
       const msg = missing.map((item) => item.slice(1)).join(', ')
-      throw new Error(`Missing the follwing required properties: ${msg}`)
+      const eMsg = `Missing the follwing required properties: ${msg}`
+      throw new Error(eMsg)
     }
     return true
   }

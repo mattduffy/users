@@ -16,6 +16,7 @@
   },
   "exports": {
     ".": "./src/index.js",
+    "./Users.js": "./src/Users.js",
     "./AdminUser.js": "./src/AdminUser.js",
     "./mongoclient.js": "./src/mongoclient.js",
     "./package.json": "./package.json",
