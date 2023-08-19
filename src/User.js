@@ -62,7 +62,7 @@ class User {
     this._name = fullName ?? null
     this._username = config?.username ?? this._name.toLowerCase().replace(' ', '')
     this._displayName = config?.displayname ?? config?.displayName ?? config.display_name ?? this._name
-    this._url = config?.url ?? `/@${this._username}`
+    this._url = config?.url ?? `@${this._username}`
     // this._url = this.#fixUsernameUrl(this._url)
     this._avatar = config?.avatar ?? config?._avatar ?? '/i/accounts/avatars/missing.png'
     // this._avatar = this.#fixAvatarUrl(this._avatar)
