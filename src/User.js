@@ -935,7 +935,8 @@ class User {
     const filter = { 'emails.primary': email, archived: o.archived }
     try {
       await client.connect()
-      const db = client.db(DATABASE)
+      // const db = client.db(DATABASE)
+      const db = client.db()
       const users = db.collection(COLLECTION)
       foundUserByEmail = await users.findOne(filter)
     } catch (err) {
@@ -989,7 +990,8 @@ class User {
     const opts = { archived: false, ...o }
     try {
       await client.connect()
-      const db = client.db(DATABASE)
+      // const db = client.db(DATABASE)
+      const db = client.db()
       const users = db.collection(COLLECTION)
       foundUserById = await users.findOne({ _id: ObjectId(id), archived: opts.archived })
     } catch (err) {
@@ -1041,7 +1043,8 @@ class User {
     let foundUserByUsername
     try {
       await client.connect()
-      const db = client.db(DATABASE)
+      // const db = client.db(DATABASE)
+      const db = client.db()
       const users = db.collection(COLLECTION)
       foundUserByUsername = await users.findOne({ username, archived: o.archived })
     } catch (err) {
@@ -1092,7 +1095,8 @@ class User {
     let foundUserBySessionId
     try {
       await client.connect()
-      const db = client.db(DATABASE)
+      // const db = client.db(DATABASE)
+      const db = client.db()
       const users = db.collection(COLLECTION)
       foundUserBySessionId = await users.findOne({ sessionId: sessId, archived: o.archived })
     } catch (err) {
