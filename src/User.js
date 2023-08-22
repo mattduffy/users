@@ -1295,6 +1295,7 @@ class User {
     } catch (err) {
       if (err) {
         error('6: catch err', err)
+        throw new Error('Update failed!', { cause: err })
       }
     } finally {
       await this.dbClient.close()
