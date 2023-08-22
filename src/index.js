@@ -30,8 +30,8 @@ import { AnonymousUser } from './AnonymousUser.js'
 const Database = 'mattmadethese'
 const Collection = 'users'
 
-const log = Debug('users:index_log')
-const error = Debug('users:index_error')
+const _log = Debug('users_index_log')
+const _error = Debug('users_index_error')
 
 if (process.argv[1] === await readFile(fileURLToPath(import.meta.url))) {
   /* eslint-disable-next-line  */
@@ -46,14 +46,21 @@ class Users {
   NO_DB_OBJECT = 'No MongoDB client connection object provided.'
 
   constructor(mongoClient, ctx) {
+    const log = _log.extend('constructor')
+    // const error = _error.extend('constructor')
+    log()
     this._db = mongoClient
+    this._dbName = mongoClient.dbName
     this._ctx = ctx
     this._jose = jose
   }
 
   async newUser(type = 'basic') {
+    const log = _log.extend('newUser')
+    const error = _error.extend('newUser')
+    log()
     if (this._db === null) {
-      log(this.NO_DB_OBJECT)
+      error(this.NO_DB_OBJECT)
       throw new Error(this.NO_DB_OBJECT)
     }
     if (/admin/i.test(type)) {
@@ -69,9 +76,11 @@ class Users {
   }
 
   async factory(config, type = 'null') {
+    const log = _log.extend('factory')
+    const error = _error.extend('factory')
     const conf = { ctx: this._ctx, jwt: jose, ...config }
     if (this._db === null) {
-      log(this.NO_DB_OBJECT)
+      error(this.NO_DB_OBJECT)
       throw new Error(this.NO_DB_OBJECT)
     }
     if (/admin/i.test(type)) {
@@ -91,17 +100,21 @@ class Users {
   }
 
   async archiveUser(ctx, id = null) {
+    const log = _log.extend('archiveUser')
+    const error = _error.extend('archiveUser')
     if (this._db === null) {
-      log(this.NO_DB_OBJECT)
+      error(this.NO_DB_OBJECT)
       throw new Error(this.NO_DB_OBJECT)
     }
     if (id === null || id === undefined) {
+      error('Required user id parameter is missing.')
       throw new Error('Required user id parameter is missing.')
     }
     const archiveDir = ctx.app.dirs.archive.archive ?? path.resolve('./archive')
     let user
     try {
       user = await User.findById(id, this._db)
+      user.dbName = this._dbName
       user = await this.factory(user, user.type)
       if (!user) {
         return false
@@ -200,6 +213,8 @@ class Users {
   }
 
   async getById(id = null, options = {}) {
+    const log = _log.extend('getById')
+    const error = _error.extend('getById')
     if (this._db === null) {
       error(this.NO_DB_OBJECT)
       throw new Error(this.NO_DB_OBJECT)
@@ -214,6 +229,7 @@ class Users {
       if (!user) {
         return false
       }
+      user.dbName = this._dbName
       return await this.factory(user, user.type)
     } catch (e) {
       log(e)
@@ -222,6 +238,8 @@ class Users {
   }
 
   async getByEmail(email = null, options = {}) {
+    const log = _log.extend('getByEmail')
+    const error = _error.extend('getByEmail')
     if (this._db === null) {
       error(this.NO_DB_OBJECT)
       throw new Error(this.NO_DB_OBJECT)
@@ -236,6 +254,7 @@ class Users {
       if (!user) {
         return false
       }
+      user.dbName = this._dbName
       return await this.factory(user, user.type)
     } catch (e) {
       log(e)
@@ -244,6 +263,8 @@ class Users {
   }
 
   async getByUsername(aUsername = null, options = {}) {
+    const log = _log.extend('getByUsername')
+    const error = _error.extend('getByUsername')
     if (this._db === null) {
       error(this.NO_DB_OBJECT)
       throw new Error(this.NO_DB_OBJECT)
@@ -260,6 +281,7 @@ class Users {
       if (!user) {
         return false
       }
+      user.dbName = this._dbName
       return await this.factory(user, user.type)
     } catch (e) {
       log(e)
@@ -268,6 +290,8 @@ class Users {
   }
 
   async getBySessionId(sessionId = null, options = {}) {
+    const log = _log.extend('getBySessionId')
+    const error = _error.extend('getBySessionId')
     if (this._db === null) {
       error(this.NO_DB_OBJECT)
       throw new Error(this.NO_DB_OBJECT)
@@ -282,6 +306,7 @@ class Users {
       if (!user) {
         return false
       }
+      user.dbName = this._dbName
       return await this.factory(user, user.type)
     } catch (e) {
       log(e)
@@ -290,7 +315,10 @@ class Users {
   }
 
   async getAllArchivedUsers(filter = { archived: true }) {
+    const log = _log.extend('getAllArchivedUsers')
+    const error = _error.extend('getAllArchivedUsers')
     let users
+    log()
     if (this._db.s.namespace.collection === undefined) {
       await this._db.connect()
       const db = this._db.db(Database)
@@ -339,15 +367,18 @@ class Users {
       pipeline.push(group)
       archivedUserList = await users.aggregate(pipeline).toArray()
     } catch (e) {
-      log(e)
+      error(e)
       return false
     }
     return archivedUserList
   }
 
   async getAllUsers(filter = {}) {
+    const log = _log.extend('getAllUsers')
+    const error = _error.extend('getAllUsers')
     // log(`s.namespace: ${this._db.s.namespace.collection}`)
     let users
+    log()
     if (this._db.s.namespace.collection === undefined) {
       await this._db.connect()
       const db = this._db.db(Database)
@@ -395,7 +426,7 @@ class Users {
       // pipeline.push(match)
       userList = await users.aggregate(pipeline).toArray()
     } catch (e) {
-      log(e)
+      error(e)
       return false
     }
     // return array
@@ -403,6 +434,8 @@ class Users {
   }
 
   async authenticateByAccessToken(token = null) {
+    const log = _log.extend('authenticateByAccessToken')
+    const error = _error.extend('authenticateByAccessToken')
     const result = {
       user: null,
       message: null,
@@ -427,12 +460,14 @@ class Users {
             result.user = false
             result.message = 'Access token for an inactive user account.'
           } else {
+            result.user.dbName = this._dbName
             const userByToken = await this.factory(result.user, result.user.type)
             result.user = userByToken
             result.message = 'success'
           }
         }
       } catch (e) {
+        error(e)
         result.user = false
         result.error = e
       }
@@ -443,6 +478,8 @@ class Users {
   }
 
   async authenticateAndGetUser(email = null, password = null) {
+    const log = _log.extend('authenticateAndGetUser')
+    const error = _error.extend('authenticateAndGetUser')
     const result = {
       email,
       user: null,
@@ -474,6 +511,7 @@ class Users {
           const match = await bcrypt.compare(password, result.user.hashedPassword)
           log(`match is ${match}`)
           if (match) {
+            result.user.dbName = this._dbName
             const user = await this.factory(result.user, result.user.type)
             result.user = user
           } else {
