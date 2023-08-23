@@ -13,7 +13,7 @@ import { client, ObjectId } from './mongoclient.js'
 
 const log = Debug('users:User')
 const error = Debug('users:User_error')
-const DATABASE = process.env.MONGODB_DBNAME ?? 'koastub'
+// const DATABASE = process.env.MONGODB_DBNAME ?? 'koastub'
 const COLLECTION = 'users'
 
 /**
@@ -37,10 +37,11 @@ class User {
    * Create a user model and populate the properties.
    * @param { Object } config - An object literal with properties to initialize new user.
    */
-  constructor(config) {
+  constructor(config, db) {
     this.log = log
     this.objectId = ObjectId
-    this.dbClient = config?.client ?? client
+    // this.dbClient = config?.client ?? client
+    this.dbClient = db?.client ?? client
     this.dbDatabase = config?.dbName ?? process.env.MONGODB_DBNAME ?? 'koastub'
     this.dbCollection = 'users'
     this.jwt = config.jwt
@@ -1213,6 +1214,8 @@ class User {
    * @return { boolean } - True or throws Error is client connection is not working.
    */
   checkDB() {
+    const _log = log.extend('checkDB')
+    const _err = error.extend('checkDB')
     const missing = []
     if (!this.dbClient || this.dbClient === null || this.dbClient === 'undefined') {
       missing.push('DB client connection object')
@@ -1225,8 +1228,15 @@ class User {
     }
     if (missing.length > 0) {
       const msg = missing.join(', ')
+      _err(msg)
       throw new Error(`Missing the following required database properties: ${msg}`)
     }
+    // log(this.dbDatabse)
+    // log(this.dbCollection)
+    // log(this.dbClient)
+    _log(typeof this.dbClient)
+    // _log(this.dbClient.prototype.toString())
+    _log(Object.getPrototypeOf(this.dbClient))
     return true
   }
 
@@ -1249,10 +1259,15 @@ class User {
     log('2: Calling checkDB()')
     let result
     try {
-      await this.dbClient.connect()
-      log('3: Calling dbClient.connect()')
-      const database = this.dbClient.db(this.dbDatabase)
-      const users = database.collection(this.dbCollection)
+      let users
+      if (this.dbClient.connect) {
+        await this.dbClient.connect()
+        log('3: Calling dbClient.connect()')
+        const database = this.dbClient.db(this.dbDatabase)
+        users = database.collection(this.dbCollection)
+      } else {
+        users = this.dbClient
+      }
       log(`4: Setting update filter doc with ${this._id}`)
       const filter = { _id: this.objectId(this._id) }
       const update = {
@@ -1298,7 +1313,7 @@ class User {
         throw new Error('Update failed!', { cause: err })
       }
     } finally {
-      await this.dbClient.close()
+      // await this.dbClient.close()
     }
     log('7: returning result')
     // return result
@@ -1324,10 +1339,15 @@ class User {
     log('2: Calling checkDB()')
     let result
     try {
-      await this.dbClient.connect()
-      log('3: Calling dbClient.connect()')
-      const database = this.dbClient.db(this.dbDatabase)
-      const users = database.collection(this.dbCollection)
+      let users
+      if (this.dbClient.connect) {
+        await this.dbClient.connect()
+        log('3: Calling dbClient.connect()')
+        const database = this.dbClient.db(this.dbDatabase)
+        users = database.collection(this.dbCollection)
+      } else {
+        users = this.dbClient
+      }
       this._updated_on = Date.now()
       // Inserting a new user.
       log('5: This is a new user - insertOne.')
@@ -1377,7 +1397,7 @@ class User {
         error('8: catch err', err)
       }
     } finally {
-      await this.dbClient.close()
+      // await this.dbClient.close()
     }
     log('9: returning the newly created ObjectId value')
     return this

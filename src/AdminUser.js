@@ -21,9 +21,10 @@ class AdminUser extends User {
    * @param { Object } config - An object literal with properties to pass new user
    * to super to instantiate the base user model.
    */
-  constructor(config) {
-    super(config)
+  constructor(config, db) {
+    super(config, db)
     this._type = 'Admin'
+    this.dbClient = db
     // this._description = 'This is an Admin level user.'
     debug('This is an Admin level user.')
     this._userTypes = [
@@ -32,6 +33,7 @@ class AdminUser extends User {
       { type: 'Creator', description: 'This is an Creator level user.' },
       { type: 'Admin', description: 'This is an Admin level user.' },
     ]
+    // debug(db)
   }
 
   /**

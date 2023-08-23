@@ -527,7 +527,7 @@ class Users {
       result.user = false
       result.error = e
     }
-    log(result)
+    // log(result)
     return result
   }
 }
