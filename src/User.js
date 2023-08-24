@@ -935,10 +935,11 @@ class User {
     // const filter = { email }
     const filter = { 'emails.primary': email, archived: o.archived }
     try {
-      await client.connect()
+      // await client.connect()
       // const db = client.db(DATABASE)
-      const db = client.db()
-      const users = db.collection(COLLECTION)
+      // const db = client.db()
+      // const users = db.collection(COLLECTION)
+      const users = _db
       foundUserByEmail = await users.findOne(filter)
     } catch (err) {
       error('Exception during findByEmail')
@@ -992,8 +993,9 @@ class User {
     try {
       await client.connect()
       // const db = client.db(DATABASE)
-      const db = client.db()
-      const users = db.collection(COLLECTION)
+      // const db = client.db()
+      // const users = db.collection(COLLECTION)
+      const users = _db
       foundUserById = await users.findOne({ _id: ObjectId(id), archived: opts.archived })
     } catch (err) {
       error(`Exception during findById(${id})`)
@@ -1036,17 +1038,19 @@ class User {
    * @static
    * @async
    * @param { string } username - Find the single user with the username parameter.
+   * @param { Mongodbclient } _db - Connection to db if needed.
    * @param { object } o - Additional optional filtering values.
    * @param { boolean } o.archived - Is the user account archived.
    * @return { Promise(<User>|null } - Instance of a User with the properties populated.
    */
-  static async findByUsername(username, o) {
+  static async findByUsername(username, _db, o) {
     let foundUserByUsername
     try {
       await client.connect()
       // const db = client.db(DATABASE)
-      const db = client.db()
-      const users = db.collection(COLLECTION)
+      // const db = client.db()
+      // const users = db.collection(COLLECTION)
+      const users = _db
       foundUserByUsername = await users.findOne({ username, archived: o.archived })
     } catch (err) {
       error('Exception during findByUsername')
@@ -1088,17 +1092,19 @@ class User {
    * @static
    * @async
    * @param { string } sessId - Current session ID of user as stored by redis.
+   * @param { Mongodbclient } _db - Connection to db if needed.
    * @param { object } o - Additional optional filtering values.
    * @param { boolean } o.archived - Is the user account archived.
    * @return { Promise(<User>|null } - Instance of a User with properties populated.
    */
-  static async findBySessionId(sessId, o) {
+  static async findBySessionId(sessId, _db, o) {
     let foundUserBySessionId
     try {
-      await client.connect()
+      // await client.connect()
       // const db = client.db(DATABASE)
-      const db = client.db()
-      const users = db.collection(COLLECTION)
+      // const db = client.db()
+      // const users = db.collection(COLLECTION)
+      const users = _db
       foundUserBySessionId = await users.findOne({ sessionId: sessId, archived: o.archived })
     } catch (err) {
       error('Exception during findBySessionId')

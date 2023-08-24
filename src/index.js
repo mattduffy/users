@@ -226,6 +226,7 @@ class Users {
     const opts = { archived: false, ...options }
     try {
       const user = await User.findById(id, this._db, opts)
+      // log(user)
       if (!user) {
         return false
       }
@@ -276,7 +277,7 @@ class Users {
     const username = (aUsername[0] === '@') ? aUsername.slice(1) : aUsername
     const opts = { archived: false, ...options }
     try {
-      const user = await User.findByUsername(username, opts)
+      const user = await User.findByUsername(username, this._db, opts)
       // if (!username) {
       if (!user) {
         return false
@@ -302,7 +303,7 @@ class Users {
     }
     const opts = { archived: false, ...options }
     try {
-      const user = await User.findBySessionId(sessionId, opts)
+      const user = await User.findBySessionId(sessionId, this._db, opts)
       if (!user) {
         return false
       }
