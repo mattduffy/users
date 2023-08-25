@@ -2,7 +2,9 @@
  * @module @mattduffy/users
  */
 if (!module.parent) {
+  /* eslint-disable global-require */
   require('dotenv').config({ path: './tests/.env' })
+  /* eslint-enable global-require */
 }
 const debug = require('debug')('users:Users')
 const User = require('./User.js')
@@ -19,6 +21,7 @@ const AdminUser = require('./AdminUser.js')
  */
 function createNewBasicUser(properties = {}) {
   debug('Creating a new basic user')
+  /* eslint-disable no-prototype-builtins  */
   if (!properties.hasOwnProperty('first') || !properties.hasOwnProperty('last') || !properties.hasOwnProperty('emails') || !properties.hasOwnProperty('password')) {
     let msg = 'The following fields are required to create a new user:\n'
     msg += '    - first_name: new user\'s first name.\n'
@@ -28,6 +31,7 @@ function createNewBasicUser(properties = {}) {
     throw new Error(msg)
   }
   return new User(properties)
+  /* eslint-enable no-prototype-builtins  */
 }
 
 /**
@@ -38,8 +42,9 @@ function createNewBasicUser(properties = {}) {
  * assigned to the new user instance.
  * @return {AdminUser} - A new (unsaved) instance of AdminUser.
  */
-function createNewAdmincUser(adminProperties = {}) {
+function createNewAdminUser(adminProperties = {}) {
   debug('Creating a new admin user')
+  /* eslint-disable no-prototype-builtins  */
   if (!adminProperties.hasOwnProperty('first') || !adminProperties.hasOwnProperty('last') || !adminProperties.hasOwnProperty('emails') || !adminProperties.hasOwnProperty('password')) {
     let msg = 'The following fields are required to create a new user:\n'
     msg += '    - first_name: new user\'s first name.\n'
@@ -49,6 +54,7 @@ function createNewAdmincUser(adminProperties = {}) {
     throw new Error(msg)
   }
   return new AdminUser(adminProperties)
+  /* eslint-enable no-prototype-builtins  */
 }
 
 /**
@@ -95,7 +101,7 @@ async function comparePasswords(email = null, password = null) {
 
 module.exports = {
   newUser: createNewBasicUser,
-  newAdminUser: createNewAdmincUser,
+  newAdminUser: createNewAdminUser,
   findByEmail: getUserByEmailAddress,
   findById: getUserById,
   cmpPassword: comparePasswords,
