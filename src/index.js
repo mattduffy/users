@@ -52,7 +52,9 @@ class Users {
     this._db = mongoClient
     this._dbName = mongoClient.dbName
     this._ctx = ctx
+    this._env = ctx.app.appEnv
     this._jose = jose
+    log(this._env)
   }
 
   async newUser(type = 'basic') {
@@ -64,15 +66,16 @@ class Users {
       throw new Error(this.NO_DB_OBJECT)
     }
     if (/admin/i.test(type)) {
-      return new AdminUser(this._db, this._ctx)
+      log(this._env)
+      return new AdminUser(this._db, this._ctx, this._env)
     }
     if (/creator/i.test(type)) {
-      return new CreatorUser(this._db, this._ctx)
+      return new CreatorUser(this._db, this._ctx, this._env)
     }
     if (/anonymous/i.test(type)) {
-      return new AnonymousUser(this._db, this._ctx)
+      return new AnonymousUser(this._db, this._ctx, this._env)
     }
-    return await new User(this._db, this._ctx)
+    return await new User(this._db, this._ctx, this._env)
   }
 
   async factory(config, type = 'null') {
@@ -85,18 +88,18 @@ class Users {
     }
     if (/admin/i.test(type)) {
       log('making a new admin user')
-      return new AdminUser(conf, this._db)
+      return new AdminUser(conf, this._db, this._env)
     }
     if (/creator/i.test(type)) {
       log('making a new creator user')
-      return new CreatorUser(conf, this._db)
+      return new CreatorUser(conf, this._db, this._env)
     }
     if (/anonymous/i.test(type)) {
       log('making a new anonymous user')
-      return new AnonymousUser(conf, this._db)
+      return new AnonymousUser(conf, this._db, this._env)
     }
     log('making a new basic user')
-    return await new User(conf, this._db)
+    return await new User(conf, this._db, this._env)
   }
 
   async archiveUser(ctx, id = null) {

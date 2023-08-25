@@ -14,7 +14,7 @@ import { client, ObjectId } from './mongoclient.js'
 const log = Debug('users:User')
 const error = Debug('users:User_error')
 // const DATABASE = process.env.MONGODB_DBNAME ?? 'koastub'
-const COLLECTION = 'users'
+// const COLLECTION = 'users'
 
 /**
  * A class representing the basic user model.  This class contains the generic
@@ -33,11 +33,29 @@ class User {
    */
   _emails
 
+  #RSA_SIG_KEY_NAME
+
+  #RSA_SIG_KEY_MOD
+
+  #RSA_SIG_KEY_HASH
+
+  #RSA_SIG_KEY_EXTRACTABLE
+
+  #RSA_ENC_KEY_NAME
+
+  #RSA_ENC_KEY_MOD
+
+  #RSA_ENC_KEY_TYPE
+
+  #RSA_ENC_KEY_EXTRACTABLE
+
   /**
    * Create a user model and populate the properties.
    * @param { Object } config - An object literal with properties to initialize new user.
+   * @param { MongoClient } db - A connected MongoDB client.
+   * @param { Object } env - An object encapsulating the app's environmental variables.
    */
-  constructor(config, db) {
+  constructor(config, db, env) {
     this.log = log
     this.objectId = ObjectId
     // this.dbClient = config?.client ?? client
@@ -90,6 +108,15 @@ class User {
     this._following_count = config?.following_count ?? 0
     // Is this user account archived?
     this._archived = config?.archived ?? false
+    // App environmental variables
+    this.#RSA_SIG_KEY_NAME = env?.RSA_SIG_KEY_NAME ?? process.env.RSA_SIG_KEY_NAME
+    this.#RSA_SIG_KEY_MOD = env?.RSA_SIG_KEY_MOD ?? process.env.RSA_SIG_KEY_MOD
+    this.#RSA_SIG_KEY_HASH = env?.RSA_SIG_KEY_HASH ?? process.env.RSA_SIG_KEY_HASH
+    this.#RSA_SIG_KEY_EXTRACTABLE = env?.RSA_SIG_KEY_EXTRACTABLE ?? process.env.RSA_SIG_KEY_EXTRACTABLE
+    this.#RSA_ENC_KEY_NAME = env?.RSA_ENC_KEY_NAME ?? process.env.RSA_ENC_KEY_NAME
+    this.#RSA_ENC_KEY_MOD = env?.RSA_ENC_KEY_MOD ?? process.env.RSA_ENC_KEY_MOD
+    this.#RSA_ENC_KEY_TYPE = env?.RSA_ENC_KEY_TYPE ?? process.env.RSA_ENC_KEY_TYPE
+    this.#RSA_ENC_KEY_EXTRACTABLE = env?.RSA_ENC_KEY_EXTRACTABLE ?? process.env.RSA_ENC_KEY_EXTRACTABLE
   }
 
   /**
@@ -460,21 +487,29 @@ class User {
       // no-op
       return { status: null }
     }
+    log(this.#RSA_SIG_KEY_NAME)
+    log(this.#RSA_SIG_KEY_MOD)
+    log(this.#RSA_SIG_KEY_HASH)
+    log(this.#RSA_SIG_KEY_EXTRACTABLE)
+    log(this.#RSA_ENC_KEY_NAME)
+    log(this.#RSA_ENC_KEY_MOD)
+    log(this.#RSA_ENC_KEY_TYPE)
+    log(this.#RSA_ENC_KEY_EXTRACTABLE)
     const signingKeyOpts = {
-      name: process.env.RSA_SIG_KEY_NAME ?? 'RSASSA-PKCS1-v1_5',
-      modulusLength: parseInt(process.env.RSA_SIG_KEY_MOD, 10) ?? 2048,
+      name: this.#RSA_SIG_KEY_NAME ?? 'RSASSA-PKCS1-v1_5',
+      modulusLength: parseInt(this.#RSA_SIG_KEY_MOD, 10) ?? 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
-      hash: process.env.RSA_SIG_KEY_HASH ?? 'SHA-256',
-      extractable: (process.env.RSA_SIG_KEY_EXTRACTABLE.toLowerCase() === 'true') ?? true,
+      hash: this.#RSA_SIG_KEY_HASH ?? 'SHA-256',
+      extractable: (this.#RSA_SIG_KEY_EXTRACTABLE.toLowerCase() === 'true') ?? true,
       uses: ['sign', 'verify'],
       ...sign,
     }
     const encryptingKeyOpts = {
-      name: process.env.RSA_ENC_KEY_NAME ?? 'RSA-OAEP',
-      modulusLength: parseInt(process.env.RSA_ENC_KEY_MOD, 10) ?? 2048,
+      name: this.#RSA_ENC_KEY_NAME ?? 'RSA-OAEP',
+      modulusLength: parseInt(this.#RSA_ENC_KEY_MOD, 10) ?? 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
-      hash: process.env.RSA_ENC_KEY_TYPE ?? 'SHA-256',
-      extractable: (process.env.RSA_ENC_KEY_EXTRACTABLE.toLowerCase() === 'true') ?? true,
+      hash: this.#RSA_ENC_KEY_TYPE ?? 'SHA-256',
+      extractable: (this.#RSA_ENC_KEY_EXTRACTABLE.toLowerCase() === 'true') ?? true,
       uses: ['encrypt', 'decrypt'],
       ...enc,
     }
@@ -1913,7 +1948,7 @@ class User {
   }
 
   #prettyPrintJwk(jwk) {
-    console.log(jwk)
+    this.log(jwk)
     // const matches = jwk.match(/(?<key_ops>"key_ops":\[.*\]),(?<ext>"ext":(?:true|false)),(?<kty>"kty":"(?:RSA|AES|ECDSA|HMAC)"),(?<n>"n":"(?<n_val>.*)"),(?<e>"e":".*"),(?<alg>"alg":".*"),(?<kid>"kid":".*"),?(?<use>"use":".*")?/)?.groups
     const matches = jwk.match(/"key_ops":(?<key_ops>\[.*\]),"ext":(?<ext>(true|false)),"kty":(?<kty>".*"),"n":(?<n>".*"),"e":(?<e>".*"),"alg":(?<alg>".*"),"kid":(?<kid>".*"),?(?:"use":(?<use>".*"))?/)
     const groups = matches?.groups
