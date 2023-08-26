@@ -54,7 +54,7 @@ class Users {
     this._ctx = ctx
     this._env = ctx.app.appEnv
     this._jose = jose
-    log(this._env)
+    // log(this._env)
   }
 
   async newUser(type = 'basic') {

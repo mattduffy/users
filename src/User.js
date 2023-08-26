@@ -242,6 +242,7 @@ class User {
   async #keyDirs() {
     const pubKeyDir = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys`)
     const priKeyDir = path.resolve(this._ctx.app.dirs.private.dir, `${this.privateDir}/keys`)
+    log(`#keyDirs() -> priKeyDir: ${priKeyDir}`, this.privateDir)
     try {
       try {
         if ((await stat(pubKeyDir)).isDirectory()) {
@@ -500,7 +501,7 @@ class User {
       modulusLength: parseInt(this.#RSA_SIG_KEY_MOD, 10) ?? 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
       hash: this.#RSA_SIG_KEY_HASH ?? 'SHA-256',
-      extractable: (this.#RSA_SIG_KEY_EXTRACTABLE.toLowerCase() === 'true') ?? true,
+      extractable: (this.#RSA_SIG_KEY_EXTRACTABLE?.toLowerCase() === 'true') ?? true,
       uses: ['sign', 'verify'],
       ...sign,
     }
@@ -509,7 +510,7 @@ class User {
       modulusLength: parseInt(this.#RSA_ENC_KEY_MOD, 10) ?? 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
       hash: this.#RSA_ENC_KEY_TYPE ?? 'SHA-256',
-      extractable: (this.#RSA_ENC_KEY_EXTRACTABLE.toLowerCase() === 'true') ?? true,
+      extractable: (this.#RSA_ENC_KEY_EXTRACTABLE?.toLowerCase() === 'true') ?? true,
       uses: ['encrypt', 'decrypt'],
       ...enc,
     }
@@ -896,7 +897,8 @@ class User {
    */
   /* eslint-disable-next-line class-methods-use-this */
   renamedir(newName) {
-    const oldName = `${this._ctx.app.publicDir}/${this._publicDir}`
+    // const oldName = `${this._ctx.app.publicDir}/${this._publicDir}`
+    const oldName = `${this._ctx.app.dirs.public.dir}/${this._publicDir}`
     log(`Renaming ${oldName} to ${newName}`)
     try {
       rename(oldName, newName, (err) => {
@@ -1384,9 +1386,12 @@ class User {
       if (this.dbClient.connect) {
         await this.dbClient.connect()
         log('3: Calling dbClient.connect()')
+        log(`3.1: Using database: ${this.dbDatabase}`)
         const database = this.dbClient.db(this.dbDatabase)
+        log(`3.2: Setting collection to: ${this.dbCollection}`)
         users = database.collection(this.dbCollection)
       } else {
+        log('3: Assigning the db client.')
         users = this.dbClient
       }
       this._updated_on = Date.now()
@@ -1440,7 +1445,7 @@ class User {
     } finally {
       // await this.dbClient.close()
     }
-    log('9: returning the newly created ObjectId value')
+    log('9: returning the newly created user object')
     return this
   }
 
@@ -2272,18 +2277,19 @@ class User {
     const re = new RegExp(`${hashedId}`)
     if (!re.test(location)) {
       relPublicPath = `${location}/${hashedId}/`
-      fullPublicPath = `${this._ctx.app.publicDir}/${location}/${hashedId}/`
+      fullPublicPath = `${this._ctx.app.dirs.public.dir}/${location}/${hashedId}/`
       relPrivatePath = `${location}/${hashedId}/`
       fullPrivatePath = `${this._ctx.app.dirs.private.dir}/${location}/${hashedId}/`
     } else {
       relPublicPath = `${location}/`
-      fullPublicPath = `${this._ctx.app.publicDir}/${location}/`
+      // fullPublicPath = `${this._ctx.app.publicDir}/${location}/`
+      fullPublicPath = `${this._ctx.app.dirs.public.dir}/${location}/`
       relPrivatePath = `${location}/`
       fullPrivatePath = `${this._ctx.app.dirs.private.dir}/${location}/`
     }
     if (this._publicDir === null || this._publicDir === '') {
       // publicDir not set yet, create it now
-      log(`Creating a new publicDir for ${this.emails[0].primary} at ${location}`)
+      log(`Creating a new publicDir for ${this.emails[0].primary} at ${fullPublicPath}`)
       log(`Creating a new privateDir for ${this.emails[0].primary} at ${fullPrivatePath}`)
       log(`ctx.app.root: ${this._ctx.app.root}`)
       try {
@@ -2300,8 +2306,8 @@ class User {
         log(`private shortPath: ${relPrivatePath}`)
         log(`private fullPath: ${fullPrivatePath}`)
         this.privateDir = relPrivatePath
-        // this.makedir(fullPrivatePath)
-        // this._privateDir = relPrivatePath
+        this.makedir(fullPrivatePath)
+        this._privateDir = relPrivatePath
       } catch (e) {
         const msg = `Failed setting ${this.emails[0].primary}'s privateDir ${fullPrivatePath}.`
         error(msg)
@@ -2309,8 +2315,10 @@ class User {
       }
     } else {
       // renaming old publicDir to new name
-      const oldFullPublicPath = `${this._ctx.app.publicDir}/${this.publicDir}`
-      const newFullPublicPath = path.resolve(`${this._ctx.app.publicDir}`, `${location}`)
+      // const oldFullPublicPath = `${this._ctx.app.publicDir}/${this.publicDir}`
+      const oldFullPublicPath = `${this._ctx.app.dirs.public.dir}/${this.publicDir}`
+      // const newFullPublicPath = path.resolve(`${this._ctx.app.publicDir}`, `${location}`)
+      const newFullPublicPath = path.resolve(`${this._ctx.app.dirs.public.dir}`, `${location}`)
       const newRelPublicPath = `${location}/`
       log(`Renaming ${this.emails[0].primary}'s publicDir from ${oldFullPublicPath} to ${newFullPublicPath}`)
       // resolve the new path to the same root path...
