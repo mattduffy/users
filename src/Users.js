@@ -53,7 +53,7 @@ function createNewAdminUser(adminProperties = {}) {
     msg += '    - password: new user\'s password to be hashed.'
     throw new Error(msg)
   }
-  return new AdminUser(adminProperties)
+  return new AdminUser(adminProperties, adminProperties.client, adminProperties.env)
 }
 
 /**
