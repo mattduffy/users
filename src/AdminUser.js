@@ -22,10 +22,10 @@ class AdminUser extends User {
    * @param { MongoClient } db - A connected MongoDB client.
    * @param { Object } env - An object encapsulating the app's environmental variables.
    */
-  constructor(config, db, env) {
+  constructor(config, db, env = {}) {
     super(config, db, env)
     this._type = 'Admin'
-    this.dbClient = db
+    // this.dbClient = db
     // this._description = 'This is an Admin level user.'
     debug('This is an Admin level user.')
     this._userTypes = [
