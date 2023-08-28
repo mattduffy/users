@@ -59,7 +59,11 @@ class User {
     this.log = log
     this.objectId = ObjectId
     // this.dbClient = config?.client ?? client
-    this.dbClient = db?.client ?? client
+    this.dbClient = db?.client ?? db ?? client
+    log('[User] DB credentials in use: %O', db.client?.options.credentials)
+    log('[User] DB credentials in use: %O', this.dbClient.options.credentials)
+    log('[User] DB name in use: ', db?.client?.options.dbName)
+    log('[User] DB name in use: ', this.dbClient.options.dbName)
     this.dbDatabase = config?.dbName ?? process.env.MONGODB_DBNAME ?? 'koastub'
     this.dbCollection = 'users'
     this.jwt = config.jwt
@@ -1305,8 +1309,10 @@ class User {
       let users
       if (this.dbClient.connect) {
         await this.dbClient.connect()
-        log('3: Calling dbClient.connect()')
+        log('3: Update() Calling dbClient.connect()')
+        log(`3.1: Update() Using database: ${this.dbDatabase}`)
         const database = this.dbClient.db(this.dbDatabase)
+        log(`3.2: Update() Setting collection to: ${this.dbCollection}`)
         users = database.collection(this.dbCollection)
       } else {
         users = this.dbClient
@@ -1385,15 +1391,18 @@ class User {
       let users
       if (this.dbClient.connect) {
         await this.dbClient.connect()
-        log('3: Calling dbClient.connect()')
-        log(`3.1: Using database: ${this.dbDatabase}`)
+        log('3: Save Calling dbClient.connect()')
+        log(`3.1: Save Using database: ${this.dbDatabase}`)
+        log('3.1.1: Database options: %O', this.dbClient.options.credentials.username)
+        log('3.1.2: Database namespace: %O', this.dbClient.namespace)
         const database = this.dbClient.db(this.dbDatabase)
-        log(`3.2: Setting collection to: ${this.dbCollection}`)
+        log(`3.2: Save Setting collection to: ${this.dbCollection}`)
         users = database.collection(this.dbCollection)
       } else {
         log('3: Assigning the db client.')
         users = this.dbClient
       }
+      // const users = this.dbClient
       this._updated_on = Date.now()
       // Inserting a new user.
       log('5: This is a new user - insertOne.')

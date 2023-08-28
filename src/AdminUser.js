@@ -23,6 +23,8 @@ class AdminUser extends User {
    * @param { Object } env - An object encapsulating the app's environmental variables.
    */
   constructor(config, db, env = {}) {
+    // debug('[AdminUser] DB credentials in use: %O', db.client.options.credentials)
+    // debug('[AdminUser] DB name in use: ', db.client.options.dbName)
     super(config, db, env)
     this._type = 'Admin'
     // this.dbClient = db

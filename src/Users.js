@@ -53,7 +53,9 @@ function createNewAdminUser(adminProperties = {}) {
     msg += '    - password: new user\'s password to be hashed.'
     throw new Error(msg)
   }
-  return new AdminUser(adminProperties, adminProperties.client, adminProperties.env)
+  // debug('[createNewAdminUser] DB credentials in use: %O', adminProperties.client.options.credentials)
+  // debug('[createNewAdminUser] DB name in use: ', adminProperties.client.options.dbName)
+  return new AdminUser(adminProperties, { client: adminProperties.client }, adminProperties.env)
 }
 
 /**
