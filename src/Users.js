@@ -33,7 +33,9 @@ function createNewBasicUser(properties = {}) {
     msg += '    - password: new user\'s password to be hashed.'
     throw new Error(msg)
   }
-  return new User(properties)
+  debug('[createNewAdminUser] DB credentials in use: %O', properties.client.options.credentials)
+  debug('[createNewAdminUser] DB name in use: ', properties.client.options.dbName)
+  return new User(properties, { client: properties.client }, properties.env)
 }
 
 /**
