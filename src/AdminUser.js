@@ -18,13 +18,14 @@ const debug = Debug('users:AdminUser')
 class AdminUser extends User {
   /**
    * Create an admin user model and populate the properties.
+   * @summary Create an admin user model and populate the properties.
    * @param { Object } config - An object literal with properties to pass new user to super to instantiate the base user model.
    * @param { MongoClient } db - A connected MongoDB client.
    * @param { Object } env - An object encapsulating the app's environmental variables.
    */
   constructor(config, db, env = {}) {
-    // debug('[AdminUser] DB credentials in use: %O', db.client.options.credentials)
-    // debug('[AdminUser] DB name in use: ', db.client.options.dbName)
+    debug('[AdminUser] DB credentials in use: %O', db?.client?.options?.credentials?.username)
+    debug('[AdminUser] DB name in use: ', db?.client?.options?.dbName)
     super(config, db, env)
     this._type = 'Admin'
     // this.dbClient = db

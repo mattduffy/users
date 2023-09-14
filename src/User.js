@@ -60,10 +60,9 @@ class User {
     this.objectId = ObjectId
     // this.dbClient = config?.client ?? client
     this.dbClient = db?.client ?? db ?? client
-    log('[User] DB credentials in use: %O', db.client?.options.credentials)
-    log('[User] DB credentials in use: %O', this.dbClient.options.credentials)
-    log('[User] DB name in use: ', db?.client?.options.dbName)
-    log('[User] DB name in use: ', this.dbClient.options.dbName)
+
+    log('[User] DB credentials in use: %O', db?.client?.options?.credentials?.username)
+    // log('[User] DB name in use: ', db?.client?.options.dbName)
     this.dbDatabase = config?.dbName ?? process.env.MONGODB_DBNAME ?? 'koastub'
     this.dbCollection = 'users'
     this.jwt = config.jwt
@@ -1091,7 +1090,7 @@ class User {
       // const db = client.db(DATABASE)
       // const db = client.db()
       // const users = db.collection(COLLECTION)
-      const users = _db
+      const users = _db.client.db().collection('users')
       foundUserByUsername = await users.findOne({ username, archived: o.archived })
     } catch (err) {
       error('Exception during findByUsername')

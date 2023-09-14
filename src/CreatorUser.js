@@ -7,17 +7,6 @@ import { AnonymousUser } from './AnonymousUser.js'
 const debug = Debug('users:CreatorUser')
 
 /**
- * @todo [ ] Create a test to authenticate user accounts base on permissions.
- * @todo [ ] Create creator method - creeatAlbum.
- * @todo [ ] Create creator method - deleteAlbum.
- * @todo [ ] Create creator method - updateAlbum.
- * @todo [ ] Create creator methods - hideAlbum / showAlbum.
- * @todo [ ] Create creator methods - makeAlbumPrivate / makeAlbumPublic.
- * @todo [ ] Create creator methods - makeAlbumShareLink / deleteAlbumShareLink.
- * @todo [ ]
- */
-
-/**
  * A class representing the Creator user model.  This class extends Anonymous
  * Use rmodel.  Creator specific methods and properties are provided here.
  * @summary A class defining the creator user model.
@@ -28,10 +17,14 @@ class CreatorUser extends AnonymousUser {
   /**
    * Create a creator user model and populate the properties.
    * @summary Create a creator user model and populate the properties.
-   * @param { Object } config - An object literal with properties to pass new user to super to instantiate the parent anonymous model.
+   * @param { Object } config - An object literal with properties to pass new user to super to instantiate the base user model.
+   * @param { MongoClient } db - A connected MongoDB client.
+   * @param { Object } env - An object encapsulating the app's environmental variables.
    */
-  constructor(config) {
-    super(config)
+  constructor(config, db, env = {}) {
+    debug('[CreatorUser] DB credentials in use: %O', db?.client?.options?.credentials?.username)
+    debug('[CreatorUser] DB name in use: ', db?.client?.options?.dbName)
+    super(config, db, env)
     this._type = 'Creator'
     // this._description = 'This is a Creator user.'
     debug('This is a Creator user.')

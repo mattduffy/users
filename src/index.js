@@ -48,12 +48,14 @@ class Users {
   constructor(mongoClient, ctx) {
     const log = _log.extend('constructor')
     // const error = _error.extend('constructor')
-    log()
+    // log(mongoClient)
     this._db = mongoClient
     this._dbName = mongoClient.dbName
     this._ctx = ctx
     this._env = ctx.app.appEnv
     this._jose = jose
+    log('[Users] DB credentials in use: %O', this._db?.client?.options?.credentials?.username)
+    log('[Users] DB name in use: ', this._db?.client?.options.dbName)
     // log(this._env)
   }
 
@@ -87,18 +89,18 @@ class Users {
       throw new Error(this.NO_DB_OBJECT)
     }
     if (/admin/i.test(type)) {
-      log('making a new admin user')
+      log('Instantiating a admin user')
       return new AdminUser(conf, this._db, this._env)
     }
     if (/creator/i.test(type)) {
-      log('making a new creator user')
+      log('Instantiating a creator user')
       return new CreatorUser(conf, this._db, this._env)
     }
     if (/anonymous/i.test(type)) {
-      log('making a new anonymous user')
+      log('Instantiating a anonymous user')
       return new AnonymousUser(conf, this._db, this._env)
     }
-    log('making a new basic user')
+    log('Instantiating a basic user')
     return await new User(conf, this._db, this._env)
   }
 

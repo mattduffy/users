@@ -24,8 +24,8 @@ class AnonymousUser extends User {
    * @summary Create an admin user model and populate the properties.
    * @param { Object } config - An object literal with properties to pass new user to super to instantiate the base user model.
    */
-  constructor(config) {
-    super(config)
+  constructor(config, db, env = {}) {
+    super(config, db, env)
     this._type = 'Anonymous'
     // this._description = 'This is an Anonymous user.'
     debug('This is an Anonymous user.')
