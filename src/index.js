@@ -460,7 +460,7 @@ class Users {
       const filter = { 'jwts.token': token, archived: false }
       try {
         result.user = await this._db.findOne(filter)
-        log(`Found user by token: ${result.user.username}`)
+        log(`Found user by token: ${result?.user?.username}`)
         if (result.user !== null) {
           if (result.user.userStatus === 'inactive') {
             result.user = false
