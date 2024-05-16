@@ -89,6 +89,20 @@ async function getUserById(id = null) {
 }
 
 /**
+ * Query the database for an existing user by @username.
+ * @async
+ * @param { string } username - A valid @username to query by.
+ * @throw { Error }
+ * @return { Promise<User> } - A populated User instance or throws an Error.
+ */
+async function getuserByUsername(username = null) {
+  if (!username) {
+    throw new Error('Username is required.')
+  }
+  return await User.findByUsername(username)
+}
+
+/**
  * Query the database for an exisitn user by email address and compare the
  * supplied cleartext password with the Bcrypt hashed and salted password
  * associated with email address, if one is found.
@@ -110,5 +124,6 @@ export {
   createNewAdminUser as newAdminUser,
   getUserByEmailAddress as findByEmail,
   getUserById as findById,
+  getuserByUsername as findByUsername,
   comparePasswords as cmpPassword,
 }

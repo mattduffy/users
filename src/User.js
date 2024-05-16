@@ -700,8 +700,8 @@ class User {
     }
     const database = this.dbClient.db(this.dbDatabase)
     const users = database.collection(this.dbCollection)
-    const sig = { _id: this.objectId(this._id), 'keys.signing': { $elemMatch: { kid } } }
-    const enc = { _id: this.objectId(this._id), 'keys.encrypting': { $elemMatch: { kid } } }
+    const sig = { _id: new this.objectId(this._id), 'keys.signing': { $elemMatch: { kid } } }
+    const enc = { _id: new this.objectId(this._id), 'keys.encrypting': { $elemMatch: { kid } } }
     // log(sig)
     // log(enc)
     const key = {}
@@ -1317,7 +1317,7 @@ class User {
         users = this.dbClient
       }
       log(`4: Setting update filter doc with ${this._id}`)
-      const filter = { _id: this.objectId(this._id) }
+      const filter = { _id: new this.objectId(this._id) }
       const update = {
         $set: {
           type: this._type,
