@@ -1031,7 +1031,7 @@ class User {
     let foundUserById
     const opts = { archived: false, ...o }
     try {
-      await client.connect()
+      // await client.connect()
       // const db = client.db(DATABASE)
       // const db = client.db()
       // const users = db.collection(COLLECTION)
@@ -1039,7 +1039,8 @@ class User {
       foundUserById = await users.findOne({ _id: new ObjectId(id), archived: opts.archived })
     } catch (err) {
       error(`Exception during findById(${id})`)
-      error(err.message)
+      // error(err.message)
+      error(err)
       throw new Error(err)
     } finally {
       // await client.close()
@@ -1086,7 +1087,7 @@ class User {
   static async findByUsername(username, _db, o) {
     let foundUserByUsername
     try {
-      await client.connect()
+      // await client.connect()
       // const db = client.db(DATABASE)
       // const db = client.db()
       // const users = db.collection(COLLECTION)
