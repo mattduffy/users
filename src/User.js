@@ -100,6 +100,8 @@ class User {
     this._privateDir = config?.privateDir ?? null
     this._sessionId = config?.sessionId ?? null
     this._schemaVer = config?.schemaVer
+    // preferences object added 02/02/2025
+    this._preferences = config?.preferences ?? {}
     // Mastodon specific required fields
     this._isLocked = config?.locked ?? config?.isLocked ?? true
     this._isBot = config?.bot ?? false
@@ -1209,6 +1211,7 @@ class User {
       sessionId: this._sessionId,
       schemaVer: this._schemaVer,
       archived: this._archived,
+      preferences: this._preferences,
     }, null, 2)
   }
 
@@ -1341,6 +1344,7 @@ class User {
           sessionId: this._sessionId,
           schemaVer: this._schemaVer,
           archived: this._archived,
+          preferences: this._preferences,
           // Mastodon fields
           locked: this._isLocked,
           bot: this._isBot,
@@ -1428,6 +1432,7 @@ class User {
         sessionId: this._sessionId,
         archived: this._archived,
         schemaVer: this._schemaVer,
+        preferences: this._preferences,
         // Mastodon fields
         locked: this._isLocked,
         bot: this._isBot,
@@ -2047,6 +2052,21 @@ class User {
    */
   get status() {
     return this._userStatus
+  }
+
+  /**
+   * User preferences object setter.
+   * @param { object } prefs - A dictionary object of preference values.
+   */
+  set preferences(prefs) {
+    this._preferences = Object.assign(this._preferences, prefs)
+  }
+
+  /**
+   * User prefrences object getter.
+   */
+  get preferences() {
+    return this._preferences
   }
 
   /**
