@@ -1038,7 +1038,8 @@ class User {
       // const db = client.db()
       // const users = db.collection(COLLECTION)
       const users = _db
-      foundUserById = await users.findOne({ _id: new ObjectId(id), archived: opts.archived })
+      const _id = new ObjectId(id)
+      foundUserById = await users.findOne({ _id, archived: opts.archived })
     } catch (err) {
       error(`Exception during findById(${id})`)
       // error(err.message)
