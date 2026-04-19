@@ -4,7 +4,7 @@
   "description": "A module to create app user types.",
   "author": "mattduffy@gmail.com",
   "license": "ISC",
-  "main": "Users.cjs",
+  "main": "./src/Users.cjs",
   "type": "module",
   "homepage": "https://github.com/mattduffy/users#readme",
   "repository": {
