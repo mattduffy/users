@@ -23,19 +23,21 @@
     "./tests": "./tests/test.*.js"
   },
   "scripts": {
+    "lint": "eslint --",
     "test": "DEBUG=users:* node tests/test_users.js"
   },
   "engines": {
     "node": ">=14.16"
   },
   "devDependencies": {
-    "eslint": "8.29.0",
+    "eslint": "8.57.1",
     "eslint-config-airbnb-base": "15.0.0",
+    "eslint-import-resolver-exports": "1.0.0-beta.5",
     "eslint-plugin-import": "2.26.0"
   },
   "dependencies": {
     "assert": "2.0.0",
-    "bcrypt": "^5.0.1",
+    "bcrypt": "6.0.0",
     "debug": "^4.3.4",
     "dotenv": "^16.0.0",
     "jose": "4.15.9",
