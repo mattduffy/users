@@ -22,7 +22,10 @@ const AdminUser = require('./AdminUser.js')
 function createNewBasicUser(properties = {}) {
   debug('Creating a new basic user')
   /* eslint-disable no-prototype-builtins  */
-  if (!properties.hasOwnProperty('first') || !properties.hasOwnProperty('last') || !properties.hasOwnProperty('emails') || !properties.hasOwnProperty('password')) {
+  if (!properties.hasOwnProperty('first')
+    || !properties.hasOwnProperty('last')
+    || !properties.hasOwnProperty('emails')
+    || !properties.hasOwnProperty('password')) {
     let msg = 'The following fields are required to create a new user:\n'
     msg += '    - first_name: new user\'s first name.\n'
     msg += '    - last_name: new user\'s last name.\n'
@@ -45,7 +48,10 @@ function createNewBasicUser(properties = {}) {
 function createNewAdminUser(adminProperties = {}) {
   debug('Creating a new admin user')
   /* eslint-disable no-prototype-builtins  */
-  if (!adminProperties.hasOwnProperty('first') || !adminProperties.hasOwnProperty('last') || !adminProperties.hasOwnProperty('emails') || !adminProperties.hasOwnProperty('password')) {
+  if (!adminProperties.hasOwnProperty('first')
+    || !adminProperties.hasOwnProperty('last')
+    || !adminProperties.hasOwnProperty('emails')
+    || !adminProperties.hasOwnProperty('password')) {
     let msg = 'The following fields are required to create a new user:\n'
     msg += '    - first_name: new user\'s first name.\n'
     msg += '    - last_name: new user\'s last name.\n'

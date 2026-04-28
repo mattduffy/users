@@ -83,7 +83,10 @@ class User {
     }
     this._name = fullName ?? null
     this._username = config?.username ?? this._name.toLowerCase().replace(' ', '')
-    this._displayName = config?.displayname ?? config?.displayName ?? config.display_name ?? this._name
+    this._displayName = config?.displayname
+      ?? config?.displayName
+      ?? config.display_name
+      ?? this._name
     this._url = config?.url ?? `@${this._username}`
     // this._url = this.#fixUsernameUrl(this._url)
     this._avatar = config?.avatar ?? config?._avatar ?? '/i/accounts/avatars/missing.png'
@@ -117,11 +120,13 @@ class User {
     this.#RSA_SIG_KEY_NAME = env?.RSA_SIG_KEY_NAME ?? process.env.RSA_SIG_KEY_NAME
     this.#RSA_SIG_KEY_MOD = env?.RSA_SIG_KEY_MOD ?? process.env.RSA_SIG_KEY_MOD
     this.#RSA_SIG_KEY_HASH = env?.RSA_SIG_KEY_HASH ?? process.env.RSA_SIG_KEY_HASH
-    this.#RSA_SIG_KEY_EXTRACTABLE = env?.RSA_SIG_KEY_EXTRACTABLE ?? process.env.RSA_SIG_KEY_EXTRACTABLE
+    this.#RSA_SIG_KEY_EXTRACTABLE = env?.RSA_SIG_KEY_EXTRACTABLE
+      ?? process.env.RSA_SIG_KEY_EXTRACTABLE
     this.#RSA_ENC_KEY_NAME = env?.RSA_ENC_KEY_NAME ?? process.env.RSA_ENC_KEY_NAME
     this.#RSA_ENC_KEY_MOD = env?.RSA_ENC_KEY_MOD ?? process.env.RSA_ENC_KEY_MOD
     this.#RSA_ENC_KEY_TYPE = env?.RSA_ENC_KEY_TYPE ?? process.env.RSA_ENC_KEY_TYPE
-    this.#RSA_ENC_KEY_EXTRACTABLE = env?.RSA_ENC_KEY_EXTRACTABLE ?? process.env.RSA_ENC_KEY_EXTRACTABLE
+    this.#RSA_ENC_KEY_EXTRACTABLE = env?.RSA_ENC_KEY_EXTRACTABLE
+      ?? process.env.RSA_ENC_KEY_EXTRACTABLE
   }
 
   /**
@@ -133,7 +138,10 @@ class User {
     const { origin } = this._ctx.request
     const pattern = new RegExp(`${origin}/i/a/avatars/.*$`)
     if (!pattern.test(url)) {
-      goodUrl = url.replace(/^(http|https):\/\/(<<app.host>>)\/(.*)$/, (m, p, h, x) => `${origin}/${x}`)
+      goodUrl = url.replace(
+        /^(http|https):\/\/(<<app.host>>)\/(.*)$/,
+        (m, p, h, x) => `${origin}/${x}`,
+      )
     }
     return goodUrl
   }
@@ -146,7 +154,10 @@ class User {
     const { protocol, host } = this._ctx
     const pattern = new RegExp(`${host}/i/accounts/avatars/.*$`)
     if (!pattern.test(url)) {
-      goodUrl = url.replace(/^(http|https):\/\/(<<app.host>>)\/(.*)$/, (m, p, h, x) => `${protocol}://${host}/${x}`)
+      goodUrl = url.replace(
+        /^(http|https):\/\/(<<app.host>>)\/(.*)$/,
+        (m, p, h, x) => `${protocol}://${host}/${x}`,
+      )
     }
     return goodUrl
   }
@@ -159,7 +170,10 @@ class User {
     const { protocol, host } = this._ctx
     const pattern = new RegExp(`${host}/@(.*){2,30}$`)
     if (!pattern.test(url)) {
-      goodUrl = url.replace(/^(http|https):\/\/(<<app.host>>)\/(.*)/, () => `${protocol}://${host}/@${this._username}`)
+      goodUrl = url.replace(
+        /^(http|https):\/\/(<<app.host>>)\/(.*)/,
+        () => `${protocol}://${host}/@${this._username}`,
+      )
     }
     return goodUrl
   }
@@ -294,9 +308,18 @@ class User {
     const keyOpts = { ...o }
     const keyIndex = o?.keyIndex ?? this._keys.signing.length
     let keyExists
-    const pubKeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rs256-public-${keyIndex}.pem`)
-    const jwkeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rs256-${keyIndex}.jwk`)
-    const priKeyPath = path.resolve(this._ctx.app.dirs.private.dir, `${this.privateDir}/keys/rs256-private-${keyIndex}.pem`)
+    const pubKeyPath = path.resolve(
+      this._ctx.app.dirs.public.dir,
+      `${this.publicDir}/keys/rs256-public-${keyIndex}.pem`,
+    )
+    const jwkeyPath = path.resolve(
+      this._ctx.app.dirs.public.dir,
+      `${this.publicDir}/keys/rs256-${keyIndex}.jwk`,
+    )
+    const priKeyPath = path.resolve(
+      this._ctx.app.dirs.private.dir,
+      `${this.privateDir}/keys/rs256-private-${keyIndex}.pem`,
+    )
     try {
       await this.#keyDirs()
     } catch (e) {
@@ -340,12 +363,18 @@ class User {
       error(e)
       return { status: null }
     }
-    let pubToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pub)), 'binary').toString('base64')
+    let pubToPem = Buffer.from(
+      String.fromCharCode(...new Uint8Array(pub)),
+      'binary',
+    ).toString('base64')
     pubToPem = pubToPem.match(/.{1,64}/g).join('\n')
     pubToPem = '-----BEGIN PUBLIC KEY-----\n'
       + `${pubToPem}\n`
       + '-----END PUBLIC KEY-----'
-    let priToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pri)), 'binary').toString('base64')
+    let priToPem = Buffer.from(
+      String.fromCharCode(...new Uint8Array(pri)),
+      'binary',
+    ).toString('base64')
     priToPem = priToPem.match(/.{1,64}/g).join('\n')
     priToPem = '-----BEGIN PRIVATE KEY-----\n'
       + `${priToPem}\n`
@@ -394,9 +423,18 @@ class User {
     const keyOpts = o
     const keyIndex = o?.keyIndex ?? this._keys.encrypting.length
     let keyExists
-    const pubKeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rsa-oaep-public-${keyIndex}.pem`)
-    const jwkeyPath = path.resolve(this._ctx.app.dirs.public.dir, `${this.publicDir}/keys/rsa-oaep-${keyIndex}.jwk`)
-    const priKeyPath = path.resolve(this._ctx.app.dirs.private.dir, `${this.privateDir}/keys/rsa-oaep-private-${keyIndex}.pem`)
+    const pubKeyPath = path.resolve(
+      this._ctx.app.dirs.public.dir,
+      `${this.publicDir}/keys/rsa-oaep-public-${keyIndex}.pem`,
+    )
+    const jwkeyPath = path.resolve(
+      this._ctx.app.dirs.public.dir,
+      `${this.publicDir}/keys/rsa-oaep-${keyIndex}.jwk`,
+    )
+    const priKeyPath = path.resolve(
+      this._ctx.app.dirs.private.dir,
+      `${this.privateDir}/keys/rsa-oaep-private-${keyIndex}.pem`,
+    )
     try {
       await this.#keyDirs()
     } catch (e) {
@@ -440,12 +478,18 @@ class User {
       error(e)
       return { status: null }
     }
-    let pubToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pub)), 'binary').toString('base64')
+    let pubToPem = Buffer.from(
+      String.fromCharCode(...new Uint8Array(pub)),
+      'binary',
+    ).toString('base64')
     pubToPem = pubToPem.match(/.{1,64}/g).join('\n')
     pubToPem = '-----BEGIN PUBLIC KEY-----\n'
       + `${pubToPem}\n`
       + '-----END PUBLIC KEY-----'
-    let priToPem = Buffer.from(String.fromCharCode(...new Uint8Array(pri)), 'binary').toString('base64')
+    let priToPem = Buffer.from(
+      String.fromCharCode(...new Uint8Array(pri)),
+      'binary',
+    ).toString('base64')
     priToPem = priToPem.match(/.{1,64}/g).join('\n')
     priToPem = '-----BEGIN PRIVATE KEY-----\n'
       + `${priToPem}\n`
@@ -791,7 +835,10 @@ class User {
       dataToEncrypt,
     )
     if (output === 'base64') {
-      cipherText = Buffer.from(String.fromCharCode(...new Uint8Array(cipherText)), 'binary').toString('base64')
+      cipherText = Buffer.from(
+        String.fromCharCode(...new Uint8Array(cipherText)),
+        'binary',
+      ).toString('base64')
     }
     return cipherText
   }
@@ -801,7 +848,8 @@ class User {
    * @summary Use RSA private encryption key to decrypt data.
    * @async
    * @param { ArrayBuffer } data - Array buffer of data to be decrypted.
-   * @param { string } format - String specifying input format of cipher text, either 'base64' or 'buffer'.
+   * @param { string } format - String specifying input format of cipher text, either 'base64'
+   *                            or 'buffer'.
    * @param { number } keyIndex - The index of the encrypting keys array.
    * @return { string } String containing decrypted data, if successful.
    */
@@ -845,7 +893,10 @@ class User {
       // jku: `${origin}/@${this.username}/jwks-${keyIndex}.json`,
     }
     try {
-      thumbprint = await this.jwt.calculateJwkThumbprint(await this.#importSigningJwk(keyIndex), 'sha256')
+      thumbprint = await this.jwt.calculateJwkThumbprint(
+        await this.#importSigningJwk(keyIndex),
+        'sha256',
+      )
       headers.x5t = thumbprint
     } catch (e) {
       // error(`Failed to create thumbprint of JWK: ${this._keys.signing.key}`)
@@ -870,7 +921,8 @@ class User {
    * @async
    * @param { string } token - A signed JWT to decode.
    * @param { number } keyIndex - The index of the signing keys array.
-   * @return { JWTVerifyResult } An object literal containing decoded payload and any protected headers.
+   * @return { JWTVerifyResult } An object literal containing decoded payload and any
+   *                             protected headers.
    */
   async verifyJWT(token, keyIndex = 0) {
     let result
@@ -1222,7 +1274,10 @@ class User {
    * @return { string } - A stringified version of a JSON literal of user properties.
    */
   serialize() {
-    const propertiesToSerialize = ['_type', '_userStatus', '_first', '_last', '_name', '_emails', '_username', '_displayName', '_url', '_avatar', '_header', '_hashedPassword', '_created_on', '_updated_on', '_description', '_jwts', '_sessionId', '_schemaVer', '_archived']
+    const propertiesToSerialize = [
+      '_type', '_userStatus', '_first', '_last', '_name', '_emails', '_username', '_displayName',
+      '_url', '_avatar', '_header', '_hashedPassword', '_created_on', '_updated_on',
+      '_description', '_jwts', '_sessionId', '_schemaVer', '_archived']
     const that = this
     log(that._jwts)
     return JSON.stringify(that, propertiesToSerialize)
@@ -1232,8 +1287,9 @@ class User {
    * Returns an array of the minimum required properties to instantiate a new user.
    */
   requiredProperties() {
-    // this._requiredProperties = ['_first', '_last', '_email', '_emails', '_hashedPassword', '_jwts', '_type', '_userStatus']
-    this._requiredProperties = ['_first', '_last', '_emails', '_hashedPassword', '_jwts', '_type', '_userStatus']
+    this._requiredProperties = [
+      '_first', '_last', '_emails',
+      '_hashedPassword', '_jwts', '_type', '_userStatus']
     return this._requiredProperties
   }
 
@@ -1357,7 +1413,12 @@ class User {
           following_count: this._following_count,
         },
       }
-      const options = { writeConcern: { w: 'majority' }, upsert: false, returnDocument: 'after', projection: { _id: 1, email: 1, first: 1 } }
+      const options = {
+        writeConcern: { w: 'majority' },
+        upsert: false,
+        returnDocument: 'after',
+        projection: { _id: 1, email: 1, first: 1 },
+      }
       log('5: Calling findOneAndUpdate.')
       result = await users.findOneAndUpdate(filter, update, options)
       log(result)
@@ -1969,8 +2030,10 @@ class User {
 
   #prettyPrintJwk(jwk) {
     this.log(jwk)
-    // const matches = jwk.match(/(?<key_ops>"key_ops":\[.*\]),(?<ext>"ext":(?:true|false)),(?<kty>"kty":"(?:RSA|AES|ECDSA|HMAC)"),(?<n>"n":"(?<n_val>.*)"),(?<e>"e":".*"),(?<alg>"alg":".*"),(?<kid>"kid":".*"),?(?<use>"use":".*")?/)?.groups
-    const matches = jwk.match(/"key_ops":(?<key_ops>\[.*\]),"ext":(?<ext>(true|false)),"kty":(?<kty>".*"),"n":(?<n>".*"),"e":(?<e>".*"),"alg":(?<alg>".*"),"kid":(?<kid>".*"),?(?:"use":(?<use>".*"))?/)
+    const matches = jwk.match(
+      // eslint-disable-next-line
+      /"key_ops":(?<key_ops>\[.*\]),"ext":(?<ext>(true|false)),"kty":(?<kty>".*"),"n":(?<n>".*"),"e":(?<e>".*"),"alg":(?<alg>".*"),"kid":(?<kid>".*"),?(?:"use":(?<use>".*"))?/
+    )
     const groups = matches?.groups
     const indent = '  '
     const string = '{\n'
@@ -2088,8 +2151,10 @@ class User {
   }
 
   /**
-   * Mastodon compatibility - Additional metadata attached to a profile as an array of name-value pairs.
-   * @param { Object[] } field - name/value object literal (a.k.a field) or an array of name/value fields.
+   * Mastodon compatibility - Additional metadata attached to a profile as an array of
+   * name-value pairs.
+   * @param { Object[] } field - name/value object literal (a.k.a field) or an array of
+   *                             name/value fields.
    * @return { undefined }
    */
   set fields(field) {
@@ -2350,28 +2415,39 @@ class User {
       // const newFullPublicPath = path.resolve(`${this._ctx.app.publicDir}`, `${location}`)
       const newFullPublicPath = path.resolve(`${this._ctx.app.dirs.public.dir}`, `${location}`)
       const newRelPublicPath = `${location}/`
-      log(`Renaming ${this.emails[0].primary}'s publicDir from ${oldFullPublicPath} to ${newFullPublicPath}`)
+      log(
+        `Renaming ${this.emails[0].primary}'s publicDir from `
+        + `${oldFullPublicPath} to ${newFullPublicPath}`,
+      )
       // resolve the new path to the same root path...
       try {
         if (this.renamedir(newFullPublicPath)) {
           this._publicDir = newRelPublicPath
         }
       } catch (e) {
-        const msg = `Failed to rename ${this.emails[0].primary}'s publicDir from ${oldFullPublicPath} to ${newFullPublicPath}`
+        const msg = `Failed to rename ${this.emails[0].primary}'s `
+          + `publicDir from ${oldFullPublicPath} to ${newFullPublicPath}`
         error(msg, { cause: e })
         throw new Error(e)
       }
       // renaming old privateDir to new name
       const oldFullPrivatePath = `${this._ctx.app.dirs.private.accounts}/${this._privateDir}`
-      const newFullPrivatePath = path.resolve(`${this._ctx.app.dirs.private.accounts}`, `${location}`)
+      const newFullPrivatePath = path.resolve(
+        `${this._ctx.app.dirs.private.accounts}`,
+        `${location}`,
+      )
       const newRelPrivatePath = `${location}`
-      log(`Renaming ${this.emails[0].primary}'s privateDir from ${oldFullPrivatePath} to ${newFullPrivatePath}`)
+      log(
+        `Renaming ${this.emails[0].primary}'s privateDir from `
+        + `${oldFullPrivatePath} to ${newFullPrivatePath}`,
+      )
       try {
         if (this.renamedir(newFullPrivatePath)) {
           this._privateDir = newRelPrivatePath
         }
       } catch (e) {
-        const msg = `Failed to rename ${this.emails[0].primary}'s privateDir from ${oldFullPrivatePath} to ${newFullPrivatePath}`
+        const msg = `Failed to rename ${this.emails[0].primary}'s `
+          + `privateDir from ${oldFullPrivatePath} to ${newFullPrivatePath}`
         error(msg)
         throw new Error(msg, { cause: e })
       }

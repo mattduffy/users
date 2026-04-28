@@ -17,7 +17,8 @@ class CreatorUser extends AnonymousUser {
   /**
    * Create a creator user model and populate the properties.
    * @summary Create a creator user model and populate the properties.
-   * @param { Object } config - An object literal with properties to pass new user to super to instantiate the base user model.
+   * @param { Object } config - An object literal with properties to pass new user to super to
+   *                            instantiate the base user model.
    * @param { MongoClient } db - A connected MongoDB client.
    * @param { Object } env - An object encapsulating the app's environmental variables.
    */

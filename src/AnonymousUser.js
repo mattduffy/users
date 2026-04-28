@@ -22,7 +22,8 @@ class AnonymousUser extends User {
   /**
    * Create an admin user model and populate the properties.
    * @summary Create an admin user model and populate the properties.
-   * @param { Object } config - An object literal with properties to pass new user to super to instantiate the base user model.
+   * @param { Object } config - An object literal with properties to pass new user to super
+   *                            to instantiate the base user model.
    */
   constructor(config, db, env = {}) {
     super(config, db, env)

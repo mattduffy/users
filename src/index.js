@@ -364,7 +364,13 @@ class Users {
         '$group': {
           _id: '$type',
           count: { '$sum': 1 },
-          users: { '$push': { id: '$_id', primary_email: '$emails.primary', username: { '$concat': ['@', '$username'] } } },
+          users: {
+            '$push': {
+              id: '$_id',
+              primary_email: '$emails.primary',
+              username: { '$concat': ['@', '$username'] },
+            },
+          },
         },
       }
       /* eslint-enable quote-props */
@@ -421,7 +427,15 @@ class Users {
         '$group': {
           _id: '$type',
           count: { '$sum': 1 },
-          users: { '$push': { id: '$_id', primary_email: '$emails.primary', name: '$first', status: '$userStatus', username: '$username' } },
+          users: {
+            '$push': {
+              id: '$_id',
+              primary_email: '$emails.primary',
+              name: '$first',
+              status: '$userStatus',
+              username: '$username',
+            },
+          },
         },
       }
       /* eslint-enable quote-props */

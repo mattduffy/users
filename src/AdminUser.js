@@ -19,7 +19,8 @@ class AdminUser extends User {
   /**
    * Create an admin user model and populate the properties.
    * @summary Create an admin user model and populate the properties.
-   * @param { Object } config - An object literal with properties to pass new user to super to instantiate the base user model.
+   * @param { Object } config - An object literal with properties to pass new user to super
+   *                            to instantiate the base user model.
    * @param { MongoClient } db - A connected MongoDB client.
    * @param { Object } env - An object encapsulating the app's environmental variables.
    */
@@ -123,7 +124,9 @@ class AdminUser extends User {
         '$group': {
           '_id': '$userStatus',
           'count': { '$sum': 1 },
-          'users': { '$push': { 'id': '$_id', 'primary_email': '$emails.primary', 'name': '$first' } },
+          'users': {
+            '$push': { 'id': '$_id', 'primary_email': '$emails.primary', 'name': '$first' },
+          },
         },
       }
       const match = {
@@ -185,7 +188,14 @@ class AdminUser extends User {
         '$group': {
           _id: '$type',
           count: { '$sum': 1 },
-          users: { '$push': { id: '$_id', primary_email: '$emails.primary', name: '$first', status: '$userStatus' } },
+          users: {
+            '$push': {
+              id: '$_id',
+              primary_email: '$emails.primary',
+              name: '$first',
+              status: '$userStatus',
+            },
+          },
         },
       }
       /* eslint-enable-next-line quote-props */
